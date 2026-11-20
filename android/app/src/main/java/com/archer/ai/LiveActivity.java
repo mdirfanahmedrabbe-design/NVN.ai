@@ -147,7 +147,7 @@ public class LiveActivity extends Activity {
                 @Override public void onClose(String reason) {
                     runOnUiThread(() -> {
                         if (live) {
-                            setStatus("লাইভ সংযোগ বন্ধ হয়েছে");
+                            setStatus("লাইভ সংযোগ বন্ধ: " + reason);
                             stopLive();
                         }
                     });
@@ -168,7 +168,7 @@ public class LiveActivity extends Activity {
                         .put("responseModalities", new JSONArray().put("AUDIO"))
                         .put("speechConfig", speech);
                 JSONObject setup = new JSONObject()
-                        .put("model", "models/gemini-2.0-flash-live-001")
+                        .put("model", "models/gemini-3.1-flash-live-preview")
                         .put("generationConfig", gen)
                         .put("systemInstruction", new JSONObject().put("parts", new JSONArray().put(
                                 new JSONObject().put("text",
