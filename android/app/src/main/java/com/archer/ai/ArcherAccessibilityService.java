@@ -40,4 +40,11 @@ public class ArcherAccessibilityService extends AccessibilityService {
     public boolean openNotifications() {
         return performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS);
     }
+
+    public boolean takeScreenshot() {
+        if (android.os.Build.VERSION.SDK_INT >= 28) {
+            return performGlobalAction(GLOBAL_ACTION_TAKE_SCREENSHOT);
+        }
+        return false;
+    }
 }
