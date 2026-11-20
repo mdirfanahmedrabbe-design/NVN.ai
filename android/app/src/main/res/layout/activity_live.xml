@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <TextureView
+        android:id="@+id/preview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="#CC05070D"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <com.archer.ai.OrbView
+            android:id="@+id/liveOrb"
+            android:layout_width="110dp"
+            android:layout_height="110dp"
+            android:layout_gravity="center_horizontal" />
+
+        <TextView
+            android:id="@+id/liveStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="লাইভ শুরু করলে ক্যামেরা দেখে কথা বলবে"
+            android:textColor="#7DD3FC"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/liveToggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="🔴 লাইভ শুরু করো" />
+    </LinearLayout>
+</FrameLayout>
