@@ -66,6 +66,68 @@
         android:text="English ভাষা"
         android:textColor="#E2E8F0" />
 
+    <CheckBox
+        android:id="@+id/setMainVoice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="মেইন স্ক্রিনে ভয়েস উত্তর"
+        android:textColor="#E2E8F0" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="bKash নম্বর (প্রিমিয়াম পেমেন্টের জন্য)"
+        android:textColor="#E2E8F0" />
+
+    <EditText
+        android:id="@+id/setBkash"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_input"
+        android:hint="01XXXXXXXXX"
+        android:inputType="phone"
+        android:padding="12dp"
+        android:textColor="#E8F4FF"
+        android:textColorHint="#64748B" />
+
+    <TextView
+        android:id="@+id/setKeyLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="আরেকটা Gemini Key যোগ করো (শুধু মালিক)"
+        android:textColor="#E2E8F0" />
+
+    <EditText
+        android:id="@+id/setAddKey"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_input"
+        android:hint="নতুন Key বসাও"
+        android:inputType="textPassword"
+        android:padding="12dp"
+        android:textColor="#E8F4FF"
+        android:textColorHint="#64748B" />
+
+    <TextView
+        android:id="@+id/setKeyCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="#94A3B8"
+        android:textSize="12sp" />
+
+    <Button
+        android:id="@+id/setClearKeys"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/btn_secondary"
+        android:text="সব Key মুছো"
+        android:textColor="#E9D5FF" />
+
     <Button
         android:id="@+id/setSave"
         android:layout_width="match_parent"
