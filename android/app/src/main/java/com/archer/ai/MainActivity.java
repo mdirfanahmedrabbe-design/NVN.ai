@@ -144,7 +144,7 @@ public class MainActivity extends Activity {
         });
 
         SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
-        keyInput.setText(prefs.getString("gemini_key", ""));
+        keyInput.setText(prefs.getString("gemini_key", "").trim());
         saveKey.setOnClickListener(v -> {
             prefs.edit().putString("gemini_key", keyInput.getText().toString().trim()).apply();
             status.setText("Key সেভ হয়েছে");
@@ -514,7 +514,7 @@ public class MainActivity extends Activity {
 
     private String askGeminiVision(Bitmap bmp) {
         SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
-        String key = prefs.getString("gemini_key", "");
+        String key = prefs.getString("gemini_key", "").trim();
         if (key.isEmpty()) {
             return "ছবি বুঝতে ফ্রি Gemini Key লাগবে — নিচে বসাও (aistudio.google.com)।";
         }
@@ -522,13 +522,13 @@ public class MainActivity extends Activity {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bmp.compress(Bitmap.CompressFormat.JPEG, 80, baos);
             String b64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP);
-            URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=" + key);
+            URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + key);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setDoOutput(true);
             conn.setConnectTimeout(20000);
-            conn.setReadTimeout(30000);
+            conn.setReadTimeout(60000);
             JSONObject textPart = new JSONObject();
             textPart.put("text", "Describe what you see in this photo briefly (2-3 sentences) in Bengali. If there is text, read it.");
             JSONObject inline = new JSONObject();
@@ -554,7 +554,7 @@ public class MainActivity extends Activity {
                     .getJSONObject("content").getJSONArray("parts").getJSONObject(0)
                     .getString("text").trim();
         } catch (Exception e) {
-            return "ছবি বুঝতে পারলাম না। ইন্টারনেট আর Key দেখো।";
+            return "ছবি বুঝতে পারলাম না। (" + e.getClass().getSimpleName() + ": " + e.getMessage() + ")";
         }
     }
 
@@ -1124,18 +1124,18 @@ public class MainActivity extends Activity {
 
     private String askGemini(String q) {
         SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
-        String key = prefs.getString("gemini_key", "");
+        String key = prefs.getString("gemini_key", "").trim();
         if (key.isEmpty()) {
             return "AI উত্তরের জন্য নিচে ফ্রি Gemini Key বসাও (aistudio.google.com)। Key ছাড়া আমি অ্যাপ খুলতে, volume/brightness বদলাতে, torch জ্বালাতে পারি।";
         }
         try {
-            URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=" + key);
+            URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + key);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setDoOutput(true);
             conn.setConnectTimeout(20000);
-            conn.setReadTimeout(30000);
+            conn.setReadTimeout(60000);
             SharedPreferences mprefs = getSharedPreferences("archer", MODE_PRIVATE);
             String personality = mprefs.getString("personality", "বন্ধু");
             String userName = mprefs.getString("user_name", "");
@@ -1165,7 +1165,7 @@ public class MainActivity extends Activity {
                     .getJSONObject("content").getJSONArray("parts").getJSONObject(0)
                     .getString("text").trim();
         } catch (Exception e) {
-            return "দুঃখিত, উত্তর পাইনি। ইন্টারনেট আর Key ঠিক আছে কিনা দেখো।";
+            return "দুঃখিত, উত্তর পাইনি। (" + e.getClass().getSimpleName() + ": " + e.getMessage() + ")";
         }
     }
 
