@@ -91,6 +91,41 @@
         android:orientation="horizontal">
 
         <Button
+            android:id="@+id/camera"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="📷 ক্যামেরা" />
+
+        <Button
+            android:id="@+id/news"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="📰 খবর" />
+
+        <Button
+            android:id="@+id/access"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="♿ কন্ট্রোল" />
+
+        <Button
+            android:id="@+id/live"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🔴 লাইভ" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <Button
             android:id="@+id/lang"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -117,7 +152,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:text="Key ছাড়াও চলবে: Facebook খোলো, YouTube খোলো, volume বাড়াও, brightness কমাও, torch জ্বালাও, কয়টা বাজে। AI উত্তরের জন্য ফ্রি Gemini Key লাগবে (aistudio.google.com)।"
+        android:text="Key ছাড়াও চলবে: &quot;Facebook খোলো&quot;, &quot;YouTube খোলো&quot;, &quot;volume বাড়াও&quot;, &quot;brightness কমাও&quot;, &quot;torch জ্বালাও&quot;, &quot;কয়টা বাজে&quot;। AI উত্তরের জন্য ফ্রি Gemini Key লাগবে (aistudio.google.com)।"
         android:textColor="#94A3B8"
         android:textSize="11sp" />
 </LinearLayout>
