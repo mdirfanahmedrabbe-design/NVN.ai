@@ -75,6 +75,7 @@ public class LiveActivity extends Activity {
     private AudioTrack player;
     private Thread micThread;
     private Thread frameThread;
+    private Runnable liveTimerRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -184,9 +185,14 @@ public class LiveActivity extends Activity {
             return;
         }
         SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
-        String key = prefs.getString("gemini_key", "");
+        String key = NvnCore.currentKey(prefs);
         if (key.isEmpty()) {
             Toast.makeText(this, "আগে মূল স্ক্রিনে ফ্রি Gemini Key বসাও", Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (!NvnCore.canUseLive(this)) {
+            Toast.makeText(this, "আজকের Live লিমিট শেষ — প্রিমিয়াম নাও", Toast.LENGTH_LONG).show();
+            setStatus("আজকের Live লিমিট শেষ");
             return;
         }
         setStatus("লাইভ সংযোগ হচ্ছে...");
@@ -208,6 +214,7 @@ public class LiveActivity extends Activity {
                 @Override public void onClose(String reason) {
                     runOnUiThread(() -> {
                         if (live) {
+                            if (NvnCore.isQuotaError(reason)) NvnCore.rotateKey(getSharedPreferences("archer", MODE_PRIVATE));
                             setStatus("লাইভ সংযোগ বন্ধ: " + reason);
                             stopLive();
                         }
@@ -275,6 +282,7 @@ public class LiveActivity extends Activity {
                 startMic();
                 startFrames();
                 startPlayer();
+                startLiveTimer();
                 return;
             }
             if (obj.has("toolCall")) {
@@ -704,6 +712,22 @@ public class LiveActivity extends Activity {
         }
     }
 
+    private void startLiveTimer() {
+        liveTimerRunnable = new Runnable() {
+            @Override public void run() {
+                if (!live) return;
+                NvnCore.addLiveSeconds(LiveActivity.this, 10);
+                if (!NvnCore.canUseLive(LiveActivity.this)) {
+                    setStatus("আজকের Live লিমিট শেষ — প্রিমিয়াম নাও");
+                    stopLive();
+                    return;
+                }
+                mainHandler.postDelayed(this, 10000);
+            }
+        };
+        mainHandler.postDelayed(liveTimerRunnable, 10000);
+    }
+
     private void stopLive() {
         live = false;
         setupDone = false;
@@ -712,6 +736,7 @@ public class LiveActivity extends Activity {
         orb.setState(OrbView.IDLE);
         try { if (recorder != null) { recorder.stop(); recorder.release(); recorder = null; } } catch (Exception ignored) {}
         try { if (player != null) { player.stop(); player.release(); player = null; } } catch (Exception ignored) {}
+        if (liveTimerRunnable != null) mainHandler.removeCallbacks(liveTimerRunnable);
         if (ws != null) { ws.close(); ws = null; }
         try { if (virtualDisplay != null) { virtualDisplay.release(); virtualDisplay = null; } } catch (Exception ignored) {}
         try { if (screenReader != null) { screenReader.close(); screenReader = null; } } catch (Exception ignored) {}
