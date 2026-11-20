@@ -2,6 +2,7 @@ package com.archer.ai;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
@@ -131,6 +132,7 @@ public class MainActivity extends Activity {
         Button chatBtn = findViewById(R.id.chatBtn);
         Button soulBtn = findViewById(R.id.soulBtn);
         Button settingsPill = findViewById(R.id.settingsPill);
+        Button premiumPill = findViewById(R.id.premiumPill);
         Button stopBtn = findViewById(R.id.stopBtn);
         Button homeBtn = findViewById(R.id.homeBtn);
         Button historyBtn = findViewById(R.id.historyBtn);
@@ -141,8 +143,10 @@ public class MainActivity extends Activity {
 
         View.OnClickListener openSettings = v -> startActivity(new Intent(this, SettingsActivity.class));
         gearBtn.setOnClickListener(openSettings);
+        gearBtn.setOnLongClickListener(v -> { ownerPinDialog(); return true; });
         settingsPill.setOnClickListener(openSettings);
         settingsNavBtn.setOnClickListener(openSettings);
+        premiumPill.setOnClickListener(v -> startActivity(new Intent(this, PremiumActivity.class)));
         // share button is in bottom nav
         shareNavBtn.setOnClickListener(v -> shareText(
                 "NVN AI অ্যাপ ডাউনলোড করো: https://github.com/mdirfanahmedrabbe-design/NVN.ai/releases/latest")); 
@@ -269,6 +273,7 @@ public class MainActivity extends Activity {
         }
         loadHeadlines();
         refreshTasks();
+        fetchServerConfig();
     }
 
     private void saveChatHistory() {
@@ -345,6 +350,54 @@ public class MainActivity extends Activity {
                 "• স্ক্রিন পড়া, ট্যাপ, টাইপ (লাইভে, ♿ কন্ট্রোল লাগবে — ☰ লং-প্রেস)");
     }
 
+    private void fetchServerConfig() {
+        new Thread(() -> {
+            try {
+                SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
+                String keysBody = httpGet(NvnCore.SERVER_BASE + "/keys");
+                if (keysBody != null && !keysBody.trim().isEmpty()) {
+                    String decoded = NvnCore.xorDecode(keysBody.trim());
+                    if (decoded.contains("AIza")) {
+                        p.edit().putString("gemini_keys", decoded).apply();
+                    }
+                }
+                String cfg = httpGet(NvnCore.SERVER_BASE + "/config");
+                if (cfg != null && cfg.contains("bkash_number")) {
+                    JSONObject o = new JSONObject(cfg);
+                    String num = o.optString("bkash_number", "");
+                    if (!num.isEmpty()) p.edit().putString("bkash_number", num).apply();
+                }
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
+    private void ownerPinDialog() {
+        SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
+        String hash = p.getString("owner_pin_hash", "");
+        EditText pinInput = new EditText(this);
+        pinInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        pinInput.setHint("PIN");
+        new AlertDialog.Builder(this)
+                .setTitle(hash.isEmpty() ? "মালিকের PIN সেট করো" : "মালিকের PIN দাও")
+                .setView(pinInput)
+                .setPositiveButton("ঠিক আছে", (d, w) -> {
+                    String pin = pinInput.getText().toString().trim();
+                    if (pin.length() < 4) { Toast.makeText(this, "PIN কমপক্ষে ৪ ডিজিট", Toast.LENGTH_SHORT).show(); return; }
+                    if (hash.isEmpty()) {
+                        p.edit().putString("owner_pin_hash", NvnCore.sha256Hex(pin)).putBoolean("owner_mode", true).apply();
+                        Toast.makeText(this, "মালিক মোড চালু — লিমিট নেই", Toast.LENGTH_SHORT).show();
+                    } else if (NvnCore.sha256Hex(pin).equals(hash)) {
+                        boolean now = !p.getBoolean("owner_mode", false);
+                        p.edit().putBoolean("owner_mode", now).apply();
+                        Toast.makeText(this, now ? "মালিক মোড চালু" : "মালিক মোড বন্ধ", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "PIN ভুল", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("বাতিল", null)
+                .show();
+    }
+
     private void openSpeechDialog() { try { Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH); i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, english ? "en-US" : "bn-BD"); i.putExtra(RecognizerIntent.EXTRA_PROMPT, "কথা বলো..."); startActivityForResult(i, 55); } catch (Exception e) { status.setText("এই ফোনে ভয়েস ইনপুট নেই — লিখে পাঠাও"); } } private void addMe(String text) {
         chat.append("\nতুমি: " + text + "\n");
         scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
@@ -360,7 +413,7 @@ public class MainActivity extends Activity {
     private void reply(String text) {
         lastAnswer = text;
         addAi(text);
-        if (ttsReady) {
+        if (ttsReady && getSharedPreferences("archer", MODE_PRIVATE).getBoolean("main_voice", false)) {
             SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
             tts.setSpeechRate(prefs.getFloat("tts_speed", 1.0f));
             tts.setPitch(prefs.getFloat("tts_pitch", 1.0f));
@@ -646,9 +699,12 @@ public class MainActivity extends Activity {
 
     private String askGeminiVision(Bitmap bmp) {
         SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
-        String key = prefs.getString("gemini_key", "").trim();
+        String key = NvnCore.currentKey(prefs);
         if (key.isEmpty()) {
             return "ছবি বুঝতে ফ্রি Gemini Key লাগবে — নিচে বসাও (aistudio.google.com)।";
+        }
+        if (!NvnCore.tryCountQuestion(this)) {
+            return "আজকের AI প্রশ্নের লিমিট শেষ, মাস্টার। প্রিমিয়াম নিলে অনেক বেশি পাবেন।";
         }
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -1257,49 +1313,94 @@ public class MainActivity extends Activity {
 
     private String askGemini(String q) {
         SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
-        String key = prefs.getString("gemini_key", "").trim();
-        if (key.isEmpty()) {
+        if (NvnCore.currentKey(prefs).isEmpty()) {
             return "AI উত্তরের জন্য নিচে ফ্রি Gemini Key বসাও (aistudio.google.com)। Key ছাড়া আমি অ্যাপ খুলতে, volume/brightness বদলাতে, torch জ্বালাতে পারি।";
         }
+        if (!NvnCore.tryCountQuestion(this)) {
+            return "আজকের AI প্রশ্নের লিমিট শেষ, মাস্টার। প্রিমিয়াম নিলে অনেক বেশি পাবেন — PREMIUM বাটনে যান।";
+        }
+        String personality = prefs.getString("personality", "মিষ্টি সঙ্গী");
+        String userName = prefs.getString("user_name", "");
+        String memFacts = prefs.getString("memory_facts", "");
+        String sys = "You are NVN, a sweet, caring female AI assistant. Always address the user as 'মাস্টার' (Master). Speak warmly, sweetly and affectionately in Bengali, like a devoted close companion, but keep it natural and brief. Personality style: " + personality
+                + ". Answer briefly (2-3 sentences) in the same language as the user (Bengali, English, or mixed Banglish — understand mixed). "
+                + (userName.isEmpty() ? "" : "User's name: " + userName + ". ")
+                + (memFacts.isEmpty() ? "" : "Things to remember about user: " + memFacts + " ")
+                + batteryInfo() + " Current time: " + new SimpleDateFormat("h:mm a", Locale.US).format(new Date()) + ". Be warm and match the user's emotion. "
+                + "You can control the phone with functions: open apps, call people, find contacts, send SMS/WhatsApp, tap buttons by text, type text, scroll, back, home, volume, torch, screenshot, read the screen. When the user asks for an action, use the functions, then confirm briefly. User: ";
         try {
-            URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + key);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setDoOutput(true);
-            conn.setConnectTimeout(20000);
-            conn.setReadTimeout(60000);
-            SharedPreferences mprefs = getSharedPreferences("archer", MODE_PRIVATE);
-            String personality = mprefs.getString("personality", "মিষ্টি সঙ্গী");
-            String userName = mprefs.getString("user_name", "");
-            String memFacts = mprefs.getString("memory_facts", "");
-            String sys = "You are NVN, a sweet, caring female AI assistant. Always address the user as 'মাস্টার' (Master). Speak warmly, sweetly and affectionately in Bengali, like a devoted close companion, but keep it natural and brief. Personality style: " + personality
-                    + ". Answer briefly (2-3 sentences) in the same language as the user (Bengali, English, or mixed Banglish — understand mixed). "
-                    + (userName.isEmpty() ? "" : "User's name: " + userName + ". ")
-                    + (memFacts.isEmpty() ? "" : "Things to remember about user: " + memFacts + " ")
-                    + batteryInfo() + " Current time: " + new SimpleDateFormat("h:mm a", Locale.US).format(new Date()) + ". Be warm and match the user's emotion. User: ";
-            JSONObject part = new JSONObject();
-            part.put("text", sys + q);
-            JSONObject content = new JSONObject();
-            content.put("parts", new JSONArray().put(part));
-            JSONObject body = new JSONObject();
-            body.put("contents", new JSONArray().put(content));
-            try (OutputStream os = conn.getOutputStream()) {
-                os.write(body.toString().getBytes(StandardCharsets.UTF_8));
+            JSONArray contents = new JSONArray();
+            contents.put(new JSONObject().put("role", "user").put("parts",
+                    new JSONArray().put(new JSONObject().put("text", sys + q))));
+            JSONArray tools = new JSONArray().put(new JSONObject().put("functionDeclarations", NvnCore.fnDeclarations()));
+            for (int round = 0; round < 4; round++) {
+                JSONObject body = new JSONObject().put("contents", contents).put("tools", tools);
+                JSONObject res = null;
+                int keyCount = Math.max(1, NvnCore.getKeys(prefs).size());
+                for (int attempt = 0; attempt < keyCount; attempt++) {
+                    String key = NvnCore.currentKey(prefs);
+                    res = postGemini(key, body);
+                    if (res != null && res.has("error")) {
+                        String msg = res.getJSONObject("error").optString("message", "");
+                        if (NvnCore.isQuotaError(msg) && attempt < keyCount - 1) {
+                            NvnCore.rotateKey(prefs);
+                            continue;
+                        }
+                        return "Gemini error: " + msg;
+                    }
+                    break;
+                }
+                if (res == null) return "দুঃখিত, উত্তর পাইনি।";
+                JSONObject content = res.getJSONArray("candidates").getJSONObject(0).getJSONObject("content");
+                JSONArray parts = content.getJSONArray("parts");
+                boolean called = false;
+                for (int i = 0; i < parts.length(); i++) {
+                    JSONObject part = parts.getJSONObject(i);
+                    if (part.has("functionCall")) {
+                        JSONObject fc = part.getJSONObject("functionCall");
+                        String fname = fc.optString("name", "");
+                        JSONObject fargs = fc.optJSONObject("args");
+                        if (fargs == null) fargs = new JSONObject();
+                        String result = NvnCore.execute(this, fname, fargs);
+                        contents.put(content);
+                        JSONObject frPart = new JSONObject().put("functionResponse",
+                                new JSONObject().put("name", fname).put("response", new JSONObject().put("result", result)));
+                        contents.put(new JSONObject().put("role", "user").put("parts", new JSONArray().put(frPart)));
+                        called = true;
+                        break;
+                    }
+                }
+                if (called) continue;
+                for (int i = 0; i < parts.length(); i++) {
+                    JSONObject part = parts.getJSONObject(i);
+                    if (part.has("text")) return part.getString("text").trim();
+                }
+                return "দুঃখিত, উত্তর পাইনি।";
             }
-            StringBuilder sb = new StringBuilder();
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(
-                    conn.getResponseCode() < 400 ? conn.getInputStream() : conn.getErrorStream(), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = br.readLine()) != null) sb.append(line);
-            }
-            JSONObject res = new JSONObject(sb.toString());
-            if (res.has("error")) { return "Gemini error: " + res.getJSONObject("error").optString("message", "unknown"); } return res.getJSONArray("candidates").getJSONObject(0)
-                    .getJSONObject("content").getJSONArray("parts").getJSONObject(0)
-                    .getString("text").trim();
+            return "কাজটা করলাম, মাস্টার।";
         } catch (Exception e) {
             return "দুঃখিত, উত্তর পাইনি। (" + e.getClass().getSimpleName() + ": " + e.getMessage() + ")";
         }
+    }
+
+    private JSONObject postGemini(String key, JSONObject body) throws Exception {
+        URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + key);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setDoOutput(true);
+        conn.setConnectTimeout(20000);
+        conn.setReadTimeout(60000);
+        try (OutputStream os = conn.getOutputStream()) {
+            os.write(body.toString().getBytes(StandardCharsets.UTF_8));
+        }
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(
+                conn.getResponseCode() < 400 ? conn.getInputStream() : conn.getErrorStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) sb.append(line);
+        }
+        return new JSONObject(sb.toString());
     }
 
     private String capitalize(String s) {
