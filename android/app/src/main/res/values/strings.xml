@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NVN.ai</string>
+    <string name="accessibility_description">NVN AI voice control: back, home, recents and notification actions by voice command</string>
 </resources>
