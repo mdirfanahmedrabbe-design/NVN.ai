@@ -7,6 +7,9 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.ContactsContract;
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraCaptureSession;
@@ -47,6 +50,7 @@ public class LiveActivity extends Activity {
     private OrbView orb;
 
     private CameraDevice camera;
+    private String camId;
     private CameraCaptureSession session;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -74,8 +78,12 @@ public class LiveActivity extends Activity {
 
         if (Build.VERSION.SDK_INT >= 23 &&
                 (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
-                 checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)) {
-            requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO}, 7);
+                 checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED ||
+                 checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED ||
+                 checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED)) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO,
+                    Manifest.permission.CALL_PHONE, Manifest.permission.READ_CONTACTS,
+                    "android.permission.POST_NOTIFICATIONS"}, 7);
         }
         preview.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override public void onSurfaceTextureAvailable(SurfaceTexture st, int w, int h) { openCamera(); }
@@ -100,7 +108,7 @@ public class LiveActivity extends Activity {
     private void openCamera() {
         try {
             CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-            String camId = null;
+            camId = null;
             for (String id : cm.getCameraIdList()) {
                 Integer facing = cm.getCameraCharacteristics(id).get(CameraCharacteristics.LENS_FACING);
                 if (facing != null && facing == CameraCharacteristics.LENS_FACING_BACK) { camId = id; break; }
@@ -154,6 +162,10 @@ public class LiveActivity extends Activity {
         toggle.setText("⏹ বন্ধ করো");
         live = true;
         setupDone = false;
+        try {
+            Intent svc = new Intent(this, LiveService.class);
+            if (Build.VERSION.SDK_INT >= 26) startForegroundService(svc); else startService(svc);
+        } catch (Exception ignored) {}
         orb.setState(OrbView.LISTENING);
 
         new Thread(() -> {
@@ -184,28 +196,31 @@ public class LiveActivity extends Activity {
                 JSONObject gen = new JSONObject()
                         .put("responseModalities", new JSONArray().put("AUDIO"))
                         .put("speechConfig", speech);
-                JSONObject appParam = new JSONObject()
-                        .put("type", "STRING")
-                        .put("description", "Name of the app to open, e.g. Facebook, YouTube, WhatsApp, Telegram, Chrome, bKash");
-                JSONObject params = new JSONObject()
-                        .put("type", "OBJECT")
-                        .put("properties", new JSONObject().put("app_name", appParam))
-                        .put("required", new JSONArray().put("app_name"));
-                JSONObject fn = new JSONObject()
-                        .put("name", "open_app")
-                        .put("description", "Open an app on the user's phone by name")
-                        .put("parameters", params);
-                JSONArray tools = new JSONArray().put(new JSONObject()
-                        .put("functionDeclarations", new JSONArray().put(fn)));
+                JSONArray fns = new JSONArray();
+                fns.put(fnDef("open_app", "Open an app on the user's phone by name", "app_name", "Name of the app to open, e.g. Facebook, YouTube, WhatsApp, Telegram, Chrome, bKash"));
+                fns.put(fnDef("call_number", "Call a phone number", "number", "Phone number to call, digits only"));
+                fns.put(fnDef("call_contact", "Call a contact by name from the phone contacts", "name", "Contact name as saved in the phone"));
+                fns.put(fnDef("tap_text", "Tap a button or item on the screen by its visible text", "text", "Exact visible text of the button or item"));
+                fns.put(fnDef("type_text", "Type text into the currently focused text field on screen", "text", "Text to type"));
+                fns.put(fnDef("set_volume", "Change media volume", "direction", "One of: up, down, max, min"));
+                fns.put(fnDef("torch", "Turn the phone flashlight on or off", "state", "One of: on, off"));
+                fns.put(fnDefNoArg("press_back", "Press the Back button"));
+                fns.put(fnDefNoArg("press_home", "Go to the home screen"));
+                fns.put(fnDefNoArg("scroll_down", "Scroll the screen down"));
+                fns.put(fnDefNoArg("scroll_up", "Scroll the screen up"));
+                fns.put(fnDefNoArg("press_enter", "Press Enter or Send or Search on the keyboard"));
+                fns.put(fnDefNoArg("read_screen", "Read all visible text on the current screen"));
+                fns.put(fnDefNoArg("take_screenshot", "Take a screenshot"));
+                JSONArray tools = new JSONArray().put(new JSONObject().put("functionDeclarations", fns));
                 JSONObject setup = new JSONObject()
                         .put("model", "models/gemini-3.1-flash-live-preview")
                         .put("generationConfig", gen)
                         .put("tools", tools)
                         .put("systemInstruction", new JSONObject().put("parts", new JSONArray().put(
                                 new JSONObject().put("text",
-                                        "You are NVN, a friendly voice assistant. You can see the live camera video and hear the user. " +
+                                        "You are NVN, a sweet, caring female voice assistant. Always address the user as 'মাস্টার' (Master). Speak warmly, sweetly and affectionately in Bengali, like a devoted close companion. You can see the live camera video and hear the user. " +
                                         "Reply in Bengali, short and natural, like a real conversation. Describe what you see when asked. " +
-                                        "When the user asks you to open an app, call the open_app function with the app name."))));
+                                        "You can control the phone with functions: open apps, call people, tap buttons by their text, type text, scroll, back, home, volume, torch, screenshot, and read the screen. Use read_screen to see what is on screen before tapping. When the user asks for an action, do it with the functions, then confirm briefly in Bengali."))));
                 ws.sendText(new JSONObject().put("setup", setup).toString());
             } catch (Exception e) {
                 runOnUiThread(() -> {
@@ -234,12 +249,9 @@ public class LiveActivity extends Activity {
                         JSONObject call = calls.getJSONObject(i);
                         String id = call.optString("id", "");
                         String name = call.optString("name", "");
-                        String result = "unknown function";
-                        if ("open_app".equals(name)) {
-                            String appName = call.optJSONObject("args") != null
-                                    ? call.getJSONObject("args").optString("app_name", "") : "";
-                            result = openAppByName(appName) ? "opened " + appName : "app not found: " + appName;
-                        }
+                        JSONObject args = call.optJSONObject("args");
+                        if (args == null) args = new JSONObject();
+                        String result = executeFunction(name, args);
                         JSONObject resp = new JSONObject()
                                 .put("id", id)
                                 .put("name", name)
@@ -338,6 +350,136 @@ public class LiveActivity extends Activity {
         } catch (Exception ignored) {}
     }
 
+    private JSONObject fnDef(String name, String desc, String param, String paramDesc) throws Exception {
+        JSONObject p = new JSONObject().put("type", "STRING").put("description", paramDesc);
+        JSONObject params = new JSONObject()
+                .put("type", "OBJECT")
+                .put("properties", new JSONObject().put(param, p))
+                .put("required", new JSONArray().put(param));
+        return new JSONObject().put("name", name).put("description", desc).put("parameters", params);
+    }
+
+    private JSONObject fnDefNoArg(String name, String desc) throws Exception {
+        JSONObject params = new JSONObject().put("type", "OBJECT").put("properties", new JSONObject());
+        return new JSONObject().put("name", name).put("description", desc).put("parameters", params);
+    }
+
+    private String executeFunction(String name, JSONObject args) {
+        ArcherAccessibilityService svc = ArcherAccessibilityService.instance;
+        switch (name) {
+            case "open_app": {
+                String appName = args.optString("app_name", "");
+                return openAppByName(appName) ? "opened " + appName : "app not found: " + appName;
+            }
+            case "call_number":
+                return callNumber(args.optString("number", ""));
+            case "call_contact":
+                return callContact(args.optString("name", ""));
+            case "press_back":
+                return svc != null && svc.goBack() ? "back pressed" : "accessibility off";
+            case "press_home":
+                return svc != null && svc.goHome() ? "home pressed" : "accessibility off";
+            case "scroll_down":
+                return svc != null && svc.scrollDown() ? "scrolled down" : "accessibility off";
+            case "scroll_up":
+                return svc != null && svc.scrollUp() ? "scrolled up" : "accessibility off";
+            case "tap_text": {
+                String t = args.optString("text", "");
+                return svc != null && svc.tapText(t) ? "tapped " + t : "not found: " + t;
+            }
+            case "type_text": {
+                String t = args.optString("text", "");
+                return svc != null && svc.typeText(t) ? "typed" : "no text field";
+            }
+            case "press_enter":
+                return svc != null && svc.pressEnter() ? "enter pressed" : "failed";
+            case "read_screen":
+                return svc != null ? svc.readScreen() : "accessibility off";
+            case "take_screenshot":
+                return svc != null && svc.takeScreenshot() ? "screenshot taken" : "failed";
+            case "set_volume":
+                return setVolume(args.optString("direction", ""));
+            case "torch":
+                return setTorch("on".equalsIgnoreCase(args.optString("state", "")));
+            default:
+                return "unknown function";
+        }
+    }
+
+    private String callNumber(String number) {
+        try {
+            String num = number.replaceAll("[^0-9+]", "");
+            if (num.isEmpty()) return "no number";
+            boolean canCall = Build.VERSION.SDK_INT < 23 ||
+                    checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED;
+            Intent i = new Intent(canCall ? Intent.ACTION_CALL : Intent.ACTION_DIAL,
+                    Uri.parse("tel:" + num));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            runOnUiThread(() -> startActivity(i));
+            return canCall ? "calling " + num : "dialer opened for " + num;
+        } catch (Exception e) {
+            return "call failed";
+        }
+    }
+
+    private String callContact(String name) {
+        try {
+            if (Build.VERSION.SDK_INT >= 23 &&
+                    checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                return "contacts permission not granted";
+            }
+            Cursor c = getContentResolver().query(
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER},
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " LIKE ?",
+                    new String[]{"%" + name + "%"}, null);
+            String number = null;
+            if (c != null) {
+                if (c.moveToFirst()) number = c.getString(0);
+                c.close();
+            }
+            if (number == null) return "contact not found: " + name;
+            return callNumber(number);
+        } catch (Exception e) {
+            return "call failed";
+        }
+    }
+
+    private String setVolume(String direction) {
+        try {
+            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            int max = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            int cur = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+            int target = cur;
+            if ("up".equals(direction)) target = Math.min(max, cur + 2);
+            else if ("down".equals(direction)) target = Math.max(0, cur - 2);
+            else if ("max".equals(direction)) target = max;
+            else if ("min".equals(direction)) target = 0;
+            am.setStreamVolume(AudioManager.STREAM_MUSIC, target, AudioManager.FLAG_SHOW_UI);
+            return "volume " + target + "/" + max;
+        } catch (Exception e) {
+            return "volume failed";
+        }
+    }
+
+    private String setTorch(boolean on) {
+        try {
+            CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+            String id = camId;
+            if (id == null) {
+                for (String cid : cm.getCameraIdList()) {
+                    Boolean flash = cm.getCameraCharacteristics(cid).get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+                    if (flash != null && flash) { id = cid; break; }
+                }
+            }
+            if (id == null) return "no flashlight";
+            cm.setTorchMode(id, on);
+            return on ? "torch on" : "torch off";
+        } catch (Exception e) {
+            return "torch failed";
+        }
+    }
+
     private boolean openAppByName(String appName) {
         try {
             String q = appName.toLowerCase().trim();
@@ -394,6 +536,7 @@ public class LiveActivity extends Activity {
     private void stopLive() {
         live = false;
         setupDone = false;
+        try { stopService(new Intent(this, LiveService.class)); } catch (Exception ignored) {}
         toggle.setText("🔴 লাইভ শুরু করো");
         orb.setState(OrbView.IDLE);
         try { if (recorder != null) { recorder.stop(); recorder.release(); recorder = null; } } catch (Exception ignored) {}
