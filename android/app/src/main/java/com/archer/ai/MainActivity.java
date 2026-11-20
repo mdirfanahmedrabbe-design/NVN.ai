@@ -25,7 +25,6 @@ import java.util.Locale;
 
 public class MainActivity extends Activity {
     private TextView onlinePill;
-    private GirlView mainGirl;
     private SharedPreferences prefs;
     private int tickCount = 0;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -34,10 +33,6 @@ public class MainActivity extends Activity {
             refreshUsage();
             checkAnnounce();
             tickCount++;
-            if (mainGirl != null) {
-                if (tickCount % 3 == 1) mainGirl.dance();
-                else if (tickCount % 3 == 2) mainGirl.jump();
-            }
             if (tickCount % 2 == 0) new Thread(() -> NvnCore.backupData(MainActivity.this)).start();
             handler.postDelayed(this, 30000);
         }
@@ -57,10 +52,7 @@ public class MainActivity extends Activity {
         prefs = getSharedPreferences("archer", MODE_PRIVATE);
 
         onlinePill = findViewById(R.id.onlinePill);
-        mainGirl = findViewById(R.id.mainGirl);
         Button liveBtn = findViewById(R.id.liveBtn);
-
-        findViewById(R.id.menuBtn).setOnClickListener(v -> showFeatureMenu());
         findViewById(R.id.bellBtn).setOnClickListener(v -> showStatusDialog());
         liveBtn.setOnClickListener(v -> openLive("camera"));
         findViewById(R.id.navHome).setOnClickListener(v -> refreshUsage());
@@ -79,10 +71,28 @@ public class MainActivity extends Activity {
         if (prefs.getString("girl_name", "").isEmpty()) showNameDialog();
     }
 
+
+    private AlertDialog styleDialog(AlertDialog d) {
+        try {
+            if (d.getWindow() != null) d.getWindow().setBackgroundDrawableResource(R.drawable.bg_card);
+            android.widget.TextView msg = d.findViewById(android.R.id.message);
+            if (msg != null) msg.setTextColor(0xFFE8F4FF);
+            android.widget.TextView title = d.findViewById(android.R.id.title);
+            if (title != null) title.setTextColor(0xFFC084FC);
+            android.widget.Button pos = d.getButton(AlertDialog.BUTTON_POSITIVE);
+            if (pos != null) pos.setTextColor(0xFFC084FC);
+            android.widget.Button neg = d.getButton(AlertDialog.BUTTON_NEGATIVE);
+            if (neg != null) neg.setTextColor(0xFFA78BFA);
+            android.widget.Button neu = d.getButton(AlertDialog.BUTTON_NEUTRAL);
+            if (neu != null) neu.setTextColor(0xFFFACC15);
+        } catch (Exception ignored) {}
+        return d;
+    }
+
     private void showNameDialog() {
         EditText input = new EditText(this);
         input.setHint("নাম লিখো");
-        new AlertDialog.Builder(this)
+        AlertDialog nameDialog = new AlertDialog.Builder(this)
                 .setTitle("আসসালামু আলাইকুম মাস্টার! 💜")
                 .setMessage("আমি আপনার নতুন সঙ্গী। আমাকে একটা সুন্দর নাম দিন তো — এই নামেই আমি সবসময় আপনার পাশে থাকব।")
                 .setView(input)
@@ -91,11 +101,12 @@ public class MainActivity extends Activity {
                     String name = input.getText().toString().trim();
                     if (name.isEmpty()) name = "NVN";
                     prefs.edit().putString("girl_name", name).apply();
-                    if (mainGirl != null) { mainGirl.wave(); mainGirl.dance(); }
                     new Thread(() -> NvnCore.backupData(this)).start();
                     Toast.makeText(this, "ধন্যবাদ মাস্টার! এখন থেকে আমি " + name + " 💜", Toast.LENGTH_LONG).show();
                 })
-                .show();
+                .create();
+        nameDialog.show();
+        styleDialog(nameDialog);
     }
 
     @Override
@@ -103,7 +114,6 @@ public class MainActivity extends Activity {
         super.onResume();
         refreshUsage();
         handler.post(usageTicker);
-        if (mainGirl != null) mainGirl.wave();
     }
 
     @Override
@@ -127,36 +137,6 @@ public class MainActivity extends Activity {
         startActivity(i);
     }
 
-    private void showFeatureMenu() {
-        String[] items = {
-                "📹 Live Camera",
-                "🖥 Share Screen",
-                "👑 Premium",
-                "📰 আজকের খবর",
-                "✅ কাজের লিস্ট",
-                "🕋 কিবলা",
-                "📿 তসবিহ",
-                "⚙ সেটিংস",
-                "🔗 অ্যাপ শেয়ার করো"
-        };
-        new AlertDialog.Builder(this)
-                .setTitle("NVN AI — সব ফিচার")
-                .setItems(items, (d, which) -> {
-                    switch (which) {
-                        case 0: openLive("camera"); break;
-                        case 1: openLive("both"); break;
-                        case 2: startActivity(new Intent(this, PremiumActivity.class)); break;
-                        case 3: showHeadlines(); break;
-                        case 4: showTasks(); break;
-                        case 5: startActivity(new Intent(this, QiblaActivity.class)); break;
-                        case 6: startActivity(new Intent(this, TasbihActivity.class)); break;
-                        case 7: startActivity(new Intent(this, SettingsActivity.class)); break;
-                        case 8: shareApp(); break;
-                    }
-                })
-                .show();
-    }
-
     private void showStatusDialog() {
         SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
         int tier = NvnCore.tierIndex(this);
@@ -174,17 +154,21 @@ public class MainActivity extends Activity {
                 + "আজ Live: " + usedMin + "/" + limitMin + " মিনিট\n"
                 + "আজ প্রশ্ন: " + NvnCore.questionsUsedToday(this) + "/" + NvnCore.TIER_Q[tier] + "\n"
                 + "মালিক মোড: " + (p.getBoolean("owner_mode", false) ? "চালু" : "বন্ধ");
-        new AlertDialog.Builder(this)
+        AlertDialog statusDialog = new AlertDialog.Builder(this)
                 .setTitle("🔔 অবস্থা")
                 .setMessage(msg)
                 .setPositiveButton("ঠিক আছে", null)
-                .show();
+                .setNeutralButton("👑 Premium কিনুন", (d, w) ->
+                        startActivity(new Intent(this, PremiumActivity.class)))
+                .create();
+        statusDialog.show();
+        styleDialog(statusDialog);
     }
 
     private void showHistory() {
         SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
         String hist = p.getString("chat_history", "");
-        new AlertDialog.Builder(this)
+        AlertDialog histDialog = new AlertDialog.Builder(this)
                 .setTitle("🕐 History")
                 .setMessage(hist.isEmpty() ? "কোনো ইতিহাস নেই।" : hist)
                 .setPositiveButton("ঠিক আছে", null)
@@ -192,7 +176,9 @@ public class MainActivity extends Activity {
                     p.edit().remove("chat_history").apply();
                     Toast.makeText(this, "ইতিহাস মুছে গেছে", Toast.LENGTH_SHORT).show();
                 })
-                .show();
+                .create();
+        histDialog.show();
+        styleDialog(histDialog);
     }
 
     private void showHeadlines() {
@@ -201,6 +187,7 @@ public class MainActivity extends Activity {
                 .setMessage("খবর লোড হচ্ছে...")
                 .setPositiveButton("ঠিক আছে", null)
                 .show();
+        styleDialog(dialog);
         new Thread(() -> {
             String result;
             try {
@@ -242,7 +229,7 @@ public class MainActivity extends Activity {
         String list = p.getString("todo_list", "");
         EditText input = new EditText(this);
         input.setHint("নতুন কাজ লেখো");
-        new AlertDialog.Builder(this)
+        AlertDialog taskDialog = new AlertDialog.Builder(this)
                 .setTitle("✅ কাজের লিস্ট")
                 .setMessage(list.isEmpty() ? "কোনো কাজ নেই।" : list.trim())
                 .setView(input)
@@ -259,7 +246,9 @@ public class MainActivity extends Activity {
                     Toast.makeText(this, "সব মুছে গেছে", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("বন্ধ", null)
-                .show();
+                .create();
+        taskDialog.show();
+        styleDialog(taskDialog);
     }
 
     private void shareApp() {
@@ -276,7 +265,7 @@ public class MainActivity extends Activity {
         EditText pinInput = new EditText(this);
         pinInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
         pinInput.setHint("PIN");
-        new AlertDialog.Builder(this)
+        AlertDialog pinDialog = new AlertDialog.Builder(this)
                 .setTitle(hash.isEmpty() ? "মালিকের PIN সেট করো" : "মালিকের PIN দাও")
                 .setView(pinInput)
                 .setPositiveButton("ঠিক আছে", (d, w) -> {
@@ -294,7 +283,9 @@ public class MainActivity extends Activity {
                     }
                 })
                 .setNegativeButton("বাতিল", null)
-                .show();
+                .create();
+        pinDialog.show();
+        styleDialog(pinDialog);
     }
 
     private String httpGet(String urlStr) {

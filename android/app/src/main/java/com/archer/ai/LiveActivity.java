@@ -284,6 +284,7 @@ public class LiveActivity extends Activity {
                 fns.put(fnDef2("send_whatsapp", "Send a WhatsApp message to a phone number", "number", "Phone number with country code digits, e.g. 8801XXXXXXXXX", "text", "Message text to send"));
                 fns.put(fnDef("find_contact", "Find a contact's phone number by name", "name", "Contact name as saved in the phone"));
                 fns.put(fnDef2("call_and_talk", "Call a phone number and speak a message aloud on speaker for the user", "number", "Phone number, digits only", "message", "What to say on the call, in Bengali"));
+                fns.put(fnDef("open_screen", "Open a screen inside the NVN app: qibla compass, tasbih counter, premium packages, or settings", "screen", "One of: qibla, tasbih, premium, settings"));
                 JSONArray tools = new JSONArray().put(new JSONObject().put("functionDeclarations", fns));
                 JSONObject setup = new JSONObject()
                         .put("model", "models/gemini-3.1-flash-live-preview")
@@ -534,6 +535,18 @@ public class LiveActivity extends Activity {
             }
             case "call_and_talk":
                 return NvnCore.callAndTalk(this, args.optString("number", ""), args.optString("message", ""));
+            case "open_screen": {
+                String screen = args.optString("screen", "").toLowerCase();
+                Class<?> target = null;
+                if (screen.contains("qibla")) target = QiblaActivity.class;
+                else if (screen.contains("tasbih")) target = TasbihActivity.class;
+                else if (screen.contains("premium")) target = PremiumActivity.class;
+                else if (screen.contains("settings")) target = SettingsActivity.class;
+                if (target == null) return "unknown screen";
+                final Class<?> cls = target;
+                runOnUiThread(() -> startActivity(new Intent(this, cls)));
+                return "opened " + screen;
+            }
             default:
                 return "unknown function";
         }
