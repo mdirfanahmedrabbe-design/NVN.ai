@@ -102,7 +102,7 @@ public class MainActivity extends Activity {
         KNOWN_APPS.put("বিকাশ", "com.bKash.customerapp");
         KNOWN_APPS.put("nagad", "com.konasl.nagad");
         KNOWN_APPS.put("নগদ", "com.konasl.nagad");
-        KNOWN_APPS.put("imo", "com.imo.android.imoim");
+        KNOWN_APPS.put("imo", "com.imo.android.imoim"); KNOWN_APPS.put("facebook lite", "com.facebook.lite"); KNOWN_APPS.put("messenger lite", "com.facebook.mlite");
         KNOWN_APPS.put("ইমো", "com.imo.android.imoim");
     }
 
@@ -164,7 +164,7 @@ public class MainActivity extends Activity {
         tts = new TextToSpeech(this, s -> {
             if (s == TextToSpeech.SUCCESS) {
                 ttsReady = true;
-                tts.setLanguage(new Locale("bn", "BD"));
+                tts.setLanguage(new Locale("bn", "BD")); try { android.speech.tts.Voice best = null; for (android.speech.tts.Voice v : tts.getVoices()) { if (v.getLocale().getLanguage().equals("bn") && (best == null || v.getQuality() > best.getQuality())) best = v; } if (best != null) tts.setVoice(best); } catch (Exception ignored) {}
             }
         });
         tts.setOnUtteranceProgressListener(new android.speech.tts.UtteranceProgressListener() {
@@ -183,7 +183,7 @@ public class MainActivity extends Activity {
                 }
                 @Override public void onError(int error) {
                     orb.setState(OrbView.IDLE);
-                    status.setText("শুনতে পারিনি, আবার চেষ্টা করো");
+                    status.setText("ভয়েস ডায়ালগ খুলছি..."); openSpeechDialog();
                 }
                 @Override public void onReadyForSpeech(Bundle p) { status.setText("শুনছি... কথা বলো"); }
                 @Override public void onBeginningOfSpeech() {}
@@ -197,7 +197,7 @@ public class MainActivity extends Activity {
 
         mic.setOnClickListener(v -> {
             if (recognizer == null) {
-                status.setText("এই ফোনে ভয়েস ইনপুট নেই — লিখে পাঠাও");
+                openSpeechDialog();
                 return;
             }
             Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -216,7 +216,7 @@ public class MainActivity extends Activity {
         addAi("হ্যালো! আমি NVN। মাইক চেপে কথা বলো — অ্যাপ খুলতে, volume/brightness বদলাতে, torch জ্বালাতে পারি।");
     }
 
-    private void addMe(String text) {
+    private void openSpeechDialog() { try { Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH); i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, english ? "en-US" : "bn-BD"); i.putExtra(RecognizerIntent.EXTRA_PROMPT, "কথা বলো..."); startActivityForResult(i, 55); } catch (Exception e) { status.setText("এই ফোনে ভয়েস ইনপুট নেই — লিখে পাঠাও"); } } private void addMe(String text) {
         chat.append("\nতুমি: " + text + "\n");
         scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
     }
@@ -412,7 +412,7 @@ public class MainActivity extends Activity {
         if (s.contains("শেয়ার করো") || s.contains("share")) { shareText(lastAnswer); return "শেয়ার স্ক্রিন খুললাম।"; }
         if (s.contains("আপডেট") || s.contains("update")) { checkUpdate(); return "আপডেট দেখছি..."; }
         // open app by name
-        if (s.contains("খোলো") || s.contains("খুলো") || s.contains("open") || s.contains("চালু")) {
+        if (s.contains("খোলো") || s.contains("খুলো") || s.contains("open") || s.contains("চালু") || s.contains("চালাও")) {
             return openApp(s);
         }
         return null;
@@ -429,7 +429,7 @@ public class MainActivity extends Activity {
         PackageManager pm = getPackageManager();
         for (ApplicationInfo app : pm.getInstalledApplications(0)) {
             String label = pm.getApplicationLabel(app).toString().toLowerCase(Locale.ROOT);
-            if (!label.isEmpty() && s.contains(label)) {
+            if (!label.isEmpty() && (s.contains(label) || label.contains(s.replace("খোলো", "").replace("open", "").trim()))) {
                 if (launchPackage(app.packageName)) return pm.getApplicationLabel(app) + " খুললাম।";
             }
         }
@@ -493,7 +493,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+        super.onActivityResult(requestCode, resultCode, data); if (requestCode == 55 && resultCode == RESULT_OK && data != null) { ArrayList<String> list = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS); if (list != null && !list.isEmpty()) handle(list.get(0)); return; }
         if (requestCode == 42 && resultCode == RESULT_OK && data != null && data.getExtras() != null) {
             Bitmap bmp = (Bitmap) data.getExtras().get("data");
             if (bmp == null) {
@@ -522,7 +522,7 @@ public class MainActivity extends Activity {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bmp.compress(Bitmap.CompressFormat.JPEG, 80, baos);
             String b64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP);
-            URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + key);
+            URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=" + key);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
@@ -550,7 +550,7 @@ public class MainActivity extends Activity {
                 while ((line = br.readLine()) != null) sb.append(line);
             }
             JSONObject res = new JSONObject(sb.toString());
-            return res.getJSONArray("candidates").getJSONObject(0)
+            if (res.has("error")) { return "Gemini error: " + res.getJSONObject("error").optString("message", "unknown"); } return res.getJSONArray("candidates").getJSONObject(0)
                     .getJSONObject("content").getJSONArray("parts").getJSONObject(0)
                     .getString("text").trim();
         } catch (Exception e) {
@@ -1129,7 +1129,7 @@ public class MainActivity extends Activity {
             return "AI উত্তরের জন্য নিচে ফ্রি Gemini Key বসাও (aistudio.google.com)। Key ছাড়া আমি অ্যাপ খুলতে, volume/brightness বদলাতে, torch জ্বালাতে পারি।";
         }
         try {
-            URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + key);
+            URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=" + key);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
@@ -1161,7 +1161,7 @@ public class MainActivity extends Activity {
                 while ((line = br.readLine()) != null) sb.append(line);
             }
             JSONObject res = new JSONObject(sb.toString());
-            return res.getJSONArray("candidates").getJSONObject(0)
+            if (res.has("error")) { return "Gemini error: " + res.getJSONObject("error").optString("message", "unknown"); } return res.getJSONArray("candidates").getJSONObject(0)
                     .getJSONObject("content").getJSONArray("parts").getJSONObject(0)
                     .getString("text").trim();
         } catch (Exception e) {
