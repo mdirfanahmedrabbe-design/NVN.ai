@@ -213,7 +213,7 @@ public class MainActivity extends Activity {
             handle(q);
         });
 
-        addAi("হ্যালো! আমি NVN। মাইক চেপে কথা বলো — অ্যাপ খুলতে, volume/brightness বদলাতে, torch জ্বালাতে পারি।");
+        addAi("হ্যালো মাস্টার! আমি NVN, আপনার পাশে আছি। মাইক চেপে কথা বলুন — অ্যাপ খোলা, কল করা, সব কাজ করে দেব।");
     }
 
     private void openSpeechDialog() { try { Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH); i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, english ? "en-US" : "bn-BD"); i.putExtra(RecognizerIntent.EXTRA_PROMPT, "কথা বলো..."); startActivityForResult(i, 55); } catch (Exception e) { status.setText("এই ফোনে ভয়েস ইনপুট নেই — লিখে পাঠাও"); } } private void addMe(String text) {
@@ -274,7 +274,7 @@ public class MainActivity extends Activity {
             return "আজ " + new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.US).format(new Date()) + "।";
         }
         if (s.contains("তুমি কে") || s.contains("who are you") || s.contains("introduce")) {
-            return "আমি NVN, তোমার AI অ্যাসিস্ট্যান্ট। কথা বলো, আমি কাজ করব।";
+            return "আমি NVN, আপনার অ্যাসিস্ট্যান্ট, মাস্টার। বলুন, কী কাজ করে দেব?";
         }
         // volume
         AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
@@ -1004,8 +1004,9 @@ public class MainActivity extends Activity {
 
     private String personalityCommand(String s) {
         SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
-        String p = "বন্ধু";
+        String p = "মিষ্টি সঙ্গী";
         if (s.contains("শিক্ষক")) p = "শিক্ষক";
+        else if (s.contains("বন্ধু")) p = "বন্ধু";
         else if (s.contains("গল্পকার")) p = "গল্পকার";
         else if (s.contains("ইসলামিক")) p = "ইসলামিক সহায়ক";
         prefs.edit().putString("personality", p).apply();
@@ -1137,10 +1138,10 @@ public class MainActivity extends Activity {
             conn.setConnectTimeout(20000);
             conn.setReadTimeout(60000);
             SharedPreferences mprefs = getSharedPreferences("archer", MODE_PRIVATE);
-            String personality = mprefs.getString("personality", "বন্ধু");
+            String personality = mprefs.getString("personality", "মিষ্টি সঙ্গী");
             String userName = mprefs.getString("user_name", "");
             String memFacts = mprefs.getString("memory_facts", "");
-            String sys = "You are NVN, a friendly AI voice assistant with personality: " + personality
+            String sys = "You are NVN, a sweet, caring female AI assistant. Always address the user as 'মাস্টার' (Master). Speak warmly, sweetly and affectionately in Bengali, like a devoted close companion, but keep it natural and brief. Personality style: " + personality
                     + ". Answer briefly (2-3 sentences) in the same language as the user (Bengali, English, or mixed Banglish — understand mixed). "
                     + (userName.isEmpty() ? "" : "User's name: " + userName + ". ")
                     + (memFacts.isEmpty() ? "" : "Things to remember about user: " + memFacts + " ")
