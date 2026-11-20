@@ -3,6 +3,8 @@ package com.archer.ai;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -34,6 +36,9 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class LiveActivity extends Activity {
     private TextureView preview;
@@ -78,6 +83,18 @@ public class LiveActivity extends Activity {
             @Override public boolean onSurfaceTextureDestroyed(SurfaceTexture st) { return true; }
             @Override public void onSurfaceTextureUpdated(SurfaceTexture st) {}
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (preview.isAvailable()) openCamera();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (camera == null && preview.isAvailable()) openCamera();
     }
 
     private void openCamera() {
@@ -167,13 +184,28 @@ public class LiveActivity extends Activity {
                 JSONObject gen = new JSONObject()
                         .put("responseModalities", new JSONArray().put("AUDIO"))
                         .put("speechConfig", speech);
+                JSONObject appParam = new JSONObject()
+                        .put("type", "STRING")
+                        .put("description", "Name of the app to open, e.g. Facebook, YouTube, WhatsApp, Telegram, Chrome, bKash");
+                JSONObject params = new JSONObject()
+                        .put("type", "OBJECT")
+                        .put("properties", new JSONObject().put("app_name", appParam))
+                        .put("required", new JSONArray().put("app_name"));
+                JSONObject fn = new JSONObject()
+                        .put("name", "open_app")
+                        .put("description", "Open an app on the user's phone by name")
+                        .put("parameters", params);
+                JSONArray tools = new JSONArray().put(new JSONObject()
+                        .put("functionDeclarations", new JSONArray().put(fn)));
                 JSONObject setup = new JSONObject()
                         .put("model", "models/gemini-3.1-flash-live-preview")
                         .put("generationConfig", gen)
+                        .put("tools", tools)
                         .put("systemInstruction", new JSONObject().put("parts", new JSONArray().put(
                                 new JSONObject().put("text",
                                         "You are NVN, a friendly voice assistant. You can see the live camera video and hear the user. " +
-                                        "Reply in Bengali, short and natural, like a real conversation. Describe what you see when asked."))));
+                                        "Reply in Bengali, short and natural, like a real conversation. Describe what you see when asked. " +
+                                        "When the user asks you to open an app, call the open_app function with the app name."))));
                 ws.sendText(new JSONObject().put("setup", setup).toString());
             } catch (Exception e) {
                 runOnUiThread(() -> {
@@ -193,6 +225,31 @@ public class LiveActivity extends Activity {
                 startMic();
                 startFrames();
                 startPlayer();
+                return;
+            }
+            if (obj.has("toolCall")) {
+                JSONArray calls = obj.getJSONObject("toolCall").optJSONArray("functionCalls");
+                if (calls != null) {
+                    for (int i = 0; i < calls.length(); i++) {
+                        JSONObject call = calls.getJSONObject(i);
+                        String id = call.optString("id", "");
+                        String name = call.optString("name", "");
+                        String result = "unknown function";
+                        if ("open_app".equals(name)) {
+                            String appName = call.optJSONObject("args") != null
+                                    ? call.getJSONObject("args").optString("app_name", "") : "";
+                            result = openAppByName(appName) ? "opened " + appName : "app not found: " + appName;
+                        }
+                        JSONObject resp = new JSONObject()
+                                .put("id", id)
+                                .put("name", name)
+                                .put("response", new JSONObject().put("result", result));
+                        if (ws != null && ws.isOpen()) {
+                            ws.sendText(new JSONObject().put("toolResponse",
+                                    new JSONObject().put("functionResponses", new JSONArray().put(resp))).toString());
+                        }
+                    }
+                }
                 return;
             }
             if (obj.has("serverContent")) {
@@ -276,9 +333,62 @@ public class LiveActivity extends Activity {
                     .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
                     .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
                     .build();
-            player = new AudioTrack(attrs, fmt, Math.max(minBuf, 9600), AudioTrack.MODE_STREAM, AudioManager.AUDIO_SESSION_ID_GENERATE);
+            player = new AudioTrack(attrs, fmt, Math.max(minBuf, 48000), AudioTrack.MODE_STREAM, AudioManager.AUDIO_SESSION_ID_GENERATE);
             player.play();
         } catch (Exception ignored) {}
+    }
+
+    private boolean openAppByName(String appName) {
+        try {
+            String q = appName.toLowerCase().trim();
+            Map<String, String> known = new HashMap<>();
+            known.put("facebook", "com.facebook.katana");
+            known.put("ফেসবুক", "com.facebook.katana");
+            known.put("messenger", "com.facebook.orca");
+            known.put("youtube", "com.google.android.youtube");
+            known.put("ইউটিউব", "com.google.android.youtube");
+            known.put("instagram", "com.instagram.android");
+            known.put("ইনস্টাগ্রাম", "com.instagram.android");
+            known.put("whatsapp", "com.whatsapp");
+            known.put("হোয়াটসঅ্যাপ", "com.whatsapp");
+            known.put("telegram", "org.telegram.messenger");
+            known.put("টেলিগ্রাম", "org.telegram.messenger");
+            known.put("tiktok", "com.zhiliaoapp.musically");
+            known.put("টিকটক", "com.zhiliaoapp.musically");
+            known.put("chrome", "com.android.chrome");
+            known.put("ক্রোম", "com.android.chrome");
+            known.put("gmail", "com.google.android.gm");
+            known.put("play store", "com.android.vending");
+            known.put("প্লে স্টোর", "com.android.vending");
+            known.put("bkash", "com.bKash.customerapp");
+            known.put("বিকাশ", "com.bKash.customerapp");
+            known.put("nagad", "com.konasl.nagad");
+            known.put("নগদ", "com.konasl.nagad");
+            known.put("imo", "com.imo.android.imoim");
+            known.put("ইমো", "com.imo.android.imoim");
+            known.put("facebook lite", "com.facebook.lite");
+            known.put("messenger lite", "com.facebook.mlite");
+            PackageManager pm = getPackageManager();
+            String pkg = known.get(q);
+            if (pkg == null) {
+                List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+                for (ApplicationInfo ai : apps) {
+                    String label = pm.getApplicationLabel(ai).toString().toLowerCase();
+                    if (label.equals(q) || label.contains(q) || q.contains(label)) { pkg = ai.packageName; break; }
+                }
+            }
+            if (pkg == null) return false;
+            Intent launch = pm.getLaunchIntentForPackage(pkg);
+            if (launch == null) return false;
+            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            runOnUiThread(() -> {
+                setStatus("অ্যাপ খুলছি: " + appName);
+                startActivity(launch);
+            });
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private void stopLive() {
