@@ -119,7 +119,7 @@ public class ArcherAccessibilityService extends AccessibilityService {
             if (root == null) return false;
             AccessibilityNodeInfo focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
             if (focused != null && android.os.Build.VERSION.SDK_INT >= 30) {
-                if (focused.performAction(AccessibilityNodeInfo.ACTION_IME_ENTER)) return true;
+                if (focused.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.getId())) return true;
             }
             String[] labels = {"Send", "পাঠাও", "Search", "খুঁজুন", "Go", "Done", "OK", "ঠিক আছে"};
             for (String label : labels) {
