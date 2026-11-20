@@ -82,6 +82,35 @@ public class OrbView extends View {
         canvas.drawCircle(cx, cy, R, paint);
         paint.setShader(null);
 
+        // nebula blobs (galaxy atmosphere)
+        paint.setStyle(Paint.Style.FILL);
+        RadialGradient neb1 = new RadialGradient(cx - R * 0.4f, cy - R * 0.3f, R * 1.1f,
+                new int[]{Color.argb(90, 244, 114, 182), Color.argb(0, 244, 114, 182)},
+                new float[]{0f, 1f}, Shader.TileMode.CLAMP);
+        paint.setShader(neb1);
+        canvas.drawCircle(cx - R * 0.4f, cy - R * 0.3f, R * 1.1f, paint);
+        RadialGradient neb2 = new RadialGradient(cx + R * 0.45f, cy + R * 0.35f, R * 1.0f,
+                new int[]{Color.argb(80, 96, 165, 250), Color.argb(0, 96, 165, 250)},
+                new float[]{0f, 1f}, Shader.TileMode.CLAMP);
+        paint.setShader(neb2);
+        canvas.drawCircle(cx + R * 0.45f, cy + R * 0.35f, R * 1.0f, paint);
+        paint.setShader(null);
+
+        // spiral galaxy arms
+        for (int arm = 0; arm < 2; arm++) {
+            for (int i = 0; i < 42; i++) {
+                double ang = arm * Math.PI + i * 0.21 + t * 0.22 * speed;
+                double r = R * (0.12 + i * 0.026);
+                float x = cx + (float) (r * Math.cos(ang));
+                float y = cy + (float) (r * 0.62 * Math.sin(ang));
+                float sz = 1.2f + (42 - i) * 0.09f;
+                if (i % 3 == 0) paint.setColor(Color.argb(230, 255, 255, 255));
+                else if (i % 3 == 1) paint.setColor(Color.argb(210, 244, 114, 182));
+                else paint.setColor(Color.argb(210, 125, 211, 252));
+                canvas.drawCircle(x, y, sz, paint);
+            }
+        }
+
         // particles
         paint.setColor(Color.argb(230, 233, 213, 255));
         for (int i = 0; i < 26; i++) {

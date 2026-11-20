@@ -184,7 +184,7 @@ public class NvnCore {
         fns.put(fnDef("open_app", "Open an app on the user's phone by name", "app_name", "Name of the app to open, e.g. Facebook, YouTube, WhatsApp, Telegram, Chrome, bKash"));
         fns.put(fnDef("call_number", "Call a phone number", "number", "Phone number to call, digits only"));
         fns.put(fnDef("call_contact", "Call a contact by name from the phone contacts", "name", "Contact name as saved in the phone"));
-fns.put(fnDef("find_contact", "Find a contact's phone number by name", "name", "Contact name as saved in the phone"));
+        fns.put(fnDef("find_contact", "Find a contact's phone number by name", "name", "Contact name as saved in the phone"));
         fns.put(fnDef2("call_and_talk", "Call a phone number and speak a message aloud on speaker for the user", "number", "Phone number, digits only", "message", "What to say on the call, in Bengali"));
         fns.put(fnDef2("send_sms", "Send an SMS text message to a phone number", "number", "Phone number, digits only", "text", "Message text to send"));
         fns.put(fnDef2("send_whatsapp", "Send a WhatsApp message to a phone number", "number", "Phone number with country code digits, e.g. 8801XXXXXXXXX", "text", "Message text to send"));
@@ -440,5 +440,199 @@ fns.put(fnDef("find_contact", "Find a contact's phone number by name", "name", "
         } catch (Exception e) {
             return "torch failed";
         }
+    }
+
+    public static String httpGet(String urlStr) {
+        try {
+            java.net.URL url = new java.net.URL(urlStr);
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(20000);
+            StringBuilder sb = new StringBuilder();
+            try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = br.readLine()) != null) sb.append(line);
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String httpPost(String urlStr, String json) {
+        try {
+            java.net.URL url = new java.net.URL(urlStr);
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(20000);
+            conn.setRequestProperty("Content-Type", "application/json");
+            try (java.io.OutputStream os = conn.getOutputStream()) {
+                os.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+            StringBuilder sb = new StringBuilder();
+            try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = br.readLine()) != null) sb.append(line);
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String[] checkAnnouncement(Context ctx) {
+        try {
+            String body = httpGet(SERVER_BASE + "/announce");
+            if (body == null || body.trim().isEmpty()) return null;
+            JSONObject o = new JSONObject(body);
+            int id = o.optInt("id", 0);
+            String title = o.optString("title", "");
+            String text = o.optString("body", "");
+            if (id == 0 || title.isEmpty()) return null;
+            SharedPreferences p = ctx.getSharedPreferences("archer", Context.MODE_PRIVATE);
+            if (p.getInt("last_announce_id", 0) == id) return null;
+            p.edit().putInt("last_announce_id", id)
+                    .putString("last_announce_title", title)
+                    .putString("last_announce_body", text).apply();
+            return new String[]{title, text};
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static void showAnnouncementNotification(Context ctx, String title, String body) {
+        try {
+            android.app.NotificationManager nm = (android.app.NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+            String channelId = "nvn_announce";
+            if (android.os.Build.VERSION.SDK_INT >= 26) {
+                android.app.NotificationChannel ch = new android.app.NotificationChannel(channelId, "NVN ঘোষণা", android.app.NotificationManager.IMPORTANCE_HIGH);
+                nm.createNotificationChannel(ch);
+            }
+            Intent intent = new Intent(ctx, MainActivity.class);
+            android.app.PendingIntent pi = android.app.PendingIntent.getActivity(ctx, 0, intent,
+                    android.os.Build.VERSION.SDK_INT >= 23 ? android.app.PendingIntent.FLAG_IMMUTABLE : 0);
+            android.app.Notification.Builder b = android.os.Build.VERSION.SDK_INT >= 26
+                    ? new android.app.Notification.Builder(ctx, channelId)
+                    : new android.app.Notification.Builder(ctx);
+            b.setSmallIcon(android.R.drawable.ic_dialog_info)
+                    .setContentTitle(title)
+                    .setContentText(body)
+                    .setStyle(new android.app.Notification.BigTextStyle().bigText(body))
+                    .setContentIntent(pi)
+                    .setAutoCancel(true);
+            nm.notify(777, b.build());
+        } catch (Exception ignored) {}
+    }
+
+    public static String postAnnouncement(Context ctx, String token, String title, String body) {
+        try {
+            JSONObject o = new JSONObject().put("token", token).put("title", title).put("body", body);
+            String res = httpPost(SERVER_BASE + "/announce", o.toString());
+            return res != null && res.contains("ok") ? "sent" : "failed";
+        } catch (Exception e) {
+            return "failed";
+        }
+    }
+
+    private static final String[] BACKUP_STRING_KEYS = {
+            "girl_name", "user_name", "memory_facts", "todo_list", "chat_history",
+            "premium_tier", "gemini_keys", "gemini_key", "bkash_number", "owner_pin_hash",
+            "personality", "voice_lang", "last_announce_title", "last_announce_body"
+    };
+
+    public static void backupData(Context ctx) {
+        try {
+            SharedPreferences p = ctx.getSharedPreferences("archer", Context.MODE_PRIVATE);
+            JSONObject o = new JSONObject();
+            for (String k : BACKUP_STRING_KEYS) {
+                String v = p.getString(k, null);
+                if (v != null) o.put(k, v);
+            }
+            o.put("premium_expiry", p.getLong("premium_expiry", 0));
+            o.put("owner_mode", p.getBoolean("owner_mode", false));
+            o.put("last_announce_id", p.getInt("last_announce_id", 0));
+            String json = o.toString();
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                android.content.ContentResolver cr = ctx.getContentResolver();
+                String rel = android.os.Environment.DIRECTORY_DOCUMENTS + "/NVNAI";
+                try (android.database.Cursor c = cr.query(android.provider.MediaStore.Files.getContentUri("external"),
+                        new String[]{android.provider.MediaStore.MediaColumns._ID},
+                        android.provider.MediaStore.MediaColumns.RELATIVE_PATH + "=? AND " + android.provider.MediaStore.MediaColumns.DISPLAY_NAME + "=?",
+                        new String[]{rel, "nvn_backup.json"}, null)) {
+                    if (c != null) {
+                        while (c.moveToNext()) {
+                            long id = c.getLong(0);
+                            cr.delete(android.content.ContentUris.withAppendedId(android.provider.MediaStore.Files.getContentUri("external"), id), null, null);
+                        }
+                    }
+                }
+                android.content.ContentValues cv = new android.content.ContentValues();
+                cv.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, "nvn_backup.json");
+                cv.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "application/json");
+                cv.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, rel);
+                android.net.Uri uri = cr.insert(android.provider.MediaStore.Files.getContentUri("external"), cv);
+                if (uri != null) {
+                    try (java.io.OutputStream os = cr.openOutputStream(uri)) {
+                        os.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    }
+                }
+            } else {
+                java.io.File dir = new java.io.File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOCUMENTS), "NVNAI");
+                dir.mkdirs();
+                try (java.io.FileWriter fw = new java.io.FileWriter(new java.io.File(dir, "nvn_backup.json"))) {
+                    fw.write(json);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public static void restoreData(Context ctx) {
+        try {
+            SharedPreferences p = ctx.getSharedPreferences("archer", Context.MODE_PRIVATE);
+            if (!p.getString("girl_name", "").isEmpty()) return;
+            String json = null;
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                android.content.ContentResolver cr = ctx.getContentResolver();
+                String rel = android.os.Environment.DIRECTORY_DOCUMENTS + "/NVNAI";
+                try (android.database.Cursor c = cr.query(android.provider.MediaStore.Files.getContentUri("external"),
+                        new String[]{android.provider.MediaStore.MediaColumns._ID},
+                        android.provider.MediaStore.MediaColumns.RELATIVE_PATH + "=? AND " + android.provider.MediaStore.MediaColumns.DISPLAY_NAME + "=?",
+                        new String[]{rel, "nvn_backup.json"}, null)) {
+                    if (c != null && c.moveToFirst()) {
+                        long id = c.getLong(0);
+                        android.net.Uri uri = android.content.ContentUris.withAppendedId(android.provider.MediaStore.Files.getContentUri("external"), id);
+                        try (java.io.InputStream is = cr.openInputStream(uri);
+                             java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
+                            StringBuilder sb = new StringBuilder();
+                            String line;
+                            while ((line = br.readLine()) != null) sb.append(line);
+                            json = sb.toString();
+                        }
+                    }
+                }
+            } else {
+                java.io.File f = new java.io.File(new java.io.File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOCUMENTS), "NVNAI"), "nvn_backup.json");
+                if (f.exists()) {
+                    StringBuilder sb = new StringBuilder();
+                    try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(f))) {
+                        String line;
+                        while ((line = br.readLine()) != null) sb.append(line);
+                    }
+                    json = sb.toString();
+                }
+            }
+            if (json == null || json.trim().isEmpty()) return;
+            JSONObject o = new JSONObject(json);
+            SharedPreferences.Editor e = p.edit();
+            for (String k : BACKUP_STRING_KEYS) {
+                if (o.has(k)) e.putString(k, o.optString(k, ""));
+            }
+            e.putLong("premium_expiry", o.optLong("premium_expiry", 0));
+            e.putBoolean("owner_mode", o.optBoolean("owner_mode", false));
+            e.putInt("last_announce_id", o.optInt("last_announce_id", 0));
+            e.apply();
+        } catch (Exception ignored) {}
     }
 }
