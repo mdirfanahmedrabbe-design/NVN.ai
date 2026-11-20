@@ -100,16 +100,20 @@
         android:text="আরেকটা Gemini Key যোগ করো (শুধু মালিক)"
         android:textColor="#E2E8F0" />
 
-    <EditText
-        android:id="@+id/setAddKey"
+    <LinearLayout
+        android:id="@+id/setKeysList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_input"
-        android:hint="নতুন Key বসাও"
-        android:inputType="textPassword"
-        android:padding="12dp"
-        android:textColor="#E8F4FF"
-        android:textColorHint="#64748B" />
+        android:orientation="vertical" />
+
+    <Button
+        android:id="@+id/setAddKeyRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/btn_secondary"
+        android:text="＋ আরেকটা ঘর"
+        android:textColor="#E9D5FF" />
 
     <TextView
         android:id="@+id/setKeyCount"
