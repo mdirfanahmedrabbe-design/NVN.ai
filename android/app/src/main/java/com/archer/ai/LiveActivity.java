@@ -23,6 +23,15 @@ import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
+import android.media.Image;
+import android.media.ImageReader;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
+import android.hardware.display.DisplayManager;
+import android.hardware.display.VirtualDisplay;
+import android.telephony.SmsManager;
+import android.util.DisplayMetrics;
+import java.nio.ByteBuffer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -51,6 +60,11 @@ public class LiveActivity extends Activity {
 
     private CameraDevice camera;
     private String camId;
+    private boolean screenMode = false;
+    private MediaProjection projection;
+    private VirtualDisplay virtualDisplay;
+    private ImageReader screenReader;
+    private static final int REQ_SCREEN = 88;
     private CameraCaptureSession session;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -70,6 +84,11 @@ public class LiveActivity extends Activity {
         liveStatus = findViewById(R.id.liveStatus);
         toggle = findViewById(R.id.liveToggle);
         orb = findViewById(R.id.liveOrb);
+        screenMode = "screen".equals(getIntent().getStringExtra("mode"));
+        if (screenMode) {
+            preview.setVisibility(android.view.View.GONE);
+            setStatus("স্ক্রিন শেয়ার মোড — লাইভ শুরু করলে স্ক্রিন দেখে কাজ করব");
+        }
 
         toggle.setOnClickListener(v -> {
             if (live) stopLive();
@@ -80,10 +99,11 @@ public class LiveActivity extends Activity {
                 (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
                  checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED ||
                  checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED ||
-                 checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED)) {
+                 checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED ||
+                 checkSelfPermission(Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED)) {
             requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO,
                     Manifest.permission.CALL_PHONE, Manifest.permission.READ_CONTACTS,
-                    "android.permission.POST_NOTIFICATIONS"}, 7);
+                    "android.permission.POST_NOTIFICATIONS", Manifest.permission.SEND_SMS}, 7);
         }
         preview.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override public void onSurfaceTextureAvailable(SurfaceTexture st, int w, int h) { openCamera(); }
@@ -106,6 +126,7 @@ public class LiveActivity extends Activity {
     }
 
     private void openCamera() {
+        if (screenMode) return;
         try {
             CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
             camId = null;
@@ -152,6 +173,16 @@ public class LiveActivity extends Activity {
     }
 
     private void startLive() {
+        if (screenMode && projection == null) {
+            try {
+                MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+                startActivityForResult(mpm.createScreenCaptureIntent(), REQ_SCREEN);
+                setStatus("স্ক্রিন শেয়ারের অনুমতি দাও...");
+            } catch (Exception e) {
+                setStatus("স্ক্রিন শেয়ার শুরু হয়নি");
+            }
+            return;
+        }
         SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
         String key = prefs.getString("gemini_key", "");
         if (key.isEmpty()) {
@@ -164,6 +195,7 @@ public class LiveActivity extends Activity {
         setupDone = false;
         try {
             Intent svc = new Intent(this, LiveService.class);
+            svc.putExtra("mode", screenMode ? "screen" : "camera");
             if (Build.VERSION.SDK_INT >= 26) startForegroundService(svc); else startService(svc);
         } catch (Exception ignored) {}
         orb.setState(OrbView.LISTENING);
@@ -211,6 +243,9 @@ public class LiveActivity extends Activity {
                 fns.put(fnDefNoArg("press_enter", "Press Enter or Send or Search on the keyboard"));
                 fns.put(fnDefNoArg("read_screen", "Read all visible text on the current screen"));
                 fns.put(fnDefNoArg("take_screenshot", "Take a screenshot"));
+                fns.put(fnDef2("send_sms", "Send an SMS text message to a phone number", "number", "Phone number, digits only", "text", "Message text to send"));
+                fns.put(fnDef2("send_whatsapp", "Send a WhatsApp message to a phone number", "number", "Phone number with country code digits, e.g. 8801XXXXXXXXX", "text", "Message text to send"));
+                fns.put(fnDef("find_contact", "Find a contact's phone number by name", "name", "Contact name as saved in the phone"));
                 JSONArray tools = new JSONArray().put(new JSONObject().put("functionDeclarations", fns));
                 JSONObject setup = new JSONObject()
                         .put("model", "models/gemini-3.1-flash-live-preview")
@@ -218,9 +253,9 @@ public class LiveActivity extends Activity {
                         .put("tools", tools)
                         .put("systemInstruction", new JSONObject().put("parts", new JSONArray().put(
                                 new JSONObject().put("text",
-                                        "You are NVN, a sweet, caring female voice assistant. Always address the user as 'মাস্টার' (Master). Speak warmly, sweetly and affectionately in Bengali, like a devoted close companion. You can see the live camera video and hear the user. " +
+                                        "You are NVN, a sweet, caring female voice assistant. Always address the user as 'মাস্টার' (Master). Speak warmly, sweetly and affectionately in Bengali, like a devoted close companion. You can see the live video (camera or the user's phone screen) and hear the user. " +
                                         "Reply in Bengali, short and natural, like a real conversation. Describe what you see when asked. " +
-                                        "You can control the phone with functions: open apps, call people, tap buttons by their text, type text, scroll, back, home, volume, torch, screenshot, and read the screen. Use read_screen to see what is on screen before tapping. When the user asks for an action, do it with the functions, then confirm briefly in Bengali."))));
+                                        "You can control the phone with functions: open apps, call people, tap buttons by their text, type text, scroll, back, home, volume, torch, screenshot, and read the screen. You can also find a contact's number by name and send SMS or WhatsApp messages on the user's behalf. Use read_screen to see what is on screen before tapping. When the user asks for an action, do it with the functions, then confirm briefly in Bengali."))));
                 ws.sendText(new JSONObject().put("setup", setup).toString());
             } catch (Exception e) {
                 runOnUiThread(() -> {
@@ -318,7 +353,7 @@ public class LiveActivity extends Activity {
                 try {
                     Thread.sleep(1000);
                     if (!setupDone || ws == null || !ws.isOpen()) continue;
-                    Bitmap bmp = preview.getBitmap(640, 480);
+                    Bitmap bmp = screenMode ? grabScreenBitmap() : preview.getBitmap(640, 480);
                     if (bmp == null) continue;
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     bmp.compress(Bitmap.CompressFormat.JPEG, 55, baos);
@@ -331,6 +366,28 @@ public class LiveActivity extends Activity {
             }
         });
         frameThread.start();
+    }
+
+    private Bitmap grabScreenBitmap() {
+        try {
+            if (screenReader == null) return null;
+            Image image = screenReader.acquireLatestImage();
+            if (image == null) return null;
+            int w = image.getWidth();
+            int h = image.getHeight();
+            Image.Plane[] planes = image.getPlanes();
+            ByteBuffer buffer = planes[0].getBuffer();
+            int pixelStride = planes[0].getPixelStride();
+            int rowStride = planes[0].getRowStride();
+            int rowPadding = rowStride - pixelStride * w;
+            Bitmap full = Bitmap.createBitmap(w + rowPadding / pixelStride, h, Bitmap.Config.ARGB_8888);
+            full.copyPixelsFromBuffer(buffer);
+            image.close();
+            Bitmap cropped = Bitmap.createBitmap(full, 0, 0, w, h);
+            return Bitmap.createScaledBitmap(cropped, 720, 1280, true);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private void startPlayer() {
@@ -401,6 +458,14 @@ public class LiveActivity extends Activity {
                 return setVolume(args.optString("direction", ""));
             case "torch":
                 return setTorch("on".equalsIgnoreCase(args.optString("state", "")));
+            case "send_sms":
+                return sendSms(args.optString("number", ""), args.optString("text", ""));
+            case "send_whatsapp":
+                return sendWhatsApp(args.optString("number", ""), args.optString("text", ""));
+            case "find_contact": {
+                String num = findContactNumber(args.optString("name", ""));
+                return num != null ? "number: " + num : "contact not found";
+            }
             default:
                 return "unknown function";
         }
@@ -533,6 +598,112 @@ public class LiveActivity extends Activity {
         }
     }
 
+    private JSONObject fnDef2(String name, String desc, String p1, String p1Desc, String p2, String p2Desc) throws Exception {
+        JSONObject props = new JSONObject()
+                .put(p1, new JSONObject().put("type", "STRING").put("description", p1Desc))
+                .put(p2, new JSONObject().put("type", "STRING").put("description", p2Desc));
+        JSONObject params = new JSONObject()
+                .put("type", "OBJECT")
+                .put("properties", props)
+                .put("required", new JSONArray().put(p1).put(p2));
+        return new JSONObject().put("name", name).put("description", desc).put("parameters", params);
+    }
+
+    private String findContactNumber(String name) {
+        try {
+            if (Build.VERSION.SDK_INT >= 23 &&
+                    checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                return null;
+            }
+            Cursor c = getContentResolver().query(
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER},
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " LIKE ?",
+                    new String[]{"%" + name + "%"}, null);
+            String number = null;
+            if (c != null) {
+                if (c.moveToFirst()) number = c.getString(0);
+                c.close();
+            }
+            return number;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String sendSms(String number, String text) {
+        try {
+            String num = number.replaceAll("[^0-9+]", "");
+            if (num.isEmpty() || text.isEmpty()) return "missing number or text";
+            if (Build.VERSION.SDK_INT >= 23 &&
+                    checkSelfPermission(Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+                return "sms permission not granted";
+            }
+            SmsManager sms = SmsManager.getDefault();
+            java.util.ArrayList<String> parts = sms.divideMessage(text);
+            sms.sendMultipartTextMessage(num, null, parts, null, null);
+            return "sms sent to " + num;
+        } catch (Exception e) {
+            return "sms failed";
+        }
+    }
+
+    private String sendWhatsApp(String number, String text) {
+        try {
+            String num = number.replaceAll("[^0-9]", "");
+            if (num.isEmpty() || text.isEmpty()) return "missing number or text";
+            if (num.startsWith("0")) num = "880" + num.substring(1);
+            Intent i = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://wa.me/" + num + "?text=" + Uri.encode(text)));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            runOnUiThread(() -> startActivity(i));
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                ArcherAccessibilityService svc = ArcherAccessibilityService.instance;
+                if (svc != null) {
+                    if (!svc.tapText("Send")) svc.tapText("পাঠান");
+                }
+            }, 3000);
+            return "whatsapp opened for " + num + ", message sending";
+        } catch (Exception e) {
+            return "whatsapp failed";
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_SCREEN) {
+            if (resultCode != RESULT_OK || data == null) {
+                setStatus("স্ক্রিন শেয়ারের অনুমতি পাইনি");
+                return;
+            }
+            try {
+                Intent svc = new Intent(this, LiveService.class);
+                svc.putExtra("mode", "screen");
+                if (Build.VERSION.SDK_INT >= 26) startForegroundService(svc); else startService(svc);
+                mainHandler.postDelayed(() -> {
+                    try {
+                        MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+                        projection = mpm.getMediaProjection(resultCode, data);
+                        projection.registerCallback(new MediaProjection.Callback() {
+                            @Override public void onStop() { stopLive(); }
+                        }, mainHandler);
+                        DisplayMetrics metrics = new DisplayMetrics();
+                        getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
+                        screenReader = ImageReader.newInstance(720, 1280, android.graphics.PixelFormat.RGBA_8888, 2);
+                        virtualDisplay = projection.createVirtualDisplay("NVNScreen", 720, 1280, metrics.densityDpi,
+                                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, screenReader.getSurface(), null, mainHandler);
+                        startLive();
+                    } catch (Exception e) {
+                        setStatus("স্ক্রিন শেয়ার শুরু হয়নি");
+                    }
+                }, 600);
+            } catch (Exception e) {
+                setStatus("স্ক্রিন শেয়ার শুরু হয়নি");
+            }
+        }
+    }
+
     private void stopLive() {
         live = false;
         setupDone = false;
@@ -542,6 +713,9 @@ public class LiveActivity extends Activity {
         try { if (recorder != null) { recorder.stop(); recorder.release(); recorder = null; } } catch (Exception ignored) {}
         try { if (player != null) { player.stop(); player.release(); player = null; } } catch (Exception ignored) {}
         if (ws != null) { ws.close(); ws = null; }
+        try { if (virtualDisplay != null) { virtualDisplay.release(); virtualDisplay = null; } } catch (Exception ignored) {}
+        try { if (screenReader != null) { screenReader.close(); screenReader = null; } } catch (Exception ignored) {}
+        try { if (projection != null) { projection.stop(); projection = null; } } catch (Exception ignored) {}
     }
 
     private void setStatus(String s) {
