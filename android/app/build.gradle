@@ -2,6 +2,12 @@ plugins {
     id 'com.android.application'
 }
 
+def ksPass = System.getenv('KEYSTORE_PASS')
+if (ksPass == null || ksPass.trim().isEmpty()) ksPass = 'nvnpass'
+def buildNum = System.getenv('BUILD_NUMBER')
+def verCode = 1
+if (buildNum != null && buildNum.trim().isInteger()) verCode = buildNum.trim().toInteger()
+
 android {
     namespace 'com.archer.ai'
     compileSdk 34
@@ -9,9 +15,9 @@ android {
     signingConfigs {
         release {
             storeFile file('nvn.keystore')
-            storePassword System.getenv('KEYSTORE_PASS')
+            storePassword ksPass
             keyAlias 'nvn'
-            keyPassword System.getenv('KEYSTORE_PASS')
+            keyPassword ksPass
             storeType 'PKCS12'
         }
     }
@@ -20,7 +26,7 @@ android {
         applicationId "com.archer.ai"
         minSdk 24
         targetSdk 34
-        versionCode (System.getenv('BUILD_NUMBER') ?: '1').toInteger()
+        versionCode verCode
         versionName "1.0"
     }
 
