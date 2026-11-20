@@ -9,6 +9,25 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <com.archer.ai.GirlView
+        android:id="@+id/liveGirl"
+        android:layout_width="120dp"
+        android:layout_height="150dp"
+        android:layout_gravity="top|start"
+        android:layout_margin="10dp" />
+
+    <TextView
+        android:id="@+id/liveUsage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_card"
+        android:padding="8dp"
+        android:text="আজ Live: 0/5 মিনিট"
+        android:textColor="#E9D5FF"
+        android:textSize="13sp" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
