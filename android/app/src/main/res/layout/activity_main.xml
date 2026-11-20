@@ -12,14 +12,9 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/menuBtn"
+        <View
             android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/btn_secondary"
-            android:text="☰"
-            android:textColor="#E8F4FF"
-            android:textSize="16sp" />
+            android:layout_height="40dp" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -59,10 +54,10 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <com.archer.ai.GirlView
-            android:id="@+id/mainGirl"
-            android:layout_width="260dp"
-            android:layout_height="320dp"
+        <com.archer.ai.OrbView
+            android:id="@+id/mainOrb"
+            android:layout_width="240dp"
+            android:layout_height="240dp"
             android:layout_gravity="center" />
     </FrameLayout>
 

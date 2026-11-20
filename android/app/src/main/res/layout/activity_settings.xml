@@ -35,6 +35,14 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="🔑 মালিকের Key-ঘর (একটা নিচে একটা) দেখতে: মূল স্ক্রিনে Settings বাটন চেপে ধরে রাখুন → PIN দিন"
+        android:textColor="#A78BFA"
+        android:textSize="12sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="ভয়েসের গতি"
         android:textColor="#E2E8F0" />
