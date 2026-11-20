@@ -1,244 +1,415 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_main"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:fillViewport="true">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:letterSpacing="0.12"
-        android:text="NVN AI"
-        android:textColor="#C084FC"
-        android:textSize="26sp"
-        android:textStyle="bold" />
+        android:orientation="vertical"
+        android:padding="14dp">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="তোমার ভয়েস অ্যাসিস্ট্যান্ট"
-        android:textColor="#94A3B8"
-        android:textSize="12sp" />
-
-    <com.archer.ai.OrbView
-        android:id="@+id/orb"
-        android:layout_width="230dp"
-        android:layout_height="230dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="6dp" />
-
-    <TextView
-        android:id="@+id/status"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="মাইক চেপে কথা বলো, বা লিখে পাঠাও"
-        android:textColor="#C084FC"
-        android:textSize="13sp" />
-
-    <ScrollView
-        android:id="@+id/scroll"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="10dp"
-        android:layout_weight="1"
-        android:background="@drawable/bg_card"
-        android:padding="12dp">
-
-        <TextView
-            android:id="@+id/chat"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:lineSpacingMultiplier="1.15"
-            android:textColor="#E2E8F0"
-            android:textSize="15sp" />
-    </ScrollView>
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+            <Button
+                android:id="@+id/menuBtn"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/btn_secondary"
+                android:text="☰"
+                android:textColor="#E9D5FF"
+                android:textSize="18sp" />
 
-        <Button
-            android:id="@+id/mic"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:background="@drawable/btn_mic"
-            android:text="🎤"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp" />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
 
-        <EditText
-            android:id="@+id/input"
-            android:layout_width="0dp"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.08"
+                    android:text="⚛ NVN AI"
+                    android:textColor="#C084FC"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Your Personal Assistant"
+                    android:textColor="#94A3B8"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/gearBtn"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/btn_secondary"
+                android:text="⚙"
+                android:textColor="#E9D5FF"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_input"
-            android:hint="এখানে লেখো..."
-            android:padding="12dp"
-            android:textColor="#E8F4FF"
-            android:textColorHint="#64748B" />
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/send"
-            android:layout_width="wrap_content"
+            <Button
+                android:id="@+id/liveCamBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_primary"
+                android:text="📹 LIVE CAMERA"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/photoBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_secondary"
+                android:text="📷 PHOTO"
+                android:textColor="#E9D5FF"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/shareScreenBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_secondary"
+                android:text="🖥 SHARE SCREEN"
+                android:textColor="#E9D5FF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/btn_primary"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:text="পাঠাও"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold" />
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.1"
+                android:text="TRANSCRIPT"
+                android:textColor="#C084FC"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <ScrollView
+                android:id="@+id/scroll"
+                android:layout_width="match_parent"
+                android:layout_height="170dp"
+                android:layout_marginTop="6dp">
+
+                <TextView
+                    android:id="@+id/chat"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingMultiplier="1.15"
+                    android:textColor="#E2E8F0"
+                    android:textSize="15sp" />
+            </ScrollView>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="112dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/memoryBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/btn_secondary"
+                    android:text="MEMORY"
+                    android:textColor="#E9D5FF"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/chatBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="CHAT"
+                    android:textColor="#E9D5FF"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/soulBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="SOUL"
+                    android:textColor="#E9D5FF"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/settingsPill"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/btn_secondary"
+                    android:text="SETTINGS"
+                    android:textColor="#E9D5FF"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <com.archer.ai.OrbView
+                    android:id="@+id/orb"
+                    android:layout_width="170dp"
+                    android:layout_height="170dp" />
+
+                <Button
+                    android:id="@+id/stopBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/btn_primary"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:text="⏹ STOP"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.1"
+                android:text="TODAY HEADLINES"
+                android:textColor="#C084FC"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/headlines"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="খবর লোড হচ্ছে..."
+                android:textColor="#E2E8F0"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.1"
+                android:text="TODAY TASKS"
+                android:textColor="#C084FC"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tasks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="কোনো কাজ নেই"
+                android:textColor="#E2E8F0"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:text="মাইক চেপে কথা বলো, বা লিখে পাঠাও"
+            android:textColor="#C084FC"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/mic"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/btn_mic"
+                android:text="🎤"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp" />
+
+            <EditText
+                android:id="@+id/input"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_input"
+                android:hint="Type a message..."
+                android:padding="12dp"
+                android:textColor="#E8F4FF"
+                android:textColorHint="#64748B" />
+
+            <Button
+                android:id="@+id/send"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/btn_primary"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="পাঠাও"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/lang"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_secondary"
+                android:text="বাংলা"
+                android:textColor="#E9D5FF"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/key"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_input"
+                android:hint="Gemini API Key (ফ্রি)"
+                android:inputType="textPassword"
+                android:padding="10dp"
+                android:textColor="#E8F4FF"
+                android:textColorHint="#64748B" />
+
+            <Button
+                android:id="@+id/saveKey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/btn_primary"
+                android:text="সেভ"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/homeBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_secondary"
+                android:text="🏠 HOME"
+                android:textColor="#E9D5FF"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/historyBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_secondary"
+                android:text="🕘 HISTORY"
+                android:textColor="#E9D5FF"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/shareNavBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_secondary"
+                android:text="📤 SHARE"
+                android:textColor="#E9D5FF"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/settingsNavBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_secondary"
+                android:text="⚙ SETTINGS"
+                android:textColor="#E9D5FF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
     </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/camera"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/btn_secondary"
-            android:text="📷 ক্যামেরা"
-            android:textColor="#E9D5FF"
-            android:textSize="13sp" />
-
-        <Button
-            android:id="@+id/news"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/btn_secondary"
-            android:text="📰 খবর"
-            android:textColor="#E9D5FF"
-            android:textSize="13sp" />
-
-        <Button
-            android:id="@+id/access"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/btn_secondary"
-            android:text="♿ কন্ট্রোল"
-            android:textColor="#E9D5FF"
-            android:textSize="13sp" />
-
-        <Button
-            android:id="@+id/live"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/btn_primary"
-            android:text="🔴 লাইভ"
-            android:textColor="#FFFFFF"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/settings"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/btn_secondary"
-            android:text="⚙️ Settings"
-            android:textColor="#E9D5FF"
-            android:textSize="13sp" />
-
-        <Button
-            android:id="@+id/share"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/btn_secondary"
-            android:text="📤 উত্তর শেয়ার"
-            android:textColor="#E9D5FF"
-            android:textSize="13sp" />
-
-        <Button
-            android:id="@+id/shareApp"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/btn_secondary"
-            android:text="📲 অ্যাপ শেয়ার"
-            android:textColor="#E9D5FF"
-            android:textSize="13sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/lang"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/btn_secondary"
-            android:text="বাংলা"
-            android:textColor="#E9D5FF"
-            android:textSize="13sp" />
-
-        <EditText
-            android:id="@+id/key"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_input"
-            android:hint="Gemini API Key (ফ্রি)"
-            android:inputType="textPassword"
-            android:padding="10dp"
-            android:textColor="#E8F4FF"
-            android:textColorHint="#64748B" />
-
-        <Button
-            android:id="@+id/saveKey"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/btn_primary"
-            android:text="সেভ"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:text="Key ছাড়াও চলবে: &quot;Facebook খোলো&quot;, &quot;YouTube খোলো&quot;, &quot;volume বাড়াও&quot;, &quot;brightness কমাও&quot;, &quot;torch জ্বালাও&quot;, &quot;কয়টা বাজে&quot;। AI উত্তরের জন্য ফ্রি Gemini Key লাগবে (aistudio.google.com)।"
-        android:textColor="#94A3B8"
-        android:textSize="11sp" />
-</LinearLayout>
+</ScrollView>
