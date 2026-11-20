@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#05070D"
+    android:background="@drawable/bg_main"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="20dp">
@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="📿 তসবিহ"
-        android:textColor="#7DD3FC"
+        android:textColor="#C084FC"
         android:textSize="24sp"
         android:textStyle="bold" />
 
@@ -21,7 +21,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
+        android:background="@drawable/bg_card"
         android:gravity="center"
+        android:padding="20dp"
         android:text="0 / 33"
         android:textColor="#E2E8F0"
         android:textSize="36sp" />
@@ -31,12 +33,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="গুনো" />
+        android:background="@drawable/btn_primary"
+        android:text="গুনো"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold" />
 
     <Button
         android:id="@+id/tasbihReset"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="রিসেট" />
+        android:background="@drawable/btn_secondary"
+        android:text="রিসেট"
+        android:textColor="#E9D5FF" />
 </LinearLayout>
