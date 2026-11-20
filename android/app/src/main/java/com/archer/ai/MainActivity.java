@@ -360,11 +360,11 @@ public class MainActivity extends Activity {
             return calculate(s);
         }
         if (s.contains("অনুবাদ") || s.contains("translate")) {
-            askGeminiAsync("Translate to " + (english ? "Bengali" : "English") + ", only the translation: " + q);
+            askGeminiAsync("Translate to " + (english ? "Bengali" : "English") + ", only the translation: " + s);
             return "অনুবাদ করছি...";
         }
         if (s.contains("টুডু") || s.contains("todo") || s.contains("কাজের লিস্ট")) return todoCommand(s);
-        if (s.contains("মনে রাখো") || s.contains("remember")) return rememberCommand(q);
+        if (s.contains("মনে রাখো") || s.contains("remember")) return rememberCommand(s);
         if (s.contains("আমার নাম") && s.contains("কী")) {
             String n = getSharedPreferences("archer", MODE_PRIVATE).getString("user_name", "");
             return n.isEmpty() ? "তোমার নাম এখনো বলোনি। বলো: আমার নাম ... মনে রাখো" : "তোমার নাম " + n + "।";
@@ -390,7 +390,7 @@ public class MainActivity extends Activity {
         if (s.contains("কৌতুক") || s.contains("joke") || s.contains("হাসাও")) { askGeminiAsync("Tell a funny clean joke in Bengali."); return "কৌতুক শোনাচ্ছি..."; }
         if (s.contains("বাচ্চাদের") || s.contains("kids mode")) { askGeminiAsync("Talk like a friendly kids teacher in simple Bengali, fun and easy. Greet the child and offer to teach counting or rhymes."); return "বাচ্চাদের মোড চালু!"; }
         if (s.contains("ইংরেজি অনুশীলন") || s.contains("english practice")) { askGeminiAsync("Start English speaking practice with a Bengali learner. Ask one simple question in English, wait for answer, correct gently."); return "English practice শুরু!"; }
-        if (s.contains("সারাংশ") || s.contains("summarize") || s.contains("summary")) { askGeminiAsync("Summarize in 2-3 Bengali sentences: " + q); return "সারাংশ করছি..."; }
+        if (s.contains("সারাংশ") || s.contains("summarize") || s.contains("summary")) { askGeminiAsync("Summarize in 2-3 Bengali sentences: " + s); return "সারাংশ করছি..."; }
         if (s.contains("ওয়েক") || s.contains("wake word") || s.contains("হে nvn") || s.contains("হে আর্চার")) {
             wakeWordOn = !wakeWordOn;
             return wakeWordOn ? "ওয়েক ওয়ার্ড চালু — অ্যাপ খোলা থাকলে \"হে NVN\" বললেই শুনব।" : "ওয়েক ওয়ার্ড বন্ধ।";
