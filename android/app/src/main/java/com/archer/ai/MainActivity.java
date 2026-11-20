@@ -158,7 +158,7 @@ public class MainActivity extends Activity {
         });
         shareScreenBtn.setOnClickListener(v -> {
             Intent i = new Intent(this, LiveActivity.class);
-            i.putExtra("mode", "screen");
+            i.putExtra("mode", "both");
             startActivity(i);
         });
 
@@ -348,6 +348,20 @@ public class MainActivity extends Activity {
                 "• টুডু লিস্ট, খরচের হিসাব",
                 "• মনে রাখা (মনে রাখো ...)",
                 "• স্ক্রিন পড়া, ট্যাপ, টাইপ (লাইভে, ♿ কন্ট্রোল লাগবে — ☰ লং-প্রেস)");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshUsage();
+    }
+
+    private void refreshUsage() {
+        try {
+            int used = NvnCore.liveSecondsToday(this) / 60;
+            int limit = NvnCore.TIER_LIVE_MIN[NvnCore.tierIndex(this)];
+            status.setText("আজ Live: " + used + "/" + limit + " মিনিট — LIVE CAMERA বা SHARE SCREEN চাপো");
+        } catch (Exception ignored) {}
     }
 
     private void fetchServerConfig() {
