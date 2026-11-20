@@ -11,6 +11,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -40,6 +42,7 @@ import android.util.Base64;
 import android.view.Surface;
 import android.view.TextureView;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -76,6 +79,12 @@ public class LiveActivity extends Activity {
     private Thread micThread;
     private Thread frameThread;
     private Runnable liveTimerRunnable;
+    private GirlView girl;
+    private TextView liveUsage;
+    private boolean bothMode = false;
+    private boolean userStopped = false;
+    private int reconnectAttempts = 0;
+    private long lastAudioMs = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,15 +94,26 @@ public class LiveActivity extends Activity {
         liveStatus = findViewById(R.id.liveStatus);
         toggle = findViewById(R.id.liveToggle);
         orb = findViewById(R.id.liveOrb);
-        screenMode = "screen".equals(getIntent().getStringExtra("mode"));
-        if (screenMode) {
+        girl = findViewById(R.id.liveGirl);
+        liveUsage = findViewById(R.id.liveUsage);
+        String modeExtra = getIntent().getStringExtra("mode");
+        bothMode = "both".equals(modeExtra);
+        screenMode = "screen".equals(modeExtra) || bothMode;
+        if (screenMode && !bothMode) {
             preview.setVisibility(android.view.View.GONE);
             setStatus("স্ক্রিন শেয়ার মোড — লাইভ শুরু করলে স্ক্রিন দেখে কাজ করব");
         }
+        if (bothMode) {
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(360, 480);
+            lp.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.END;
+            lp.setMargins(0, 0, 24, 24);
+            preview.setLayoutParams(lp);
+            setStatus("স্ক্রিন + ক্যামেরা মোড — লাইভ শুরু করলে দুটোই দেখব");
+        }
 
         toggle.setOnClickListener(v -> {
-            if (live) stopLive();
-            else startLive();
+            if (live) { userStopped = true; stopLive(); }
+            else { userStopped = false; reconnectAttempts = 0; startLive(); }
         });
 
         if (Build.VERSION.SDK_INT >= 23 &&
@@ -127,7 +147,7 @@ public class LiveActivity extends Activity {
     }
 
     private void openCamera() {
-        if (screenMode) return;
+        if (screenMode && !bothMode) return;
         try {
             CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
             camId = null;
@@ -214,7 +234,17 @@ public class LiveActivity extends Activity {
                 @Override public void onClose(String reason) {
                     runOnUiThread(() -> {
                         if (live) {
-                            if (NvnCore.isQuotaError(reason)) NvnCore.rotateKey(getSharedPreferences("archer", MODE_PRIVATE));
+                            if (NvnCore.isQuotaError(reason)) {
+                                SharedPreferences kp = getSharedPreferences("archer", MODE_PRIVATE);
+                                NvnCore.rotateKey(kp);
+                                if (!userStopped && reconnectAttempts < Math.max(1, NvnCore.getKeys(kp).size())) {
+                                    reconnectAttempts++;
+                                    setStatus("Key বদলে আবার সংযোগ হচ্ছে...");
+                                    stopLive();
+                                    mainHandler.postDelayed(() -> { if (!live && !userStopped) startLive(); }, 800);
+                                    return;
+                                }
+                            }
                             setStatus("লাইভ সংযোগ বন্ধ: " + reason);
                             stopLive();
                         }
@@ -253,6 +283,7 @@ public class LiveActivity extends Activity {
                 fns.put(fnDef2("send_sms", "Send an SMS text message to a phone number", "number", "Phone number, digits only", "text", "Message text to send"));
                 fns.put(fnDef2("send_whatsapp", "Send a WhatsApp message to a phone number", "number", "Phone number with country code digits, e.g. 8801XXXXXXXXX", "text", "Message text to send"));
                 fns.put(fnDef("find_contact", "Find a contact's phone number by name", "name", "Contact name as saved in the phone"));
+                fns.put(fnDef2("call_and_talk", "Call a phone number and speak a message aloud on speaker for the user", "number", "Phone number, digits only", "message", "What to say on the call, in Bengali"));
                 JSONArray tools = new JSONArray().put(new JSONObject().put("functionDeclarations", fns));
                 JSONObject setup = new JSONObject()
                         .put("model", "models/gemini-3.1-flash-live-preview")
@@ -278,7 +309,8 @@ public class LiveActivity extends Activity {
             JSONObject obj = new JSONObject(text);
             if (obj.has("setupComplete")) {
                 setupDone = true;
-                runOnUiThread(() -> setStatus("🔴 লাইভ — কথা বলো, আমি শুনছি ও দেখছি"));
+                reconnectAttempts = 0;
+                runOnUiThread(() -> { setStatus("🔴 লাইভ — কথা বলো, আমি শুনছি ও দেখছি"); if (girl != null) girl.wave(); });
                 startMic();
                 startFrames();
                 startPlayer();
@@ -318,6 +350,8 @@ public class LiveActivity extends Activity {
                             String data = part.getJSONObject("inlineData").getString("data");
                             byte[] pcm = Base64.decode(data, Base64.DEFAULT);
                             if (player != null) player.write(pcm, 0, pcm.length);
+                            lastAudioMs = System.currentTimeMillis();
+                            if (girl != null) girl.setTalking(true);
                         }
                     }
                 }
@@ -361,7 +395,7 @@ public class LiveActivity extends Activity {
                 try {
                     Thread.sleep(1000);
                     if (!setupDone || ws == null || !ws.isOpen()) continue;
-                    Bitmap bmp = screenMode ? grabScreenBitmap() : preview.getBitmap(640, 480);
+                    Bitmap bmp = bothMode ? grabBothBitmap() : (screenMode ? grabScreenBitmap() : preview.getBitmap(640, 480));
                     if (bmp == null) continue;
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     bmp.compress(Bitmap.CompressFormat.JPEG, 55, baos);
@@ -393,6 +427,30 @@ public class LiveActivity extends Activity {
             image.close();
             Bitmap cropped = Bitmap.createBitmap(full, 0, 0, w, h);
             return Bitmap.createScaledBitmap(cropped, 720, 1280, true);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Bitmap grabBothBitmap() {
+        try {
+            Bitmap screen = grabScreenBitmap();
+            Bitmap cam = null;
+            try { cam = preview.getBitmap(360, 270); } catch (Exception ignored) {}
+            if (screen == null) return cam;
+            if (cam == null) return screen;
+            Bitmap out = Bitmap.createBitmap(720, 1280, Bitmap.Config.ARGB_8888);
+            Canvas cv = new Canvas(out);
+            cv.drawBitmap(screen, 0, 0, null);
+            Paint border = new Paint();
+            border.setColor(0xFFFFFFFF);
+            border.setStyle(Paint.Style.STROKE);
+            border.setStrokeWidth(6f);
+            float x = 720 - 360 - 16;
+            float y = 1280 - 270 - 16;
+            cv.drawBitmap(cam, x, y, null);
+            cv.drawRect(x, y, x + 360, y + 270, border);
+            return out;
         } catch (Exception e) {
             return null;
         }
@@ -474,6 +532,8 @@ public class LiveActivity extends Activity {
                 String num = findContactNumber(args.optString("name", ""));
                 return num != null ? "number: " + num : "contact not found";
             }
+            case "call_and_talk":
+                return NvnCore.callAndTalk(this, args.optString("number", ""), args.optString("message", ""));
             default:
                 return "unknown function";
         }
@@ -717,6 +777,8 @@ public class LiveActivity extends Activity {
             @Override public void run() {
                 if (!live) return;
                 NvnCore.addLiveSeconds(LiveActivity.this, 10);
+                if (girl != null && System.currentTimeMillis() - lastAudioMs > 600) girl.setTalking(false);
+                if (liveUsage != null) liveUsage.setText("আজ Live: " + (NvnCore.liveSecondsToday(LiveActivity.this) / 60) + "/" + NvnCore.TIER_LIVE_MIN[NvnCore.tierIndex(LiveActivity.this)] + " মিনিট");
                 if (!NvnCore.canUseLive(LiveActivity.this)) {
                     setStatus("আজকের Live লিমিট শেষ — প্রিমিয়াম নাও");
                     stopLive();
