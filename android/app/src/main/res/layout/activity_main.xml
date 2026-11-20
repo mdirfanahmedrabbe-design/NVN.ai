@@ -1,426 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_main"
-    android:fillViewport="true">
+    android:orientation="vertical"
+    android:padding="14dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="14dp">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/menuBtn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/btn_secondary"
+            android:text="☰"
+            android:textColor="#E8F4FF"
+            android:textSize="16sp" />
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/menuBtn"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@drawable/btn_secondary"
-                android:text="☰"
-                android:textColor="#E9D5FF"
-                android:textSize="18sp" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:letterSpacing="0.08"
-                    android:text="⚛ NVN AI"
-                    android:textColor="#C084FC"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Your Personal Assistant"
-                    android:textColor="#94A3B8"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/gearBtn"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@drawable/btn_secondary"
-                android:text="⚙"
-                android:textColor="#E9D5FF"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/liveCamBtn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
-                android:layout_weight="1"
-                android:background="@drawable/btn_primary"
-                android:text="📹 LIVE CAMERA"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/photoBtn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
-                android:layout_weight="1"
-                android:background="@drawable/btn_secondary"
-                android:text="📷 PHOTO"
-                android:textColor="#E9D5FF"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/shareScreenBtn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_weight="1"
-                android:background="@drawable/btn_secondary"
-                android:text="🖥 SHARE SCREEN"
-                android:textColor="#E9D5FF"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_card"
-            android:orientation="vertical"
-            android:padding="12dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:letterSpacing="0.1"
-                android:text="TRANSCRIPT"
-                android:textColor="#C084FC"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <ScrollView
-                android:id="@+id/scroll"
-                android:layout_width="match_parent"
-                android:layout_height="170dp"
-                android:layout_marginTop="6dp">
-
-                <TextView
-                    android:id="@+id/chat"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:lineSpacingMultiplier="1.15"
-                    android:textColor="#E2E8F0"
-                    android:textSize="15sp" />
-            </ScrollView>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:layout_width="112dp"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <Button
-                    android:id="@+id/memoryBtn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/btn_secondary"
-                    android:text="MEMORY"
-                    android:textColor="#E9D5FF"
-                    android:textSize="12sp" />
-
-                <Button
-                    android:id="@+id/chatBtn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/btn_secondary"
-                    android:text="CHAT"
-                    android:textColor="#E9D5FF"
-                    android:textSize="12sp" />
-
-                <Button
-                    android:id="@+id/soulBtn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/btn_secondary"
-                    android:text="SOUL"
-                    android:textColor="#E9D5FF"
-                    android:textSize="12sp" />
-
-                <Button
-                    android:id="@+id/settingsPill"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/btn_secondary"
-                    android:text="SETTINGS"
-                    android:textColor="#E9D5FF"
-                    android:textSize="12sp" />
-
-                <Button
-                    android:id="@+id/premiumPill"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/btn_primary"
-                    android:text="👑 PREMIUM"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
-
-                <com.archer.ai.OrbView
-                    android:id="@+id/orb"
-                    android:layout_width="170dp"
-                    android:layout_height="170dp" />
-
-                <Button
-                    android:id="@+id/stopBtn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/btn_primary"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:text="⏹ STOP"
-                    android:textColor="#FFFFFF"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_card"
-            android:orientation="vertical"
-            android:padding="12dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:letterSpacing="0.1"
-                android:text="TODAY HEADLINES"
-                android:textColor="#C084FC"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/headlines"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="খবর লোড হচ্ছে..."
-                android:textColor="#E2E8F0"
-                android:textSize="13sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_card"
-            android:orientation="vertical"
-            android:padding="12dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:letterSpacing="0.1"
-                android:text="TODAY TASKS"
-                android:textColor="#C084FC"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tasks"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="কোনো কাজ নেই"
-                android:textColor="#E2E8F0"
-                android:textSize="13sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_weight="1"
             android:gravity="center"
-            android:text="মাইক চেপে কথা বলো, বা লিখে পাঠাও"
-            android:textColor="#C084FC"
-            android:textSize="13sp" />
+            android:orientation="vertical">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/mic"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:background="@drawable/btn_mic"
-                android:text="🎤"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp" />
-
-            <EditText
-                android:id="@+id/input"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_input"
-                android:hint="Type a message..."
-                android:padding="12dp"
-                android:textColor="#E8F4FF"
-                android:textColorHint="#64748B" />
-
-            <Button
-                android:id="@+id/send"
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/btn_primary"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:text="পাঠাও"
+                android:text="⚛ NVN AI"
                 android:textColor="#FFFFFF"
+                android:textSize="22sp"
                 android:textStyle="bold" />
-        </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/lang"
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/btn_secondary"
-                android:text="বাংলা"
-                android:textColor="#E9D5FF"
-                android:textSize="13sp" />
-
-            <EditText
-                android:id="@+id/key"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_input"
-                android:hint="Gemini API Key (ফ্রি)"
-                android:inputType="textPassword"
-                android:padding="10dp"
-                android:textColor="#E8F4FF"
-                android:textColorHint="#64748B" />
-
-            <Button
-                android:id="@+id/saveKey"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/btn_primary"
-                android:text="সেভ"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold" />
+                android:text="Your Personal Assistant"
+                android:textColor="#A78BFA"
+                android:textSize="11sp" />
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/homeBtn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
-                android:layout_weight="1"
-                android:background="@drawable/btn_secondary"
-                android:text="🏠 HOME"
-                android:textColor="#E9D5FF"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/historyBtn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
-                android:layout_weight="1"
-                android:background="@drawable/btn_secondary"
-                android:text="🕘 HISTORY"
-                android:textColor="#E9D5FF"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/shareNavBtn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
-                android:layout_weight="1"
-                android:background="@drawable/btn_secondary"
-                android:text="📤 SHARE"
-                android:textColor="#E9D5FF"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/settingsNavBtn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_weight="1"
-                android:background="@drawable/btn_secondary"
-                android:text="⚙ SETTINGS"
-                android:textColor="#E9D5FF"
-                android:textSize="12sp" />
-        </LinearLayout>
-
+        <Button
+            android:id="@+id/bellBtn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/btn_secondary"
+            android:text="🔔"
+            android:textColor="#E8F4FF"
+            android:textSize="15sp" />
     </LinearLayout>
-</ScrollView>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <com.archer.ai.GirlView
+            android:id="@+id/mainGirl"
+            android:layout_width="260dp"
+            android:layout_height="320dp"
+            android:layout_gravity="center" />
+    </FrameLayout>
+
+    <Button
+        android:id="@+id/liveBtn"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/btn_primary"
+        android:text="((•)) On Live ›"
+        android:textColor="#FFFFFF"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/onlinePill"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_card"
+        android:paddingStart="14dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="6dp"
+        android:text="● Online for 0 min"
+        android:textColor="#4ADE80"
+        android:textSize="13sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_card"
+        android:orientation="horizontal"
+        android:padding="6dp">
+
+        <Button
+            android:id="@+id/navHome"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:text="🏠\nHome"
+            android:textColor="#C084FC"
+            android:textSize="11sp" />
+
+        <Button
+            android:id="@+id/navHistory"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:text="🕐\nHistory"
+            android:textColor="#E8F4FF"
+            android:textSize="11sp" />
+
+        <Button
+            android:id="@+id/navShare"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:text="🔗\nShare"
+            android:textColor="#E8F4FF"
+            android:textSize="11sp" />
+
+        <Button
+            android:id="@+id/navSettings"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:text="⚙\nSettings"
+            android:textColor="#E8F4FF"
+            android:textSize="11sp" />
+    </LinearLayout>
+</LinearLayout>

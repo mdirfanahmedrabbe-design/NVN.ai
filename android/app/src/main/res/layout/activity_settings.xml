@@ -123,6 +123,49 @@
         android:textColor="#94A3B8"
         android:textSize="12sp" />
 
+    <EditText
+        android:id="@+id/setAnnounceTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_input"
+        android:hint="ঘোষণার শিরোনাম"
+        android:padding="12dp"
+        android:textColor="#E8F4FF"
+        android:textColorHint="#64748B" />
+
+    <EditText
+        android:id="@+id/setAnnounceBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_input"
+        android:hint="ঘোষণার লেখা"
+        android:padding="12dp"
+        android:textColor="#E8F4FF"
+        android:textColorHint="#64748B" />
+
+    <EditText
+        android:id="@+id/setServerToken"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_input"
+        android:hint="সার্ভার টোকেন"
+        android:inputType="textPassword"
+        android:padding="12dp"
+        android:textColor="#E8F4FF"
+        android:textColorHint="#64748B" />
+
+    <Button
+        android:id="@+id/setSendAnnounce"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/btn_primary"
+        android:text="📢 ঘোষণা পাঠাও"
+        android:textColor="#FFFFFF" />
+
     <Button
         android:id="@+id/setClearKeys"
         android:layout_width="match_parent"
