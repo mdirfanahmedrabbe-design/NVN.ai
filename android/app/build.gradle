@@ -6,20 +6,32 @@ android {
     namespace 'com.archer.ai'
     compileSdk 34
 
+    signingConfigs {
+        release {
+            storeFile file('nvn.keystore')
+            storePassword System.getenv('KEYSTORE_PASS')
+            keyAlias 'nvn'
+            keyPassword System.getenv('KEYSTORE_PASS')
+            storeType 'PKCS12'
+        }
+    }
+
     defaultConfig {
         applicationId "com.archer.ai"
         minSdk 24
         targetSdk 34
-        versionCode 1
+        versionCode (System.getenv('BUILD_NUMBER') ?: '1').toInteger()
         versionName "1.0"
     }
 
     buildTypes {
         debug {
             minifyEnabled false
+            signingConfig signingConfigs.release
         }
         release {
             minifyEnabled false
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {
