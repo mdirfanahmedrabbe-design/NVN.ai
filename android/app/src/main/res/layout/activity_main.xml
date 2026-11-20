@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#05070D"
+    android:background="@drawable/bg_main"
     android:orientation="vertical"
     android:padding="16dp">
 
@@ -10,9 +10,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
+        android:letterSpacing="0.12"
         android:text="NVN AI"
-        android:textColor="#7DD3FC"
-        android:textSize="24sp"
+        android:textColor="#C084FC"
+        android:textSize="26sp"
         android:textStyle="bold" />
 
     <TextView
@@ -25,10 +26,10 @@
 
     <com.archer.ai.OrbView
         android:id="@+id/orb"
-        android:layout_width="220dp"
-        android:layout_height="220dp"
+        android:layout_width="230dp"
+        android:layout_height="230dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="6dp" />
 
     <TextView
         android:id="@+id/status"
@@ -36,7 +37,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="মাইক চেপে কথা বলো, বা লিখে পাঠাও"
-        android:textColor="#7DD3FC"
+        android:textColor="#C084FC"
         android:textSize="13sp" />
 
     <ScrollView
@@ -45,13 +46,14 @@
         android:layout_height="0dp"
         android:layout_marginTop="10dp"
         android:layout_weight="1"
-        android:background="#0F172A"
-        android:padding="10dp">
+        android:background="@drawable/bg_card"
+        android:padding="12dp">
 
         <TextView
             android:id="@+id/chat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:lineSpacingMultiplier="1.15"
             android:textColor="#E2E8F0"
             android:textSize="15sp" />
     </ScrollView>
@@ -60,20 +62,27 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/mic"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🎤" />
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/btn_mic"
+            android:text="🎤"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp" />
 
         <EditText
             android:id="@+id/input"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:layout_weight="1"
+            android:background="@drawable/bg_input"
             android:hint="এখানে লেখো..."
+            android:padding="12dp"
             android:textColor="#E8F4FF"
             android:textColorHint="#64748B" />
 
@@ -81,7 +90,13 @@
             android:id="@+id/send"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="পাঠাও" />
+            android:layout_marginStart="8dp"
+            android:background="@drawable/btn_primary"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="পাঠাও"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <LinearLayout
@@ -94,29 +109,48 @@
             android:id="@+id/camera"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
             android:layout_weight="1"
-            android:text="📷 ক্যামেরা" />
+            android:background="@drawable/btn_secondary"
+            android:text="📷 ক্যামেরা"
+            android:textColor="#E9D5FF"
+            android:textSize="13sp" />
 
         <Button
             android:id="@+id/news"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
             android:layout_weight="1"
-            android:text="📰 খবর" />
+            android:background="@drawable/btn_secondary"
+            android:text="📰 খবর"
+            android:textColor="#E9D5FF"
+            android:textSize="13sp" />
 
         <Button
             android:id="@+id/access"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
             android:layout_weight="1"
-            android:text="♿ কন্ট্রোল" />
+            android:background="@drawable/btn_secondary"
+            android:text="♿ কন্ট্রোল"
+            android:textColor="#E9D5FF"
+            android:textSize="13sp" />
 
         <Button
             android:id="@+id/live"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:text="🔴 লাইভ" />
+            android:background="@drawable/btn_primary"
+            android:text="🔴 লাইভ"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <LinearLayout
@@ -129,43 +163,63 @@
             android:id="@+id/settings"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
             android:layout_weight="1"
-            android:text="⚙️ Settings" />
+            android:background="@drawable/btn_secondary"
+            android:text="⚙️ Settings"
+            android:textColor="#E9D5FF"
+            android:textSize="13sp" />
 
         <Button
             android:id="@+id/share"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
             android:layout_weight="1"
-            android:text="📤 উত্তর শেয়ার" />
+            android:background="@drawable/btn_secondary"
+            android:text="📤 উত্তর শেয়ার"
+            android:textColor="#E9D5FF"
+            android:textSize="13sp" />
 
         <Button
             android:id="@+id/shareApp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:text="📲 অ্যাপ শেয়ার" />
+            android:background="@drawable/btn_secondary"
+            android:text="📲 অ্যাপ শেয়ার"
+            android:textColor="#E9D5FF"
+            android:textSize="13sp" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/lang"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="বাংলা" />
+            android:background="@drawable/btn_secondary"
+            android:text="বাংলা"
+            android:textColor="#E9D5FF"
+            android:textSize="13sp" />
 
         <EditText
             android:id="@+id/key"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:layout_weight="1"
+            android:background="@drawable/bg_input"
             android:hint="Gemini API Key (ফ্রি)"
             android:inputType="textPassword"
+            android:padding="10dp"
             android:textColor="#E8F4FF"
             android:textColorHint="#64748B" />
 
@@ -173,7 +227,11 @@
             android:id="@+id/saveKey"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="সেভ" />
+            android:layout_marginStart="8dp"
+            android:background="@drawable/btn_primary"
+            android:text="সেভ"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <TextView
