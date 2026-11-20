@@ -34,6 +34,7 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
+import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
 import android.widget.EditText;
@@ -61,7 +62,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public class MainActivity extends Activity {
-    private TextView chat, status;
+    private TextView chat, status, headlines, tasks;
     private ScrollView scroll;
     private EditText input, keyInput;
     private OrbView orb;
@@ -121,27 +122,73 @@ public class MainActivity extends Activity {
         Button send = findViewById(R.id.send);
         Button lang = findViewById(R.id.lang);
         Button saveKey = findViewById(R.id.saveKey);
-        Button cameraBtn = findViewById(R.id.camera);
-        Button newsBtn = findViewById(R.id.news);
-        Button accessBtn = findViewById(R.id.access);
-        Button liveBtn = findViewById(R.id.live);
-        Button settingsBtn = findViewById(R.id.settings);
-        Button shareBtn = findViewById(R.id.share);
-        Button shareAppBtn = findViewById(R.id.shareApp);
+        Button menuBtn = findViewById(R.id.menuBtn);
+        Button gearBtn = findViewById(R.id.gearBtn);
+        Button liveCamBtn = findViewById(R.id.liveCamBtn);
+        Button photoBtn = findViewById(R.id.photoBtn);
+        Button shareScreenBtn = findViewById(R.id.shareScreenBtn);
+        Button memoryBtn = findViewById(R.id.memoryBtn);
+        Button chatBtn = findViewById(R.id.chatBtn);
+        Button soulBtn = findViewById(R.id.soulBtn);
+        Button settingsPill = findViewById(R.id.settingsPill);
+        Button stopBtn = findViewById(R.id.stopBtn);
+        Button homeBtn = findViewById(R.id.homeBtn);
+        Button historyBtn = findViewById(R.id.historyBtn);
+        Button shareNavBtn = findViewById(R.id.shareNavBtn);
+        Button settingsNavBtn = findViewById(R.id.settingsNavBtn);
+        headlines = findViewById(R.id.headlines);
+        tasks = findViewById(R.id.tasks);
 
-        settingsBtn.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
-        shareBtn.setOnClickListener(v -> shareText(lastAnswer.isEmpty() ? "NVN AI — আমার ভয়েস অ্যাসিস্ট্যান্ট" : lastAnswer));
-        shareAppBtn.setOnClickListener(v -> shareText(
+        View.OnClickListener openSettings = v -> startActivity(new Intent(this, SettingsActivity.class));
+        gearBtn.setOnClickListener(openSettings);
+        settingsPill.setOnClickListener(openSettings);
+        settingsNavBtn.setOnClickListener(openSettings);
+        // share button is in bottom nav
+        shareNavBtn.setOnClickListener(v -> shareText(
                 "NVN AI অ্যাপ ডাউনলোড করো: https://github.com/mdirfanahmedrabbe-design/NVN.ai/releases/latest")); 
 
-        liveBtn.setOnClickListener(v -> startActivity(new Intent(this, LiveActivity.class)));
+        liveCamBtn.setOnClickListener(v -> {
+            Intent i = new Intent(this, LiveActivity.class);
+            i.putExtra("mode", "camera");
+            startActivity(i);
+        });
+        shareScreenBtn.setOnClickListener(v -> {
+            Intent i = new Intent(this, LiveActivity.class);
+            i.putExtra("mode", "screen");
+            startActivity(i);
+        });
 
-        cameraBtn.setOnClickListener(v -> takePhoto());
-        newsBtn.setOnClickListener(v -> fetchNews());
-        accessBtn.setOnClickListener(v -> {
+        photoBtn.setOnClickListener(v -> takePhoto());
+        memoryBtn.setOnClickListener(v -> reply(memorySummary()));
+        chatBtn.setOnClickListener(v -> {
+            input.requestFocus();
+            scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+        });
+        soulBtn.setOnClickListener(v -> {
+            String[] souls = {"মিষ্টি সঙ্গী", "বন্ধু", "শিক্ষক", "গল্পকার", "ইসলামিক সহায়ক"};
+            SharedPreferences sp = getSharedPreferences("archer", MODE_PRIVATE);
+            String cur = sp.getString("personality", "মিষ্টি সঙ্গী");
+            int idx = 0;
+            for (int i = 0; i < souls.length; i++) if (souls[i].equals(cur)) idx = i;
+            String next = souls[(idx + 1) % souls.length];
+            sp.edit().putString("personality", next).apply();
+            reply("ঠিক আছে মাস্টার, এখন থেকে আমার ধরন: " + next + "।");
+        });
+        stopBtn.setOnClickListener(v -> {
+            if (tts != null) tts.stop();
+            orb.setState(OrbView.IDLE);
+        });
+        homeBtn.setOnClickListener(v -> scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_UP)));
+        historyBtn.setOnClickListener(v -> reply(exportChat()));
+        menuBtn.setOnClickListener(v -> reply(helpText()));
+        menuBtn.setOnLongClickListener(v -> {
             startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
             Toast.makeText(this, "NVN AI Voice Control চালু করো", Toast.LENGTH_LONG).show();
+            return true;
         });
+        headlines.setOnClickListener(v -> loadHeadlines());
+        tasks.setOnClickListener(v -> reply(todoCommand("টুডু")));
+        // accessibility shortcut: long-press the menu button
 
         SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
         keyInput.setText(prefs.getString("gemini_key", "").trim());
@@ -213,17 +260,101 @@ public class MainActivity extends Activity {
             handle(q);
         });
 
-        addAi("হ্যালো মাস্টার! আমি NVN, আপনার পাশে আছি। মাইক চেপে কথা বলুন — অ্যাপ খোলা, কল করা, সব কাজ করে দেব।");
+        String savedChat = prefs.getString("chat_history", "");
+        if (!savedChat.isEmpty()) {
+            chat.setText(savedChat);
+            scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+        } else {
+            addAi("হ্যালো মাস্টার! আমি NVN, আপনার পাশে আছি। মাইক চেপে কথা বলুন — অ্যাপ খোলা, কল করা, সব কাজ করে দেব।");
+        }
+        loadHeadlines();
+        refreshTasks();
+    }
+
+    private void saveChatHistory() {
+        String all = chat.getText().toString();
+        if (all.length() > 12000) all = all.substring(all.length() - 12000);
+        getSharedPreferences("archer", MODE_PRIVATE).edit().putString("chat_history", all).apply();
+    }
+
+    private void loadHeadlines() {
+        headlines.setText("খবর লোড হচ্ছে...");
+        new Thread(() -> {
+            String result;
+            try {
+                URL url = new URL("https://feeds.bbci.co.uk/bengali/rss.xml");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(20000);
+                StringBuilder sb = new StringBuilder();
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = br.readLine()) != null) sb.append(line);
+                }
+                String xml = sb.toString();
+                StringBuilder out = new StringBuilder();
+                int idx = 0, count = 0;
+                while (count < 5) {
+                    int start = xml.indexOf("<item>", idx);
+                    if (start < 0) break;
+                    int tStart = xml.indexOf("<title>", start);
+                    int tEnd = xml.indexOf("</title>", tStart);
+                    if (tStart < 0 || tEnd < 0) break;
+                    String title = xml.substring(tStart + 7, tEnd)
+                            .replace("<![CDATA[", "").replace("]]>", "").trim();
+                    out.append("• ").append(title).append(System.lineSeparator());
+                    idx = tEnd;
+                    count++;
+                }
+                result = count > 0 ? out.toString().trim() : "খবর পাইনি।";
+            } catch (Exception e) {
+                result = "খবর আনতে পারলাম না।";
+            }
+            String finalResult = result;
+            runOnUiThread(() -> headlines.setText(finalResult));
+        }).start();
+    }
+
+    private void refreshTasks() {
+        String list = getSharedPreferences("archer", MODE_PRIVATE).getString("todo_list", "");
+        tasks.setText(list.isEmpty() ? "কোনো কাজ নেই — বলো: টুডু যোগ করো ..." : list.trim());
+    }
+
+    private String memorySummary() {
+        SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
+        String name = p.getString("user_name", "");
+        String facts = p.getString("memory_facts", "");
+        StringBuilder sb = new StringBuilder("আমি যা মনে রেখেছি:").append(System.lineSeparator());
+        if (!name.isEmpty()) sb.append("নাম: ").append(name).append(System.lineSeparator());
+        if (!facts.isEmpty()) sb.append(facts.replace("; ", System.lineSeparator()));
+        if (name.isEmpty() && facts.isEmpty()) sb.append("এখনো কিছু মনে রাখিনি। বলো: মনে রাখো ...");
+        return sb.toString().trim();
+    }
+
+    private String helpText() {
+        return String.join(System.lineSeparator(),
+                "আমি যা যা করতে পারি:",
+                "• অ্যাপ খোলা (Facebook খোলো)",
+                "• কল করা, SMS/WhatsApp (লাইভে)",
+                "• Volume, brightness, torch",
+                "• ক্যামেরা দেখে উত্তর (PHOTO)",
+                "• লাইভ ক্যামেরা/স্ক্রিন দেখে কথা + কাজ",
+                "• খবর, আবহাওয়া, নামাজের সময়",
+                "• টুডু লিস্ট, খরচের হিসাব",
+                "• মনে রাখা (মনে রাখো ...)",
+                "• স্ক্রিন পড়া, ট্যাপ, টাইপ (লাইভে, ♿ কন্ট্রোল লাগবে — ☰ লং-প্রেস)");
     }
 
     private void openSpeechDialog() { try { Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH); i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, english ? "en-US" : "bn-BD"); i.putExtra(RecognizerIntent.EXTRA_PROMPT, "কথা বলো..."); startActivityForResult(i, 55); } catch (Exception e) { status.setText("এই ফোনে ভয়েস ইনপুট নেই — লিখে পাঠাও"); } } private void addMe(String text) {
         chat.append("\nতুমি: " + text + "\n");
         scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+        saveChatHistory();
     }
 
     private void addAi(String text) {
         chat.append("NVN: " + text + "\n");
         scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+        saveChatHistory();
     }
 
     private void reply(String text) {
@@ -252,6 +383,7 @@ public class MainActivity extends Activity {
         String cmd = runCommand(s);
         if (cmd != null) {
             reply(cmd);
+            refreshTasks();
             status.setText("মাইক চেপে কথা বলো, বা লিখে পাঠাও");
             return;
         }
@@ -1145,7 +1277,7 @@ public class MainActivity extends Activity {
                     + ". Answer briefly (2-3 sentences) in the same language as the user (Bengali, English, or mixed Banglish — understand mixed). "
                     + (userName.isEmpty() ? "" : "User's name: " + userName + ". ")
                     + (memFacts.isEmpty() ? "" : "Things to remember about user: " + memFacts + " ")
-                    + "Be warm and match the user's emotion. User: ";
+                    + batteryInfo() + " Current time: " + new SimpleDateFormat("h:mm a", Locale.US).format(new Date()) + ". Be warm and match the user's emotion. User: ";
             JSONObject part = new JSONObject();
             part.put("text", sys + q);
             JSONObject content = new JSONObject();
