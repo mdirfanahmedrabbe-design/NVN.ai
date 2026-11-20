@@ -26,6 +26,7 @@ import java.util.Locale;
 public class MainActivity extends Activity {
     private TextView onlinePill;
     private GirlView mainGirl;
+    private SharedPreferences prefs;
     private int tickCount = 0;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable usageTicker = new Runnable() {
@@ -53,6 +54,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        prefs = getSharedPreferences("archer", MODE_PRIVATE);
 
         onlinePill = findViewById(R.id.onlinePill);
         mainGirl = findViewById(R.id.mainGirl);
