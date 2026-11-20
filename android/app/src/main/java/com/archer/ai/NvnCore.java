@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.ContactsContract;
+import android.speech.tts.TextToSpeech;
 import android.telephony.SmsManager;
 import android.util.Base64;
 
@@ -183,7 +184,8 @@ public class NvnCore {
         fns.put(fnDef("open_app", "Open an app on the user's phone by name", "app_name", "Name of the app to open, e.g. Facebook, YouTube, WhatsApp, Telegram, Chrome, bKash"));
         fns.put(fnDef("call_number", "Call a phone number", "number", "Phone number to call, digits only"));
         fns.put(fnDef("call_contact", "Call a contact by name from the phone contacts", "name", "Contact name as saved in the phone"));
-        fns.put(fnDef("find_contact", "Find a contact's phone number by name", "name", "Contact name as saved in the phone"));
+fns.put(fnDef("find_contact", "Find a contact's phone number by name", "name", "Contact name as saved in the phone"));
+        fns.put(fnDef2("call_and_talk", "Call a phone number and speak a message aloud on speaker for the user", "number", "Phone number, digits only", "message", "What to say on the call, in Bengali"));
         fns.put(fnDef2("send_sms", "Send an SMS text message to a phone number", "number", "Phone number, digits only", "text", "Message text to send"));
         fns.put(fnDef2("send_whatsapp", "Send a WhatsApp message to a phone number", "number", "Phone number with country code digits, e.g. 8801XXXXXXXXX", "text", "Message text to send"));
         fns.put(fnDef("tap_text", "Tap a button or item on the screen by its visible text", "text", "Exact visible text of the button or item"));
@@ -217,6 +219,8 @@ public class NvnCore {
                 String num = findContactNumber(ctx, args.optString("name", ""));
                 return num != null ? "number: " + num : "contact not found";
             }
+            case "call_and_talk":
+                return callAndTalk(ctx, args.optString("number", ""), args.optString("message", ""));
             case "send_sms":
                 return sendSms(ctx, args.optString("number", ""), args.optString("text", ""));
             case "send_whatsapp":
@@ -315,6 +319,34 @@ public class NvnCore {
         } catch (Exception e) {
             return "call failed";
         }
+    }
+
+    private static TextToSpeech callTts;
+
+    public static String callAndTalk(Context ctx, String number, String message) {
+        String res = callNumber(ctx, number);
+        if (!res.startsWith("calling")) return res;
+        try {
+            AudioManager am = (AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE);
+            am.setMode(AudioManager.MODE_IN_CALL);
+            am.setSpeakerphoneOn(true);
+        } catch (Exception ignored) {}
+        Handler h = new Handler(Looper.getMainLooper());
+        h.postDelayed(() -> {
+            try {
+                if (callTts == null) {
+                    callTts = new TextToSpeech(ctx.getApplicationContext(), status -> {
+                        if (status == TextToSpeech.SUCCESS) {
+                            try { callTts.setLanguage(new Locale("bn", "BD")); } catch (Exception ignored) {}
+                            callTts.speak(message, TextToSpeech.QUEUE_FLUSH, null, "nvn-call");
+                        }
+                    });
+                } else {
+                    callTts.speak(message, TextToSpeech.QUEUE_FLUSH, null, "nvn-call");
+                }
+            } catch (Exception ignored) {}
+        }, 5000);
+        return "calling and will speak: " + message;
     }
 
     public static String findContactNumber(Context ctx, String name) {
