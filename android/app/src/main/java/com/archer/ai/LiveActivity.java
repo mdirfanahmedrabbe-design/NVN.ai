@@ -79,7 +79,6 @@ public class LiveActivity extends Activity {
     private Thread micThread;
     private Thread frameThread;
     private Runnable liveTimerRunnable;
-    private GirlView girl;
     private TextView liveUsage;
     private boolean bothMode = false;
     private boolean userStopped = false;
@@ -91,10 +90,10 @@ public class LiveActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_live);
         preview = findViewById(R.id.preview);
+        preview.setAlpha(0f); // camera sees, but no preview picture is shown
         liveStatus = findViewById(R.id.liveStatus);
         toggle = findViewById(R.id.liveToggle);
         orb = findViewById(R.id.liveOrb);
-        girl = findViewById(R.id.liveGirl);
         liveUsage = findViewById(R.id.liveUsage);
         String modeExtra = getIntent().getStringExtra("mode");
         bothMode = "both".equals(modeExtra);
@@ -104,10 +103,6 @@ public class LiveActivity extends Activity {
             setStatus("স্ক্রিন শেয়ার মোড — লাইভ শুরু করলে স্ক্রিন দেখে কাজ করব");
         }
         if (bothMode) {
-            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(360, 480);
-            lp.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.END;
-            lp.setMargins(0, 0, 24, 24);
-            preview.setLayoutParams(lp);
             setStatus("স্ক্রিন + ক্যামেরা মোড — লাইভ শুরু করলে দুটোই দেখব");
         }
 
@@ -312,7 +307,7 @@ public class LiveActivity extends Activity {
             if (obj.has("setupComplete")) {
                 setupDone = true;
                 reconnectAttempts = 0;
-                runOnUiThread(() -> { setStatus("🔴 লাইভ — কথা বলো, আমি শুনছি ও দেখছি"); if (girl != null) girl.wave(); });
+                runOnUiThread(() -> setStatus("🔴 লাইভ — কথা বলো, আমি শুনছি ও দেখছি"));
                 startMic();
                 startFrames();
                 startPlayer();
@@ -353,7 +348,6 @@ public class LiveActivity extends Activity {
                             byte[] pcm = Base64.decode(data, Base64.DEFAULT);
                             if (player != null) player.write(pcm, 0, pcm.length);
                             lastAudioMs = System.currentTimeMillis();
-                            if (girl != null) girl.setTalking(true);
                         }
                     }
                 }
@@ -668,11 +662,23 @@ public class LiveActivity extends Activity {
             }
             if (pkg == null) return false;
             Intent launch = pm.getLaunchIntentForPackage(pkg);
-            if (launch == null) return false;
-            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (launch == null) {
+                Intent q = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(pkg);
+                java.util.List<android.content.pm.ResolveInfo> ris = pm.queryIntentActivities(q, 0);
+                if (ris == null || ris.isEmpty()) return false;
+                launch = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+                        .setComponent(new android.content.ComponentName(pkg, ris.get(0).activityInfo.name));
+            }
+            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+            final Intent toLaunch = launch;
             runOnUiThread(() -> {
-                setStatus("অ্যাপ খুলছি: " + appName);
-                startActivity(launch);
+                try {
+                    setStatus("অ্যাপ খুলছি: " + appName);
+                    startActivity(toLaunch);
+                    setStatus("খুললাম: " + appName);
+                } catch (Exception e) {
+                    setStatus("খুলতে পারলাম না: " + appName);
+                }
             });
             return true;
         } catch (Exception e) {
@@ -791,7 +797,6 @@ public class LiveActivity extends Activity {
             @Override public void run() {
                 if (!live) return;
                 NvnCore.addLiveSeconds(LiveActivity.this, 10);
-                if (girl != null && System.currentTimeMillis() - lastAudioMs > 600) girl.setTalking(false);
                 if (liveUsage != null) liveUsage.setText("আজ Live: " + (NvnCore.liveSecondsToday(LiveActivity.this) / 60) + "/" + NvnCore.TIER_LIVE_MIN[NvnCore.tierIndex(LiveActivity.this)] + " মিনিট");
                 if (!NvnCore.canUseLive(LiveActivity.this)) {
                     setStatus("আজকের Live লিমিট শেষ — প্রিমিয়াম নাও");
