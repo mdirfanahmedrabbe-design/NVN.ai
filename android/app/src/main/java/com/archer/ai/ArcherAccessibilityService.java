@@ -41,6 +41,16 @@ public class ArcherAccessibilityService extends AccessibilityService {
         return "";
     }
 
+    public boolean launchIntent(android.content.Intent i) {
+        try {
+            i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public boolean goBack() {
         return performGlobalAction(GLOBAL_ACTION_BACK);
     }

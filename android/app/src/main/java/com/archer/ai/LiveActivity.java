@@ -489,6 +489,7 @@ public class LiveActivity extends Activity {
     }
 
     private String executeFunction(String name, JSONObject args) {
+        runOnUiThread(() -> setStatus("⚙️ " + name + " চলছে…"));
         ArcherAccessibilityService svc = ArcherAccessibilityService.instance;
         switch (name) {
             case "open_app": {
@@ -685,6 +686,22 @@ public class LiveActivity extends Activity {
                     setStatus("খুলতে পারলাম না: " + appName);
                     return;
                 }
+                // extra routes for background-launch blocks
+                try {
+                    android.app.PendingIntent pi = android.app.PendingIntent.getActivity(
+                            LiveActivity.this, 777, toLaunch,
+                            android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
+                    android.app.ActivityOptions opts = android.app.ActivityOptions.makeBasic();
+                    if (android.os.Build.VERSION.SDK_INT >= 34) {
+                        opts.setPendingIntentBackgroundActivityStartMode(
+                                android.app.ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED);
+                    }
+                    pi.send(LiveActivity.this, 0, null, null, null, null, opts.toBundle());
+                } catch (Exception ignored) {}
+                try {
+                    ArcherAccessibilityService s0 = ArcherAccessibilityService.instance;
+                    if (s0 != null) s0.launchIntent(toLaunch);
+                } catch (Exception ignored) {}
                 mainHandler.postDelayed(() -> {
                     ArcherAccessibilityService s2 = ArcherAccessibilityService.instance;
                     String fg = s2 != null ? s2.foregroundPackage() : "";
