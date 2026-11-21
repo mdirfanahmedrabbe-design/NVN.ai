@@ -213,6 +213,9 @@ public class LiveActivity extends Activity {
         setStatus("লাইভ সংযোগ হচ্ছে...");
         toggle.setText("⏹ বন্ধ করো");
         live = true;
+        if (ArcherAccessibilityService.instance == null) {
+            Toast.makeText(this, "⚠️ কাজের জন্য Accessibility চালু করো: Settings → Accessibility → NVN AI Voice Control", Toast.LENGTH_LONG).show();
+        }
         getSharedPreferences("archer", MODE_PRIVATE).edit().putBoolean("live_running", true).apply();
         setupDone = false;
         try {
@@ -290,7 +293,9 @@ public class LiveActivity extends Activity {
                                 new JSONObject().put("text",
                                         "Your name is " + getSharedPreferences("archer", MODE_PRIVATE).getString("girl_name", "NVN") + ", a name the user gave you permanently. You are a sweet, caring female voice assistant who talks like a loving girlfriend. Always address the user as 'মাস্টার' (Master). Speak warmly, sweetly and affectionately in Bengali, like a devoted close companion. You can see the live video (camera or the user's phone screen) and hear the user. " +
                                         "Reply in Bengali, short and natural, like a real conversation. Describe what you see when asked. " +
-                                        "You can control the phone with functions: open apps, call people, tap buttons by their text, type text, scroll, back, home, volume, torch, screenshot, and read the screen. You can also find a contact's number by name and send SMS or WhatsApp messages on the user's behalf. Use read_screen to see what is on screen before tapping. When the user asks for an action, do it with the functions, then confirm briefly in Bengali."))));
+                                        "You are NOT a chatbot that only talks. You are a working assistant with REAL control of this phone through your functions: open_app, call_number, call_contact, call_and_talk, send_sms, send_whatsapp, find_contact, tap_text, type_text, press_enter, scroll_down, scroll_up, press_back, press_home, set_volume, torch, take_screenshot, read_screen, open_screen. " +
+                                        "When the user asks you to do ANY work, you MUST call the matching function immediately. NEVER say you cannot do work. NEVER say you are only an AI or that you have no hands or cannot touch the phone. Ordinary phone work is always possible for you through functions. " +
+                                        "Call the function FIRST, then speak a short Bengali confirmation after it runs. Use read_screen to see what is on screen before tapping. If a function result says it failed or accessibility is off, tell the user in Bengali exactly what failed and what to switch on."))));
                 ws.sendText(new JSONObject().put("setup", setup).toString());
             } catch (Exception e) {
                 runOnUiThread(() -> {
@@ -663,22 +668,37 @@ public class LiveActivity extends Activity {
             if (pkg == null) return false;
             Intent launch = pm.getLaunchIntentForPackage(pkg);
             if (launch == null) {
-                Intent q = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(pkg);
-                java.util.List<android.content.pm.ResolveInfo> ris = pm.queryIntentActivities(q, 0);
+                Intent qi = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(pkg);
+                java.util.List<android.content.pm.ResolveInfo> ris = pm.queryIntentActivities(qi, 0);
                 if (ris == null || ris.isEmpty()) return false;
                 launch = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
                         .setComponent(new android.content.ComponentName(pkg, ris.get(0).activityInfo.name));
             }
             launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
             final Intent toLaunch = launch;
+            final String targetPkg = pkg;
             runOnUiThread(() -> {
                 try {
                     setStatus("অ্যাপ খুলছি: " + appName);
                     startActivity(toLaunch);
-                    setStatus("খুললাম: " + appName);
                 } catch (Exception e) {
                     setStatus("খুলতে পারলাম না: " + appName);
+                    return;
                 }
+                mainHandler.postDelayed(() -> {
+                    ArcherAccessibilityService s2 = ArcherAccessibilityService.instance;
+                    String fg = s2 != null ? s2.foregroundPackage() : "";
+                    if (fg != null && fg.equals(targetPkg)) {
+                        setStatus("খুললাম: " + appName);
+                    } else {
+                        try { startActivity(toLaunch); } catch (Exception ignored) {}
+                        mainHandler.postDelayed(() -> {
+                            ArcherAccessibilityService s3 = ArcherAccessibilityService.instance;
+                            String fg2 = s3 != null ? s3.foregroundPackage() : "";
+                            setStatus(fg2 != null && fg2.equals(targetPkg) ? "খুললাম: " + appName : "খুলতে পারলাম না: " + appName);
+                        }, 1500);
+                    }
+                }, 1500);
             });
             return true;
         } catch (Exception e) {

@@ -33,6 +33,14 @@ public class ArcherAccessibilityService extends AccessibilityService {
         super.onDestroy();
     }
 
+    public String foregroundPackage() {
+        try {
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root != null && root.getPackageName() != null) return root.getPackageName().toString();
+        } catch (Exception ignored) {}
+        return "";
+    }
+
     public boolean goBack() {
         return performGlobalAction(GLOBAL_ACTION_BACK);
     }

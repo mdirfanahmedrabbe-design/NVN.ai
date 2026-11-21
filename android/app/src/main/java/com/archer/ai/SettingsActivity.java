@@ -46,6 +46,8 @@ public class SettingsActivity extends Activity {
                 startActivity(new Intent(this, KeysActivity.class)));
         findViewById(R.id.setAnnounceBtn).setOnClickListener(v ->
                 startActivity(new Intent(this, AnnounceActivity.class)));
+        findViewById(R.id.setAboutBtn).setOnClickListener(v ->
+                startActivity(new Intent(this, AboutActivity.class)));
 
         save.setOnClickListener(v -> {
             SharedPreferences.Editor ed = prefs.edit()
