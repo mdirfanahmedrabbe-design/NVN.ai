@@ -36,7 +36,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="🔑 মালিকের Key-ঘর (একটা নিচে একটা) দেখতে: মূল স্ক্রিনে Settings বাটন চেপে ধরে রাখুন → PIN দিন"
+        android:text="🔑 নিচে একটা নিচে একটা Key-ঘর আছে — একটা শেষ হলে পরেরটা নিজে চলবে। নতুন ঘর: ＋ বাটন"
         android:textColor="#A78BFA"
         android:textSize="12sp" />
 
@@ -182,6 +182,17 @@
         android:background="@drawable/btn_secondary"
         android:text="সব Key মুছো"
         android:textColor="#E9D5FF" />
+
+    <Button
+        android:id="@+id/setStatusBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/btn_secondary"
+        android:padding="12dp"
+        android:text="🔔 নোটিফিকেশন ও অবস্থা"
+        android:textColor="#E8F4FF"
+        android:textSize="15sp" />
 
     <Button
         android:id="@+id/setSave"
