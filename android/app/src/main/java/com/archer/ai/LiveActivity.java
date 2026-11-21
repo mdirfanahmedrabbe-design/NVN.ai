@@ -291,6 +291,8 @@ public class LiveActivity extends Activity {
                 fns.put(fnDef("find_contact", "Find a contact's phone number by name", "name", "Contact name as saved in the phone"));
                 fns.put(fnDef2("call_and_talk", "Call a phone number and speak a message aloud on speaker for the user", "number", "Phone number, digits only", "message", "What to say on the call, in Bengali"));
                 fns.put(fnDef("open_screen", "Open a screen inside the NVN app: qibla compass, tasbih counter, premium packages, or settings", "screen", "One of: qibla, tasbih, premium, settings"));
+                fns.put(fnDefNoArg("see_screen", "Start seeing the phone screen (asks the user permission once)"));
+                fns.put(fnDefNoArg("end_call", "End the current phone call"));
                 JSONArray tools = new JSONArray().put(new JSONObject().put("functionDeclarations", fns));
                 JSONObject setup = new JSONObject()
                         .put("model", "models/gemini-3.1-flash-live-preview")
@@ -302,7 +304,7 @@ public class LiveActivity extends Activity {
                                         "Reply in Bengali, short and natural, like a real conversation. Describe what you see when asked. " +
                                         "You are NOT a chatbot that only talks. You are a working assistant with REAL control of this phone through your functions: open_app, call_number, call_contact, call_and_talk, send_sms, send_whatsapp, find_contact, tap_text, type_text, press_enter, scroll_down, scroll_up, press_back, press_home, set_volume, torch, take_screenshot, read_screen, open_screen. " +
                                         "When the user asks you to do ANY work, you MUST call the matching function immediately. NEVER say you cannot do work. NEVER say you are only an AI or that you have no hands or cannot touch the phone. Ordinary phone work is always possible for you through functions. " +
-                                        "Call the function FIRST, then speak a short Bengali confirmation after it runs. Use read_screen to see what is on screen before tapping. If a function result says it failed or accessibility is off, tell the user in Bengali exactly what failed and what to switch on."))));
+                                        "Call the function FIRST, then speak a short Bengali confirmation after it runs. Use read_screen to see what is on screen before tapping. If the user asks what is on the screen or to look at the screen and you cannot see it yet, call see_screen once. If a function result says it failed or accessibility is off, tell the user in Bengali exactly what failed and what to switch on."))));
                 ws.sendText(new JSONObject().put("setup", setup).toString());
             } catch (Exception e) {
                 runOnUiThread(() -> {
@@ -543,6 +545,30 @@ public class LiveActivity extends Activity {
             }
             case "call_and_talk":
                 return NvnCore.callAndTalk(this, args.optString("number", ""), args.optString("message", ""));
+            case "see_screen": {
+                if (projection != null) { bothMode = true; screenMode = true; return "screen visible now"; }
+                runOnUiThread(() -> {
+                    try {
+                        screenMode = true;
+                        bothMode = true;
+                        MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+                        startActivityForResult(mpm.createScreenCaptureIntent(), REQ_SCREEN);
+                        setStatus("স্ক্রিন শেয়ারের অনুমতি দাও...");
+                    } catch (Exception e) {
+                        setStatus("স্ক্রিন শেয়ার শুরু হয়নি");
+                    }
+                });
+                return "asking user for screen permission";
+            }
+            case "end_call": {
+                try {
+                    android.telecom.TelecomManager tm = (android.telecom.TelecomManager) getSystemService(Context.TELECOM_SERVICE);
+                    if (tm != null && tm.endCall()) return "call ended";
+                    return "no call to end";
+                } catch (Exception e) {
+                    return "end call failed: " + e.getMessage();
+                }
+            }
             case "open_screen": {
                 String screen = args.optString("screen", "").toLowerCase();
                 Class<?> target = null;
@@ -663,6 +689,10 @@ public class LiveActivity extends Activity {
             known.put("নগদ", "com.konasl.nagad");
             known.put("imo", "com.imo.android.imoim");
             known.put("ইমো", "com.imo.android.imoim");
+            known.put("nvn", "com.archer.ai");
+            known.put("nvn ai", "com.archer.ai");
+            known.put("nvn.ai", "com.archer.ai");
+            known.put("এনভিএন", "com.archer.ai");
             known.put("facebook lite", "com.facebook.lite");
             known.put("messenger lite", "com.facebook.mlite");
             PackageManager pm = getPackageManager();
@@ -841,7 +871,7 @@ public class LiveActivity extends Activity {
                         screenReader = ImageReader.newInstance(720, 1280, android.graphics.PixelFormat.RGBA_8888, 2);
                         virtualDisplay = projection.createVirtualDisplay("NVNScreen", 720, 1280, metrics.densityDpi,
                                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, screenReader.getSurface(), null, mainHandler);
-                        startLive();
+                        if (!live) startLive(); else setStatus("স্ক্রিন দেখছি এখন");
                     } catch (Exception e) {
                         setStatus("স্ক্রিন শেয়ার শুরু হয়নি");
                     }
