@@ -2,19 +2,12 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000">
+    android:background="@drawable/bg_main">
 
     <TextureView
         android:id="@+id/preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
-    <com.archer.ai.GirlView
-        android:id="@+id/liveGirl"
-        android:layout_width="150dp"
-        android:layout_height="185dp"
-        android:layout_gravity="top|start"
-        android:layout_margin="10dp" />
 
     <TextView
         android:id="@+id/liveUsage"
