@@ -27,10 +27,6 @@ public class SettingsActivity extends Activity {
         CheckBox english = findViewById(R.id.setEnglish);
         CheckBox mainVoice = findViewById(R.id.setMainVoice);
         EditText bkash = findViewById(R.id.setBkash);
-        EditText announceTitle = findViewById(R.id.setAnnounceTitle);
-        EditText announceBody = findViewById(R.id.setAnnounceBody);
-        EditText serverToken = findViewById(R.id.setServerToken);
-        Button sendAnnounce = findViewById(R.id.setSendAnnounce);
         Button save = findViewById(R.id.setSave);
         TextView info = findViewById(R.id.setInfo);
 
@@ -43,33 +39,13 @@ public class SettingsActivity extends Activity {
 
         boolean owner = prefs.getBoolean("owner_mode", false);
         int vis = owner ? View.VISIBLE : View.GONE;
-        announceTitle.setVisibility(vis);
-        announceBody.setVisibility(vis);
-        serverToken.setVisibility(vis);
-        sendAnnounce.setVisibility(vis);
-        serverToken.setText(prefs.getString("server_token", ""));
-
-        sendAnnounce.setOnClickListener(v -> {
-            String title = announceTitle.getText().toString().trim();
-            String body = announceBody.getText().toString().trim();
-            String token = serverToken.getText().toString().trim();
-            if (title.isEmpty() || token.isEmpty()) {
-                Toast.makeText(this, "শিরোনাম আর টোকেন লাগবে", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            prefs.edit().putString("server_token", token).apply();
-            Toast.makeText(this, "পাঠানো হচ্ছে...", Toast.LENGTH_SHORT).show();
-            new Thread(() -> {
-                String res = NvnCore.postAnnouncement(this, token, title, body);
-                runOnUiThread(() -> Toast.makeText(this,
-                        "sent".equals(res) ? "ঘোষণা পাঠানো হয়েছে" : "পাঠানো যায়নি — সার্ভার/টোকেন দেখো",
-                        Toast.LENGTH_LONG).show());
-            }).start();
-        });
+        findViewById(R.id.setAnnounceBtn).setVisibility(vis);
 
         findViewById(R.id.setStatusBtn).setOnClickListener(v -> showStatusDialog());
         findViewById(R.id.setKeysBtn).setOnClickListener(v ->
                 startActivity(new Intent(this, KeysActivity.class)));
+        findViewById(R.id.setAnnounceBtn).setOnClickListener(v ->
+                startActivity(new Intent(this, AnnounceActivity.class)));
 
         save.setOnClickListener(v -> {
             SharedPreferences.Editor ed = prefs.edit()
