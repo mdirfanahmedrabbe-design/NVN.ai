@@ -304,7 +304,7 @@ public class LiveActivity extends Activity {
                                         "Reply in Bengali, short and natural, like a real conversation. Describe what you see when asked. " +
                                         "You are NOT a chatbot that only talks. You are a working assistant with REAL control of this phone through your functions: open_app, call_number, call_contact, call_and_talk, send_sms, send_whatsapp, find_contact, tap_text, type_text, press_enter, scroll_down, scroll_up, press_back, press_home, set_volume, torch, take_screenshot, read_screen, open_screen. " +
                                         "When the user asks you to do ANY work, you MUST call the matching function immediately. NEVER say you cannot do work. NEVER say you are only an AI or that you have no hands or cannot touch the phone. Ordinary phone work is always possible for you through functions. " +
-                                        "Call the function FIRST, then speak a short Bengali confirmation after it runs. Use read_screen to see what is on screen before tapping. If the user asks what is on the screen or to look at the screen and you cannot see it yet, call see_screen once. If a function result says it failed or accessibility is off, tell the user in Bengali exactly what failed and what to switch on."))));
+                                        "Call the function FIRST, then speak a short Bengali confirmation after it runs. For open_app always pass the English app name (Facebook, WhatsApp, YouTube, TikTok, bKash) even when the user says the name in Bengali. Use read_screen to see what is on screen before tapping. If the user asks what is on the screen or to look at the screen and you cannot see it yet, call see_screen once. If a function result says it failed or accessibility is off, tell the user in Bengali exactly what failed and what to switch on."))));
                 ws.sendText(new JSONObject().put("setup", setup).toString());
             } catch (Exception e) {
                 runOnUiThread(() -> {
@@ -694,6 +694,46 @@ public class LiveActivity extends Activity {
             known.put("nvn.ai", "com.archer.ai");
             known.put("এনভিএন", "com.archer.ai");
             known.put("facebook lite", "com.facebook.lite");
+            known.put("ফেসবুক লাইট", "com.facebook.lite");
+            known.put("মেসেঞ্জার", "com.facebook.orca");
+            known.put("rocket", "com.dbbl.mbs.apps.main");
+            known.put("রকেট", "com.dbbl.mbs.apps.main");
+            known.put("daraz", "com.daraz.android");
+            known.put("দারাজ", "com.daraz.android");
+            known.put("pathao", "com.pathao.user");
+            known.put("পাঠাও", "com.pathao.user");
+            known.put("uber", "com.ubercab");
+            known.put("উবার", "com.ubercab");
+            known.put("viber", "com.viber.voip");
+            known.put("ভাইবার", "com.viber.voip");
+            known.put("google", "com.google.android.googlequicksearchbox");
+            known.put("গুগল", "com.google.android.googlequicksearchbox");
+            known.put("camera", "com.android.camera2");
+            known.put("ক্যামেরা", "com.android.camera2");
+            known.put("gallery", "com.google.android.apps.photos");
+            known.put("গ্যালারি", "com.google.android.apps.photos");
+            known.put("photos", "com.google.android.apps.photos");
+            known.put("settings", "com.android.settings");
+            known.put("সেটিংস", "com.android.settings");
+            known.put("calculator", "com.google.android.calculator");
+            known.put("ক্যালকুলেটর", "com.google.android.calculator");
+            known.put("clock", "com.google.android.deskclock");
+            known.put("ঘড়ি", "com.google.android.deskclock");
+            known.put("contacts", "com.google.android.contacts");
+            known.put("phone", "com.google.android.dialer");
+            known.put("ফোন", "com.google.android.dialer");
+            known.put("messages", "com.google.android.apps.messaging");
+            known.put("মেসেজ", "com.google.android.apps.messaging");
+            known.put("files", "com.google.android.apps.nbu.files");
+            known.put("ফাইল", "com.google.android.apps.nbu.files");
+            known.put("maps", "com.google.android.apps.maps");
+            known.put("ম্যাপ", "com.google.android.apps.maps");
+            known.put("spotify", "com.spotify.music");
+            known.put("স্পটিফাই", "com.spotify.music");
+            known.put("zoom", "us.zoom.videomeetings");
+            known.put("জুম", "us.zoom.videomeetings");
+            known.put("botim", "im.thebotim");
+            known.put("বোটিম", "im.thebotim");
             known.put("messenger lite", "com.facebook.mlite");
             PackageManager pm = getPackageManager();
             String pkg = known.get(q);
