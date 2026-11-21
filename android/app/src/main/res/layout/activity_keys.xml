@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_main"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🔑 Gemini Key-ঘর"
+        android:textColor="#C084FC"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="একটা ঘরে Key বসিয়ে সেভ করলেই নিচে আরেকটা খালি ঘর খুলবে। যত খুশি Key বসাও — একটার লিমিট শেষ হলে অটোমেটিক পরেরটা চলবে, এক সেকেন্ডও দেরি হবে না।"
+        android:textColor="#A78BFA"
+        android:textSize="13sp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/keysList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/keysCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="#94A3B8"
+        android:textSize="12sp" />
+
+    <Button
+        android:id="@+id/keysSave"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/btn_primary"
+        android:padding="12dp"
+        android:text="সেভ করো"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/keysClear"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/btn_secondary"
+        android:padding="10dp"
+        android:text="সব Key মুছো"
+        android:textColor="#E9D5FF" />
+</LinearLayout>

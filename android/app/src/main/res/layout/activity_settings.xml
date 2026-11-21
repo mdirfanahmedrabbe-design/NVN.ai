@@ -14,31 +14,17 @@
         android:textSize="22sp"
         android:textStyle="bold" />
 
-    <TextView
+    <Button
+        android:id="@+id/setKeysBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Gemini API Key"
-        android:textColor="#E2E8F0" />
-
-    <EditText
-        android:id="@+id/setKey"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_input"
-        android:hint="Key বসাও"
-        android:inputType="textPassword"
+        android:background="@drawable/btn_primary"
         android:padding="12dp"
-        android:textColor="#E8F4FF"
-        android:textColorHint="#64748B" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="🔑 নিচে একটা নিচে একটা Key-ঘর আছে — একটা শেষ হলে পরেরটা নিজে চলবে। নতুন ঘর: ＋ বাটন"
-        android:textColor="#A78BFA"
-        android:textSize="12sp" />
+        android:text="🔑 Gemini Key-ঘর (আলাদা পেজ)"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:textStyle="bold" />
 
     <TextView
         android:layout_width="match_parent"
@@ -100,37 +86,6 @@
         android:textColor="#E8F4FF"
         android:textColorHint="#64748B" />
 
-    <TextView
-        android:id="@+id/setKeyLabel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="আরেকটা Gemini Key যোগ করো (শুধু মালিক)"
-        android:textColor="#E2E8F0" />
-
-    <LinearLayout
-        android:id="@+id/setKeysList"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical" />
-
-    <Button
-        android:id="@+id/setAddKeyRow"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:background="@drawable/btn_secondary"
-        android:text="＋ আরেকটা ঘর"
-        android:textColor="#E9D5FF" />
-
-    <TextView
-        android:id="@+id/setKeyCount"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textColor="#94A3B8"
-        android:textSize="12sp" />
-
     <EditText
         android:id="@+id/setAnnounceTitle"
         android:layout_width="match_parent"
@@ -173,15 +128,6 @@
         android:background="@drawable/btn_primary"
         android:text="📢 ঘোষণা পাঠাও"
         android:textColor="#FFFFFF" />
-
-    <Button
-        android:id="@+id/setClearKeys"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/btn_secondary"
-        android:text="সব Key মুছো"
-        android:textColor="#E9D5FF" />
 
     <Button
         android:id="@+id/setStatusBtn"
