@@ -33,7 +33,8 @@ public class LiveService extends Service {
                 .setContentText("লাইভ চালু আছে — কথা বলো, আমি শুনছি")
                 .setSmallIcon(android.R.drawable.ic_btn_speak_now)
                 .build();
-        boolean screen = intent != null && "screen".equals(intent.getStringExtra("mode"));
+        String mode = intent != null ? intent.getStringExtra("mode") : null;
+        boolean screen = "screen".equals(mode) || "both".equals(mode);
         if (Build.VERSION.SDK_INT >= 29) {
             int type = ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
             if (screen) type |= ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION;

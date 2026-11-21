@@ -220,7 +220,7 @@ public class LiveActivity extends Activity {
         setupDone = false;
         try {
             Intent svc = new Intent(this, LiveService.class);
-            svc.putExtra("mode", screenMode ? "screen" : "camera");
+            svc.putExtra("mode", (screenMode || bothMode) ? "screen" : "camera");
             if (Build.VERSION.SDK_INT >= 26) startForegroundService(svc); else startService(svc);
         } catch (Exception ignored) {}
         orb.setState(OrbView.LISTENING);
@@ -243,6 +243,13 @@ public class LiveActivity extends Activity {
                                     mainHandler.postDelayed(() -> { if (!live && !userStopped) startLive(); }, 800);
                                     return;
                                 }
+                            }
+                            if (!userStopped && reconnectAttempts < 3) {
+                                reconnectAttempts++;
+                                setStatus("সংযোগ ছিন্ন — আবার সংযোগ হচ্ছে...");
+                                stopLive();
+                                mainHandler.postDelayed(() -> { if (!live && !userStopped) startLive(); }, 1000);
+                                return;
                             }
                             setStatus("লাইভ সংযোগ বন্ধ: " + reason);
                             stopLive();
@@ -662,11 +669,19 @@ public class LiveActivity extends Activity {
             String pkg = known.get(q);
             if (pkg == null) {
                 List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+                String best = null;
+                int bestScore = Integer.MAX_VALUE;
                 for (ApplicationInfo ai : apps) {
                     String label = pm.getApplicationLabel(ai).toString().toLowerCase().trim();
                     if (label.length() < 2) continue;
-                    if (label.equals(q) || label.contains(q) || q.contains(label)) { pkg = ai.packageName; break; }
+                    int score = -1;
+                    if (label.equals(q)) score = 0;
+                    else if (label.startsWith(q)) score = 100 + label.length();
+                    else if (label.contains(q)) score = 1000 + label.length();
+                    else if (q.contains(label)) score = 2000 + label.length();
+                    if (score >= 0 && score < bestScore) { bestScore = score; best = ai.packageName; }
                 }
+                pkg = best;
             }
             if (pkg == null) return false;
             Intent launch = pm.getLaunchIntentForPackage(pkg);
