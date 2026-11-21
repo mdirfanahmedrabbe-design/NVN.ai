@@ -1,6 +1,8 @@
 package com.archer.ai;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
@@ -99,6 +101,8 @@ public class SettingsActivity extends Activity {
             }).start();
         });
 
+        findViewById(R.id.setStatusBtn).setOnClickListener(v -> showStatusDialog());
+
         save.setOnClickListener(v -> {
             List<String> all = new ArrayList<>();
             String single = key.getText().toString().trim();
@@ -168,5 +172,42 @@ public class SettingsActivity extends Activity {
             }
         }
         keyCount.setText("মোট Key: " + count + "টি (একটার লিমিট শেষ হলে অটো পরেরটায় যাবে)");
+    }
+
+    private void showStatusDialog() {
+        int tier = NvnCore.tierIndex(this);
+        long exp = prefs.getLong("premium_expiry", 0);
+        String expText = exp > 0
+                ? new java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.ENGLISH).format(new java.util.Date(exp))
+                : "—";
+        int usedMin = NvnCore.liveSecondsToday(this) / 60;
+        int limitMin = NvnCore.TIER_LIVE_MIN[tier];
+        String annTitle = prefs.getString("last_announce_title", "");
+        String annBody = prefs.getString("last_announce_body", "");
+        String annText = annTitle.isEmpty() ? "" : "📢 " + annTitle + "\n" + annBody + "\n\n";
+        String msg = annText + "প্যাকেজ: " + NvnCore.TIER_NAMES[tier] + "\n"
+                + "মেয়াদ: " + expText + "\n"
+                + "আজ Live: " + usedMin + "/" + limitMin + " মিনিট\n"
+                + "আজ প্রশ্ন: " + NvnCore.questionsUsedToday(this) + "/" + NvnCore.TIER_Q[tier] + "\n"
+                + "মালিক মোড: " + (prefs.getBoolean("owner_mode", false) ? "চালু" : "বন্ধ");
+        AlertDialog d = new AlertDialog.Builder(this)
+                .setTitle("🔔 নোটিফিকেশন ও অবস্থা")
+                .setMessage(msg)
+                .setPositiveButton("ঠিক আছে", null)
+                .setNeutralButton("👑 Premium কিনুন", (dlg, w) ->
+                        startActivity(new Intent(this, PremiumActivity.class)))
+                .create();
+        d.show();
+        try {
+            if (d.getWindow() != null) d.getWindow().setBackgroundDrawableResource(R.drawable.bg_card);
+            android.widget.TextView m = d.findViewById(android.R.id.message);
+            if (m != null) m.setTextColor(0xFFE8F4FF);
+            android.widget.TextView tt = d.findViewById(android.R.id.title);
+            if (tt != null) tt.setTextColor(0xFFC084FC);
+            android.widget.Button pos = d.getButton(AlertDialog.BUTTON_POSITIVE);
+            if (pos != null) pos.setTextColor(0xFFC084FC);
+            android.widget.Button neu = d.getButton(AlertDialog.BUTTON_NEUTRAL);
+            if (neu != null) neu.setTextColor(0xFFFACC15);
+        } catch (Exception ignored) {}
     }
 }

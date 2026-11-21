@@ -53,7 +53,6 @@ public class MainActivity extends Activity {
 
         onlinePill = findViewById(R.id.onlinePill);
         Button liveBtn = findViewById(R.id.liveBtn);
-        findViewById(R.id.bellBtn).setOnClickListener(v -> showStatusDialog());
         liveBtn.setOnClickListener(v -> openLive("camera"));
         findViewById(R.id.navHome).setOnClickListener(v -> refreshUsage());
         findViewById(R.id.navHistory).setOnClickListener(v -> showHistory());
@@ -135,34 +134,6 @@ public class MainActivity extends Activity {
         i.putExtra("mode", mode);
         i.putExtra("autostart", true);
         startActivity(i);
-    }
-
-    private void showStatusDialog() {
-        SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
-        int tier = NvnCore.tierIndex(this);
-        long exp = p.getLong("premium_expiry", 0);
-        String expText = exp > 0
-                ? new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH).format(new Date(exp))
-                : "—";
-        int usedMin = NvnCore.liveSecondsToday(this) / 60;
-        int limitMin = NvnCore.TIER_LIVE_MIN[tier];
-        String annTitle = p.getString("last_announce_title", "");
-        String annBody = p.getString("last_announce_body", "");
-        String annText = annTitle.isEmpty() ? "" : "📢 " + annTitle + "\n" + annBody + "\n\n";
-        String msg = annText + "প্যাকেজ: " + NvnCore.TIER_NAMES[tier] + "\n"
-                + "মেয়াদ: " + expText + "\n"
-                + "আজ Live: " + usedMin + "/" + limitMin + " মিনিট\n"
-                + "আজ প্রশ্ন: " + NvnCore.questionsUsedToday(this) + "/" + NvnCore.TIER_Q[tier] + "\n"
-                + "মালিক মোড: " + (p.getBoolean("owner_mode", false) ? "চালু" : "বন্ধ");
-        AlertDialog statusDialog = new AlertDialog.Builder(this)
-                .setTitle("🔔 অবস্থা")
-                .setMessage(msg)
-                .setPositiveButton("ঠিক আছে", null)
-                .setNeutralButton("👑 Premium কিনুন", (d, w) ->
-                        startActivity(new Intent(this, PremiumActivity.class)))
-                .create();
-        statusDialog.show();
-        styleDialog(statusDialog);
     }
 
     private void showHistory() {
