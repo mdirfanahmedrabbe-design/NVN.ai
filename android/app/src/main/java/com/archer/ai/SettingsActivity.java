@@ -54,11 +54,11 @@ public class SettingsActivity extends Activity {
 
         boolean owner = prefs.getBoolean("owner_mode", false);
         int vis = owner ? View.VISIBLE : View.GONE;
-        keyLabel.setVisibility(vis);
-        keysList.setVisibility(vis);
-        addRow.setVisibility(vis);
-        keyCount.setVisibility(vis);
-        clearKeys.setVisibility(vis);
+        keyLabel.setVisibility(View.VISIBLE);
+        keysList.setVisibility(View.VISIBLE);
+        addRow.setVisibility(View.VISIBLE);
+        keyCount.setVisibility(View.VISIBLE);
+        clearKeys.setVisibility(View.VISIBLE);
         announceTitle.setVisibility(vis);
         announceBody.setVisibility(vis);
         serverToken.setVisibility(vis);

@@ -50,6 +50,10 @@ public class PremiumActivity extends Activity {
             tv.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
             Button buy = new Button(this);
             buy.setText("কিনুন");
+            buy.setBackgroundResource(R.drawable.btn_primary);
+            buy.setTextColor(0xFFFFFFFF);
+            buy.setTextSize(15);
+            buy.setTypeface(null, android.graphics.Typeface.BOLD);
             buy.setOnClickListener(v -> selectTier(idx));
             row.addView(tv);
             row.addView(buy);
