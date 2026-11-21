@@ -21,7 +21,8 @@
         android:allowBackup="true"
         android:label="NVN.ai"
         android:theme="@style/AppTheme"
-        android:usesCleartextTraffic="false">
+        android:usesCleartextTraffic="false"
+        android:icon="@mipmap/ic_launcher">
 
         <activity
             android:name=".MainActivity"
@@ -44,6 +45,9 @@
             android:exported="false" />
         <activity
             android:name=".AnnounceActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AboutActivity"
             android:exported="false" />
 
         <activity
