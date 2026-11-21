@@ -5,22 +5,16 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
 
 public class SettingsActivity extends Activity {
-    private LinearLayout keysList;
-    private TextView keyCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,17 +22,11 @@ public class SettingsActivity extends Activity {
         setContentView(R.layout.activity_settings);
 
         SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
-        EditText key = findViewById(R.id.setKey);
         SeekBar speed = findViewById(R.id.setSpeed);
         SeekBar pitch = findViewById(R.id.setPitch);
         CheckBox english = findViewById(R.id.setEnglish);
         CheckBox mainVoice = findViewById(R.id.setMainVoice);
         EditText bkash = findViewById(R.id.setBkash);
-        TextView keyLabel = findViewById(R.id.setKeyLabel);
-        keysList = findViewById(R.id.setKeysList);
-        Button addRow = findViewById(R.id.setAddKeyRow);
-        keyCount = findViewById(R.id.setKeyCount);
-        Button clearKeys = findViewById(R.id.setClearKeys);
         EditText announceTitle = findViewById(R.id.setAnnounceTitle);
         EditText announceBody = findViewById(R.id.setAnnounceBody);
         EditText serverToken = findViewById(R.id.setServerToken);
@@ -46,7 +34,6 @@ public class SettingsActivity extends Activity {
         Button save = findViewById(R.id.setSave);
         TextView info = findViewById(R.id.setInfo);
 
-        key.setText(prefs.getString("gemini_key", ""));
         speed.setProgress((int) (prefs.getFloat("tts_speed", 1.0f) * 10));
         pitch.setProgress((int) (prefs.getFloat("tts_pitch", 1.0f) * 10));
         english.setChecked(prefs.getBoolean("english", false));
@@ -56,32 +43,11 @@ public class SettingsActivity extends Activity {
 
         boolean owner = prefs.getBoolean("owner_mode", false);
         int vis = owner ? View.VISIBLE : View.GONE;
-        keyLabel.setVisibility(View.VISIBLE);
-        keysList.setVisibility(View.VISIBLE);
-        addRow.setVisibility(View.VISIBLE);
-        keyCount.setVisibility(View.VISIBLE);
-        clearKeys.setVisibility(View.VISIBLE);
         announceTitle.setVisibility(vis);
         announceBody.setVisibility(vis);
         serverToken.setVisibility(vis);
         sendAnnounce.setVisibility(vis);
         serverToken.setText(prefs.getString("server_token", ""));
-
-        List<String> keys = NvnCore.getKeys(prefs);
-        for (String k : keys) addKeyRow(k);
-        addKeyRow("");
-        updateKeyCount();
-
-        addRow.setOnClickListener(v -> addKeyRow(""));
-
-        clearKeys.setOnClickListener(v -> {
-            prefs.edit().remove("gemini_keys").remove("gemini_key").putInt("key_index", 0).apply();
-            key.setText("");
-            keysList.removeAllViews();
-            addKeyRow("");
-            updateKeyCount();
-            Toast.makeText(this, "সব Key মুছে গেছে", Toast.LENGTH_SHORT).show();
-        });
 
         sendAnnounce.setOnClickListener(v -> {
             String title = announceTitle.getText().toString().trim();
@@ -102,76 +68,20 @@ public class SettingsActivity extends Activity {
         });
 
         findViewById(R.id.setStatusBtn).setOnClickListener(v -> showStatusDialog());
+        findViewById(R.id.setKeysBtn).setOnClickListener(v ->
+                startActivity(new Intent(this, KeysActivity.class)));
 
         save.setOnClickListener(v -> {
-            List<String> all = new ArrayList<>();
-            String single = key.getText().toString().trim();
-            if (!single.isEmpty()) all.add(single);
-            for (int i = 0; i < keysList.getChildCount(); i++) {
-                View row = keysList.getChildAt(i);
-                if (row instanceof LinearLayout) {
-                    LinearLayout ll = (LinearLayout) row;
-                    for (int j = 0; j < ll.getChildCount(); j++) {
-                        View child = ll.getChildAt(j);
-                        if (child instanceof EditText) {
-                            String val = ((EditText) child).getText().toString().trim();
-                            if (!val.isEmpty() && !all.contains(val)) all.add(val);
-                        }
-                    }
-                }
-            }
             SharedPreferences.Editor ed = prefs.edit()
-                    .putString("gemini_key", all.isEmpty() ? "" : all.get(0))
-                    .putString("gemini_keys", String.join("\n", all))
                     .putFloat("tts_speed", Math.max(0.5f, speed.getProgress() / 10f))
                     .putFloat("tts_pitch", Math.max(0.5f, pitch.getProgress() / 10f))
                     .putBoolean("english", english.isChecked())
                     .putBoolean("main_voice", mainVoice.isChecked())
                     .putString("bkash_number", bkash.getText().toString().trim());
             ed.apply();
-            Toast.makeText(this, "সেভ হয়েছে — মোট " + all.size() + "টি Key", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "সেভ হয়েছে", Toast.LENGTH_SHORT).show();
             finish();
         });
-    }
-
-    private void addKeyRow(String value) {
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setPadding(0, 4, 0, 4);
-        EditText et = new EditText(this);
-        et.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-        et.setBackgroundResource(R.drawable.bg_input);
-        et.setHint("নতুন Key বসাও");
-        et.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        et.setPadding(24, 18, 24, 18);
-        et.setTextColor(0xFFE8F4FF);
-        et.setHintTextColor(0xFF64748B);
-        et.setText(value);
-        Button del = new Button(this);
-        del.setText("✕");
-        del.setOnClickListener(v -> {
-            keysList.removeView(row);
-            updateKeyCount();
-        });
-        row.addView(et);
-        row.addView(del);
-        keysList.addView(row);
-        updateKeyCount();
-    }
-
-    private void updateKeyCount() {
-        int count = 0;
-        for (int i = 0; i < keysList.getChildCount(); i++) {
-            View row = keysList.getChildAt(i);
-            if (row instanceof LinearLayout) {
-                LinearLayout ll = (LinearLayout) row;
-                for (int j = 0; j < ll.getChildCount(); j++) {
-                    View child = ll.getChildAt(j);
-                    if (child instanceof EditText && !((EditText) child).getText().toString().trim().isEmpty()) count++;
-                }
-            }
-        }
-        keyCount.setText("মোট Key: " + count + "টি (একটার লিমিট শেষ হলে অটো পরেরটায় যাবে)");
     }
 
     private void showStatusDialog() {
