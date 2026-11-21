@@ -630,6 +630,7 @@ public class LiveActivity extends Activity {
     private boolean openAppByName(String appName) {
         try {
             String q = appName.toLowerCase().trim();
+            if (q.length() < 2) return false;
             Map<String, String> known = new HashMap<>();
             known.put("facebook", "com.facebook.katana");
             known.put("ফেসবুক", "com.facebook.katana");
@@ -662,7 +663,8 @@ public class LiveActivity extends Activity {
             if (pkg == null) {
                 List<ApplicationInfo> apps = pm.getInstalledApplications(0);
                 for (ApplicationInfo ai : apps) {
-                    String label = pm.getApplicationLabel(ai).toString().toLowerCase();
+                    String label = pm.getApplicationLabel(ai).toString().toLowerCase().trim();
+                    if (label.length() < 2) continue;
                     if (label.equals(q) || label.contains(q) || q.contains(label)) { pkg = ai.packageName; break; }
                 }
             }
@@ -811,7 +813,13 @@ public class LiveActivity extends Activity {
                         MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
                         projection = mpm.getMediaProjection(resultCode, data);
                         projection.registerCallback(new MediaProjection.Callback() {
-                            @Override public void onStop() { stopLive(); }
+                            @Override public void onStop() {
+                                screenMode = false;
+                                bothMode = false;
+                                projection = null;
+                                try { if (virtualDisplay != null) { virtualDisplay.release(); virtualDisplay = null; } } catch (Exception ignored) {}
+                                runOnUiThread(() -> setStatus("স্ক্রিন দেখা বন্ধ হলো — ক্যামেরা চলছে, কথা বলো"));
+                            }
                         }, mainHandler);
                         DisplayMetrics metrics = new DisplayMetrics();
                         getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
