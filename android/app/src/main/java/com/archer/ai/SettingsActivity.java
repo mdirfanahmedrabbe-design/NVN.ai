@@ -66,6 +66,7 @@ public class SettingsActivity extends Activity {
     }
 
     private void ownerPinDialog() {
+        android.content.SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
         String hash = prefs.getString("owner_pin_hash", "");
         android.widget.EditText pinInput = new android.widget.EditText(this);
         pinInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
