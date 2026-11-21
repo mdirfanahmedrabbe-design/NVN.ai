@@ -90,9 +90,13 @@ public class PremiumActivity extends Activity {
         else expText = "মেয়াদ: " + new SimpleDateFormat("d MMM yyyy", Locale.US).format(new Date(expiry));
         int qUsed = NvnCore.questionsUsedToday(this);
         int liveMinUsed = NvnCore.liveSecondsToday(this) / 60;
-        status.setText("বর্তমান প্যাকেজ: " + NvnCore.TIER_NAMES[idx] + " (" + expText + ")\n"
-                + "আজকের ব্যবহার: প্রশ্ন " + qUsed + "/" + NvnCore.TIER_Q[idx]
-                + ", Live " + liveMinUsed + "/" + NvnCore.TIER_LIVE_MIN[idx] + " মিনিট");
+        if (NvnCore.isOwner(this)) {
+            status.setText("👑 আপনি মালিক — সব আনলিমিটেড, কেনার দরকার নেই\nআজ Live: " + liveMinUsed + " মিনিট (লিমিট নেই)");
+        } else {
+            status.setText("বর্তমান প্যাকেজ: " + NvnCore.TIER_NAMES[idx] + " (" + expText + ")\n"
+                    + "আজকের ব্যবহার: প্রশ্ন " + qUsed + "/" + NvnCore.TIER_Q[idx]
+                    + ", Live " + liveMinUsed + "/" + NvnCore.TIER_LIVE_MIN[idx] + " মিনিট");
+        }
     }
 
     private void verifyPayment() {

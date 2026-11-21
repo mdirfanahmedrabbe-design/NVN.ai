@@ -42,6 +42,9 @@ public class SettingsActivity extends Activity {
         findViewById(R.id.setAnnounceBtn).setVisibility(vis);
 
         findViewById(R.id.setStatusBtn).setOnClickListener(v -> showStatusDialog());
+        android.widget.Button ownerBtn = findViewById(R.id.setOwnerBtn);
+        ownerBtn.setText(prefs.getBoolean("owner_mode", false) ? "👑 মালিক মোড: চালু (আনলিমিটেড)" : "👑 মালিক মোড: বন্ধ — চালু করতে টিপ দাও");
+        ownerBtn.setOnClickListener(v -> ownerPinDialog());
         findViewById(R.id.setKeysBtn).setOnClickListener(v ->
                 startActivity(new Intent(this, KeysActivity.class)));
         findViewById(R.id.setAnnounceBtn).setOnClickListener(v ->
@@ -62,6 +65,34 @@ public class SettingsActivity extends Activity {
         });
     }
 
+    private void ownerPinDialog() {
+        String hash = prefs.getString("owner_pin_hash", "");
+        android.widget.EditText pinInput = new android.widget.EditText(this);
+        pinInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        pinInput.setHint("PIN (কমপক্ষে ৪ ডিজিট)");
+        new AlertDialog.Builder(this)
+                .setTitle(hash.isEmpty() ? "মালিকের PIN সেট করো" : "মালিকের PIN দাও")
+                .setView(pinInput)
+                .setPositiveButton("ঠিক আছে", (d, w) -> {
+                    String pin = pinInput.getText().toString().trim();
+                    if (pin.length() < 4) { Toast.makeText(this, "PIN কমপক্ষে ৪ ডিজিট", Toast.LENGTH_SHORT).show(); return; }
+                    if (hash.isEmpty()) {
+                        prefs.edit().putString("owner_pin_hash", NvnCore.sha256Hex(pin)).putBoolean("owner_mode", true).apply();
+                        Toast.makeText(this, "মালিক মোড চালু — লিমিট নেই", Toast.LENGTH_LONG).show();
+                        recreate();
+                    } else if (NvnCore.sha256Hex(pin).equals(hash)) {
+                        boolean now = !prefs.getBoolean("owner_mode", false);
+                        prefs.edit().putBoolean("owner_mode", now).apply();
+                        Toast.makeText(this, now ? "মালিক মোড চালু — লিমিট নেই" : "মালিক মোড বন্ধ", Toast.LENGTH_LONG).show();
+                        recreate();
+                    } else {
+                        Toast.makeText(this, "PIN ভুল", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("বাতিল", null)
+                .show();
+    }
+
     private void showStatusDialog() {
         android.content.SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
         int tier = NvnCore.tierIndex(this);
@@ -74,18 +105,21 @@ public class SettingsActivity extends Activity {
         String annTitle = prefs.getString("last_announce_title", "");
         String annBody = prefs.getString("last_announce_body", "");
         String annText = annTitle.isEmpty() ? "" : "📢 " + annTitle + "\n" + annBody + "\n\n";
-        String msg = annText + "প্যাকেজ: " + NvnCore.TIER_NAMES[tier] + "\n"
+        boolean owner = prefs.getBoolean("owner_mode", false);
+        String msg = owner
+                ? annText + "👑 আপনি মালিক — সব আনলিমিটেড\nআজ Live: " + usedMin + " মিনিট (লিমিট নেই)"
+                : annText + "প্যাকেজ: " + NvnCore.TIER_NAMES[tier] + "\n"
                 + "মেয়াদ: " + expText + "\n"
                 + "আজ Live: " + usedMin + "/" + limitMin + " মিনিট\n"
                 + "আজ প্রশ্ন: " + NvnCore.questionsUsedToday(this) + "/" + NvnCore.TIER_Q[tier] + "\n"
-                + "মালিক মোড: " + (prefs.getBoolean("owner_mode", false) ? "চালু" : "বন্ধ");
-        AlertDialog d = new AlertDialog.Builder(this)
+                + "মালিক মোড: বন্ধ";
+        AlertDialog.Builder bld = new AlertDialog.Builder(this)
                 .setTitle("🔔 নোটিফিকেশন ও অবস্থা")
                 .setMessage(msg)
-                .setPositiveButton("ঠিক আছে", null)
-                .setNeutralButton("👑 Premium কিনুন", (dlg, w) ->
-                        startActivity(new Intent(this, PremiumActivity.class)))
-                .create();
+                .setPositiveButton("ঠিক আছে", null);
+        if (!owner) bld.setNeutralButton("👑 Premium কিনুন", (dlg, w) ->
+                startActivity(new Intent(this, PremiumActivity.class)));
+        AlertDialog d = bld.create();
         d.show();
         try {
             if (d.getWindow() != null) d.getWindow().setBackgroundDrawableResource(R.drawable.bg_card);
