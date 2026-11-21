@@ -25,6 +25,7 @@ import java.util.Locale;
 
 public class MainActivity extends Activity {
     private TextView onlinePill;
+    private Button liveBtn;
     private SharedPreferences prefs;
     private int tickCount = 0;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -52,7 +53,7 @@ public class MainActivity extends Activity {
         prefs = getSharedPreferences("archer", MODE_PRIVATE);
 
         onlinePill = findViewById(R.id.onlinePill);
-        Button liveBtn = findViewById(R.id.liveBtn);
+        liveBtn = findViewById(R.id.liveBtn);
         liveBtn.setOnClickListener(v -> openLive("camera"));
         findViewById(R.id.navHome).setOnClickListener(v -> refreshUsage());
         findViewById(R.id.navHistory).setOnClickListener(v -> showHistory());
@@ -123,6 +124,8 @@ public class MainActivity extends Activity {
 
     private void refreshUsage() {
         try {
+            boolean running = prefs.getBoolean("live_running", false);
+            if (liveBtn != null) liveBtn.setText(running ? "((•)) On Live" : "Off Live ›");
             int used = NvnCore.liveSecondsToday(this) / 60;
             int limit = NvnCore.TIER_LIVE_MIN[NvnCore.tierIndex(this)];
             onlinePill.setText("● Online for " + used + " min  (আজ " + used + "/" + limit + ")");

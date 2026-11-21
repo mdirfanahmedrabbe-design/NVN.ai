@@ -218,6 +218,7 @@ public class LiveActivity extends Activity {
         setStatus("লাইভ সংযোগ হচ্ছে...");
         toggle.setText("⏹ বন্ধ করো");
         live = true;
+        getSharedPreferences("archer", MODE_PRIVATE).edit().putBoolean("live_running", true).apply();
         setupDone = false;
         try {
             Intent svc = new Intent(this, LiveService.class);
@@ -805,6 +806,7 @@ public class LiveActivity extends Activity {
 
     private void stopLive() {
         live = false;
+        try { getSharedPreferences("archer", MODE_PRIVATE).edit().putBoolean("live_running", false).apply(); } catch (Exception ignored) {}
         setupDone = false;
         try { stopService(new Intent(this, LiveService.class)); } catch (Exception ignored) {}
         toggle.setText("🔴 লাইভ শুরু করো");
