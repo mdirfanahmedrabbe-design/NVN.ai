@@ -42,6 +42,9 @@
         <activity
             android:name=".KeysActivity"
             android:exported="false" />
+        <activity
+            android:name=".AnnounceActivity"
+            android:exported="false" />
 
         <activity
             android:name=".SettingsActivity"
