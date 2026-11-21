@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_main"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📢 ঘোষণা পেজ"
+        android:textColor="#C084FC"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="এখানে লিখে পোস্ট করলেই সব ইউজারের অ্যাপে নোটিফিকেশন যাবে।"
+        android:textColor="#A78BFA"
+        android:textSize="13sp" />
+
+    <EditText
+        android:id="@+id/annTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_input"
+        android:hint="শিরোনাম"
+        android:padding="12dp"
+        android:textColor="#E8F4FF"
+        android:textColorHint="#64748B" />
+
+    <EditText
+        android:id="@+id/annBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_input"
+        android:hint="ঘোষণার লেখা"
+        android:minLines="3"
+        android:padding="12dp"
+        android:textColor="#E8F4FF"
+        android:textColorHint="#64748B" />
+
+    <EditText
+        android:id="@+id/annToken"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_input"
+        android:hint="সার্ভার টোকেন"
+        android:inputType="textPassword"
+        android:padding="12dp"
+        android:textColor="#E8F4FF"
+        android:textColorHint="#64748B" />
+
+    <Button
+        android:id="@+id/annSend"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/btn_primary"
+        android:padding="12dp"
+        android:text="📢 পোস্ট করো"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/annCurrent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_card"
+        android:padding="12dp"
+        android:textColor="#E8F4FF"
+        android:textSize="13sp" />
+</LinearLayout>
