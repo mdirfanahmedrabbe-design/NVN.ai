@@ -128,7 +128,7 @@ public class MainActivity extends Activity {
             if (liveBtn != null) liveBtn.setText(running ? "((•)) On Live" : "Off Live ›");
             int used = NvnCore.liveSecondsToday(this) / 60;
             int limit = NvnCore.TIER_LIVE_MIN[NvnCore.tierIndex(this)];
-            onlinePill.setText("● Online for " + used + " min  (আজ " + used + "/" + limit + ")");
+            onlinePill.setText(NvnCore.isOwner(this) ? "👑 মালিক — আনলিমিটেড" : "● Online for " + used + " min  (আজ " + used + "/" + limit + ")");
         } catch (Exception ignored) {}
     }
 

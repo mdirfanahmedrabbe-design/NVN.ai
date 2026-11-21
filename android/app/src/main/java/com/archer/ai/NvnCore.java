@@ -122,7 +122,51 @@ public class NvnCore {
     }
 
     public static void rotateKey(SharedPreferences p) {
+        try {
+            String cur = currentKey(p);
+            if (cur != null && !cur.isEmpty()) {
+                String h = sha256Hex(cur);
+                String stored = p.getString("exhausted_keys", "");
+                String todayStr = today();
+                java.util.LinkedHashSet<String> set = new java.util.LinkedHashSet<>();
+                if (stored.startsWith(todayStr + "|")) {
+                    for (String x : stored.substring(todayStr.length() + 1).split(",")) if (!x.isEmpty()) set.add(x);
+                }
+                set.add(h);
+                p.edit().putString("exhausted_keys", todayStr + "|" + String.join(",", set)).apply();
+            }
+        } catch (Exception ignored) {}
         p.edit().putInt("key_index", p.getInt("key_index", 0) + 1).apply();
+    }
+
+    public static boolean isKeyExhausted(Context ctx, String key) {
+        try {
+            if (key == null || key.trim().isEmpty()) return false;
+            String stored = prefs(ctx).getString("exhausted_keys", "");
+            String todayStr = today();
+            if (!stored.startsWith(todayStr + "|")) return false;
+            String h = sha256Hex(key.trim());
+            for (String x : stored.substring(todayStr.length() + 1).split(",")) if (x.equals(h)) return true;
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    public static void notifyLimit(Context ctx) {
+        try {
+            if (isOwner(ctx)) return;
+            android.app.NotificationManager nm = (android.app.NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm == null) return;
+            String channelId = "nvn_announce";
+            if (android.os.Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(channelId) == null) {
+                nm.createNotificationChannel(new android.app.NotificationChannel(channelId, "NVN", android.app.NotificationManager.IMPORTANCE_DEFAULT));
+            }
+            android.app.Notification.Builder b = android.os.Build.VERSION.SDK_INT >= 26
+                    ? new android.app.Notification.Builder(ctx, channelId)
+                    : new android.app.Notification.Builder(ctx);
+            b.setContentTitle("NVN AI").setContentText("আজকের Live লিমিট শেষ — প্রিমিয়াম নিলে বেশি পাবেন")
+                    .setSmallIcon(android.R.drawable.ic_dialog_info).setAutoCancel(true);
+            nm.notify(778, b.build());
+        } catch (Exception ignored) {}
     }
 
     public static boolean isQuotaError(String s) {

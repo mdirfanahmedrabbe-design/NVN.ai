@@ -927,9 +927,10 @@ public class LiveActivity extends Activity {
             @Override public void run() {
                 if (!live) return;
                 NvnCore.addLiveSeconds(LiveActivity.this, 10);
-                if (liveUsage != null) liveUsage.setText("আজ Live: " + (NvnCore.liveSecondsToday(LiveActivity.this) / 60) + "/" + NvnCore.TIER_LIVE_MIN[NvnCore.tierIndex(LiveActivity.this)] + " মিনিট");
+                if (liveUsage != null) liveUsage.setText(NvnCore.isOwner(LiveActivity.this) ? "👑 মালিক — আনলিমিটেড" : "আজ Live: " + (NvnCore.liveSecondsToday(LiveActivity.this) / 60) + "/" + NvnCore.TIER_LIVE_MIN[NvnCore.tierIndex(LiveActivity.this)] + " মিনিট");
                 if (!NvnCore.canUseLive(LiveActivity.this)) {
                     setStatus("আজকের Live লিমিট শেষ — প্রিমিয়াম নাও");
+                    NvnCore.notifyLimit(LiveActivity.this);
                     stopLive();
                     return;
                 }

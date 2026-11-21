@@ -37,6 +37,12 @@ public class PremiumActivity extends Activity {
         LinearLayout list = findViewById(R.id.premList);
         Button verify = findViewById(R.id.premVerify);
 
+        TextView features = new TextView(this);
+        features.setTextColor(0xFFE9D5FF);
+        features.setTextSize(13);
+        features.setPadding(0, 6, 0, 10);
+        features.setText("প্রিমিয়ামে যা যা পাবেন:\n• প্রতিদিন বেশি Live মিনিট\n• প্রতিদিন বেশি AI প্রশ্ন\n• সব কমান্ড (অ্যাপ খোলা, কল, মেসেজ, টর্চ) সবসময় ফ্রি\n• লিমিট প্রতিদিন রিসেট হয়");
+        list.addView(features);
         for (int i = 1; i < NvnCore.TIER_IDS.length; i++) {
             final int idx = i;
             LinearLayout row = new LinearLayout(this);

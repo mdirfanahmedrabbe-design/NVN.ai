@@ -53,13 +53,14 @@ public class KeysActivity extends Activity {
         et.setHint("Gemini Key বসাও");
         et.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         et.setPadding(24, 20, 24, 20);
-        et.setTextColor(0xFFE8F4FF);
+        et.setTextColor(NvnCore.isKeyExhausted(this, value) ? 0xFFFF5252 : 0xFFE8F4FF);
         et.setHintTextColor(0xFF64748B);
         et.setText(value);
         et.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void afterTextChanged(Editable s) {
+                et.setTextColor(NvnCore.isKeyExhausted(KeysActivity.this, s.toString()) ? 0xFFFF5252 : 0xFFE8F4FF);
                 updateCount();
                 // last box filled -> a new empty box opens below automatically
                 if (!s.toString().trim().isEmpty() && keysList.getChildAt(keysList.getChildCount() - 1) == row) {
