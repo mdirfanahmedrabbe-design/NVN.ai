@@ -175,6 +175,7 @@ public class SettingsActivity extends Activity {
     }
 
     private void showStatusDialog() {
+        android.content.SharedPreferences prefs = getSharedPreferences("archer", MODE_PRIVATE);
         int tier = NvnCore.tierIndex(this);
         long exp = prefs.getLong("premium_expiry", 0);
         String expText = exp > 0
