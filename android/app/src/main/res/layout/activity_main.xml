@@ -2,14 +2,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_hacker"
+    android:background="@drawable/bg_blueprint"
     android:orientation="vertical"
     android:padding="12dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/panel_hacker"
+        android:background="@drawable/panel_blue"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="10dp">
@@ -18,7 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="⚛"
-            android:textColor="#FF3B3B"
+            android:textColor="#7DD3FC"
             android:textSize="30sp" />
 
         <LinearLayout
@@ -31,8 +31,9 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="monospace"
                 android:text="NVN AI"
-                android:textColor="#FF4D4D"
+                android:textColor="#E0F2FE"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
@@ -40,7 +41,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Your Personal Assistant"
-                android:textColor="#FCA5A5"
+                android:textColor="#7DD3FC"
                 android:textSize="11sp" />
         </LinearLayout>
 
@@ -49,7 +50,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="monospace"
             android:text="MODEL: NVN-VA-01&#10;REV 2.1 • SCALE 1:1"
-            android:textColor="#F87171"
+            android:textColor="#BAE6FD"
             android:textSize="8sp" />
     </LinearLayout>
 
@@ -60,18 +61,18 @@
 
         <com.archer.ai.OrbView
             android:id="@+id/mainOrb"
-            android:layout_width="230dp"
-            android:layout_height="230dp"
+            android:layout_width="220dp"
+            android:layout_height="220dp"
             android:layout_gravity="center" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="top|start"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="14dp"
             android:fontFamily="monospace"
             android:text="ORBIT RADIUS:&#10;45mm"
-            android:textColor="#F87171"
+            android:textColor="#BAE6FD"
             android:textSize="9sp" />
 
         <TextView
@@ -80,17 +81,17 @@
             android:layout_gravity="center_vertical|end"
             android:fontFamily="monospace"
             android:text="PARTICLE COUNT:&#10;1200"
-            android:textColor="#F87171"
+            android:textColor="#BAE6FD"
             android:textSize="9sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
-            android:layout_marginBottom="14dp"
+            android:layout_marginBottom="10dp"
             android:fontFamily="monospace"
             android:text="FIELD: ACTIVE&#10;2.4GHz"
-            android:textColor="#F87171"
+            android:textColor="#BAE6FD"
             android:textSize="9sp" />
     </FrameLayout>
 
@@ -100,7 +101,7 @@
         android:layout_gravity="center_horizontal"
         android:fontFamily="monospace"
         android:text="VOICE ASSISTANT • STANDBY &gt; READY"
-        android:textColor="#FCA5A5"
+        android:textColor="#BAE6FD"
         android:textSize="10sp" />
 
     <LinearLayout
@@ -115,9 +116,10 @@
             android:layout_height="52dp"
             android:layout_marginEnd="5dp"
             android:layout_weight="1"
-            android:background="@drawable/btn_hacker"
+            android:background="@drawable/btn_blue"
+            android:fontFamily="monospace"
             android:text="((•)) ON LIVE"
-            android:textColor="#FF6B6B"
+            android:textColor="#E0F2FE"
             android:textSize="17sp"
             android:textStyle="bold" />
 
@@ -127,9 +129,10 @@
             android:layout_height="52dp"
             android:layout_marginStart="5dp"
             android:layout_weight="1"
-            android:background="@drawable/btn_hacker2"
+            android:background="@drawable/btn_blue2"
+            android:fontFamily="monospace"
             android:text="💬 CHAT"
-            android:textColor="#FCA5A5"
+            android:textColor="#BAE6FD"
             android:textSize="16sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -138,7 +141,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:background="@drawable/panel_hacker"
+        android:background="@drawable/panel_blue"
         android:orientation="vertical"
         android:padding="10dp">
 
@@ -147,7 +150,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="monospace"
             android:text="DASHBOARD // CONNECTED APPS &amp; TODAY'S USAGE"
-            android:textColor="#FF4D4D"
+            android:textColor="#7DD3FC"
             android:textSize="10sp"
             android:textStyle="bold" />
 
@@ -158,78 +161,116 @@
             android:layout_marginTop="6dp"
             android:fontFamily="monospace"
             android:text="CONNECTED APPS: 0"
-            android:textColor="#FECACA"
+            android:textColor="#E0F2FE"
             android:textSize="12sp" />
+
+        <LinearLayout
+            android:id="@+id/dashApps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="vertical" />
+
+        <TextView
+            android:id="@+id/dashUsage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="monospace"
+            android:text="TODAY'S USAGE"
+            android:textColor="#7DD3FC"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/barQuestions"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:layout_marginTop="4dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="#38BDF8" />
+
+        <ProgressBar
+            android:id="@+id/barLive"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:layout_marginTop="4dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="#38BDF8" />
 
         <TextView
             android:id="@+id/onlinePill"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
             android:fontFamily="monospace"
             android:text="● Online for 0 min"
             android:textColor="#4ADE80"
             android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/quickTorch"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="3dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_blue2"
+                android:text="🔦 টর্চ"
+                android:textColor="#BAE6FD"
+                android:textSize="11sp" />
+
+            <Button
+                android:id="@+id/quickPrayer"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="3dp"
+                android:layout_marginEnd="3dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_blue2"
+                android:text="🕌 নামাজ"
+                android:textColor="#BAE6FD"
+                android:textSize="11sp" />
+
+            <Button
+                android:id="@+id/quickAlarm"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="3dp"
+                android:layout_marginEnd="3dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_blue2"
+                android:text="⏰ অ্যালার্ম"
+                android:textColor="#BAE6FD"
+                android:textSize="11sp" />
+
+            <Button
+                android:id="@+id/quickCamera"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="3dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_blue2"
+                android:text="📸 ক্যামেরা"
+                android:textColor="#BAE6FD"
+                android:textSize="11sp" />
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/quickTorch"
-            android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/btn_hacker2"
-            android:text="🔦&#10;টর্চ"
-            android:textColor="#FCA5A5"
-            android:textSize="12sp" />
-
-        <Button
-            android:id="@+id/quickPrayer"
-            android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/btn_hacker2"
-            android:text="🕌&#10;নামাজ"
-            android:textColor="#FCA5A5"
-            android:textSize="12sp" />
-
-        <Button
-            android:id="@+id/quickAlarm"
-            android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/btn_hacker2"
-            android:text="⏰&#10;অ্যালার্ম"
-            android:textColor="#FCA5A5"
-            android:textSize="12sp" />
-
-        <Button
-            android:id="@+id/quickCamera"
-            android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/btn_hacker2"
-            android:text="📸&#10;ক্যামেরা"
-            android:textColor="#FCA5A5"
-            android:textSize="12sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/panel_hacker"
+        android:background="@drawable/panel_blue"
         android:orientation="horizontal"
         android:padding="4dp">
 
@@ -240,7 +281,7 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:text="🏠&#10;Home"
-            android:textColor="#FF4D4D"
+            android:textColor="#7DD3FC"
             android:textSize="11sp" />
 
         <Button
@@ -250,7 +291,7 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:text="🕐&#10;History"
-            android:textColor="#FCA5A5"
+            android:textColor="#BAE6FD"
             android:textSize="11sp" />
 
         <Button
@@ -260,7 +301,7 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:text="🔗&#10;Share"
-            android:textColor="#FCA5A5"
+            android:textColor="#BAE6FD"
             android:textSize="11sp" />
 
         <Button
@@ -270,7 +311,7 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:text="⚙&#10;Settings"
-            android:textColor="#FCA5A5"
+            android:textColor="#BAE6FD"
             android:textSize="11sp" />
     </LinearLayout>
 </LinearLayout>
