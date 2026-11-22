@@ -612,7 +612,20 @@ public class NvnCore {
             "conn_whatsapp_user", "conn_whatsapp_pass",
             "conn_gmail_user", "conn_gmail_pass",
             "conn_website_user", "conn_website_pass",
-            "conn_custom_user", "conn_custom_pass"
+            "conn_custom_user", "conn_custom_pass",
+            "conn_facebook_site", "conn_instagram_site", "conn_threads_site",
+            "conn_youtube_site", "conn_telegram_site", "conn_blogger_site",
+            "conn_wordpress_site", "conn_tiktok_site", "conn_x_site",
+            "conn_pinterest_site", "conn_whatsapp_site", "conn_gmail_site",
+            "conn_website_site", "conn_custom_site"
+    };
+
+    private static final String[] BACKUP_BOOL_KEYS = {
+            "conn_facebook_browser", "conn_instagram_browser", "conn_threads_browser",
+            "conn_youtube_browser", "conn_telegram_browser", "conn_blogger_browser",
+            "conn_wordpress_browser", "conn_tiktok_browser", "conn_x_browser",
+            "conn_pinterest_browser", "conn_whatsapp_browser", "conn_gmail_browser",
+            "conn_website_browser", "conn_custom_browser"
     };
 
     public static void backupData(Context ctx) {
@@ -623,6 +636,7 @@ public class NvnCore {
                 String v = p.getString(k, null);
                 if (v != null) o.put(k, v);
             }
+            for (String k : BACKUP_BOOL_KEYS) o.put(k, p.getBoolean(k, false));
             o.put("premium_expiry", p.getLong("premium_expiry", 0));
             o.put("owner_mode", p.getBoolean("owner_mode", false));
             o.put("last_announce_id", p.getInt("last_announce_id", 0));
@@ -702,6 +716,7 @@ public class NvnCore {
             for (String k : BACKUP_STRING_KEYS) {
                 if (o.has(k)) e.putString(k, o.optString(k, ""));
             }
+            for (String k : BACKUP_BOOL_KEYS) if (o.has(k)) e.putBoolean(k, o.optBoolean(k, false));
             e.putLong("premium_expiry", o.optLong("premium_expiry", 0));
             e.putBoolean("owner_mode", o.optBoolean("owner_mode", false));
             e.putInt("last_announce_id", o.optInt("last_announce_id", 0));

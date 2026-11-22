@@ -298,6 +298,7 @@ public class LiveActivity extends Activity {
                 fns.put(fnDef2("toggle_service", "Turn daily work on or off for a connected site", "service", "Site name", "state", "One of: on, off"));
                 fns.put(fnDefNoArg("connect_status", "Report which sites are connected, which have daily work on, and what rules are saved"));
                 fns.put(fnDefNoArg("run_connect_work", "Run the connected-sites work right now (check comments, reply, post)"));
+                fns.put(fnDef2("set_browser_mode", "Turn Browser Mode on or off for a site. Browser Mode works without any token: NVN opens the site in the owner's Chrome browser (already logged in) and posts by tapping and typing, the way the owner works by hand.", "service", "Site name", "state", "One of: on, off"));
                 JSONArray tools = new JSONArray().put(new JSONObject().put("functionDeclarations", fns));
                 JSONObject setup = new JSONObject()
                         .put("model", "models/gemini-3.1-flash-live-preview")
@@ -310,7 +311,7 @@ public class LiveActivity extends Activity {
                                         "You are NOT a chatbot that only talks. You are a working assistant with REAL control of this phone through your functions: open_app, call_number, call_contact, call_and_talk, send_sms, send_whatsapp, find_contact, tap_text, type_text, press_enter, scroll_down, scroll_up, press_back, press_home, set_volume, torch, take_screenshot, read_screen, open_screen. " +
                                         "When the user asks you to do ANY work, you MUST call the matching function immediately. NEVER say you cannot do work. NEVER say you are only an AI or that you have no hands or cannot touch the phone. Ordinary phone work is always possible for you through functions. " +
                                         "Call the function FIRST, then speak a short Bengali confirmation after it runs. For open_app always pass the English app name (Facebook, WhatsApp, YouTube, TikTok, bKash) even when the user says the name in Bengali. Use read_screen to see what is on screen before tapping. If the user asks what is on the screen or to look at the screen and you cannot see it yet, call see_screen once. If a function result says it failed or accessibility is off, tell the user in Bengali exactly what failed and what to switch on. " +
-                                        "You also manage the owner's connected sites (the Connect system): facebook, instagram, threads, youtube, telegram, blogger, wordpress, tiktok, x, pinterest, whatsapp, gmail, website, custom. The owner explains work to you in conversation, exactly like he explains to a trusted assistant, and you remember EVERYTHING permanently. When he explains what to do on a site (posting, comment replies, timing, style), save it with set_service_rules and confirm in Bengali what you saved. When he asks about connected sites or their work, call connect_status. When he says to do the connect work now, call run_connect_work. Never forget saved rules; they stay forever."))));
+                                        "You also manage the owner's connected sites (the Connect system): facebook, instagram, threads, youtube, telegram, blogger, wordpress, tiktok, x, pinterest, whatsapp, gmail, website, custom. The owner explains work to you in conversation, exactly like he explains to a trusted assistant, and you remember EVERYTHING permanently. When he explains what to do on a site (posting, comment replies, timing, style), save it with set_service_rules and confirm in Bengali what you saved. When he asks about connected sites or their work, call connect_status. When he says to do the connect work now, call run_connect_work. If he wants a site to work without a token, through his Chrome browser where he is already logged in, call set_browser_mode with state on. Never forget saved rules; they stay forever."))));
                 ws.sendText(new JSONObject().put("setup", setup).toString());
             } catch (Exception e) {
                 runOnUiThread(() -> {
@@ -633,7 +634,7 @@ public class LiveActivity extends Activity {
                     boolean enabled = p.getBoolean("conn_" + svcId + "_enabled", false);
                     String rules = p.getString("conn_" + svcId + "_rules", "");
                     sb.append(ConnectWorker.svcName(svcId)).append(": ")
-                            .append(connected ? "connected" : "not connected")
+                            .append(connected ? "connected" : (ConnectWorker.isBrowserMode(this, svcId) ? "browser mode (no token)" : "not connected"))
                             .append(enabled ? ", daily work ON" : ", daily work off")
                             .append(rules != null && !rules.trim().isEmpty() ? ", rules saved" : ", no rules yet")
                             .append(". ");
@@ -643,6 +644,16 @@ public class LiveActivity extends Activity {
             case "run_connect_work": {
                 ConnectWorker.runInBackground(getApplicationContext(), true);
                 return "connect work started";
+            }
+            case "set_browser_mode": {
+                String svcId = normalizeService(args.optString("service", ""));
+                if (svcId == null) return "unknown service";
+                boolean on = "on".equalsIgnoreCase(args.optString("state", ""));
+                getSharedPreferences("archer", MODE_PRIVATE).edit()
+                        .putBoolean("conn_" + svcId + "_browser", on)
+                        .putBoolean("conn_" + svcId + "_enabled", true).apply();
+                ConnectWorker.logHistory(this, ConnectWorker.svcName(svcId) + " — ব্রাউজার মোড " + (on ? "চালু" : "বন্ধ") + " (Live থেকে)");
+                return svcId + " browser mode " + (on ? "on — will work through Chrome without a token" : "off");
             }
             default:
                 return "unknown function";

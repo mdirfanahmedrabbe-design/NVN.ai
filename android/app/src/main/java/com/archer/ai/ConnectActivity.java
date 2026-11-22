@@ -83,11 +83,17 @@ public class ConnectActivity extends Activity {
             }
             Button b = new Button(this);
             boolean connected = ConnectWorker.isConnected(this, svc);
+            boolean browserMode = ConnectWorker.isBrowserMode(this, svc);
             boolean enabled = getSharedPreferences("archer", MODE_PRIVATE)
                     .getBoolean("conn_" + svc + "_enabled", false);
-            String status = connected
-                    ? (enabled ? "✅ কানেক্ট আছে, কাজ চালু" : "✅ কানেক্ট আছে, কাজ বন্ধ")
-                    : "⚠️ Token বসানো বাকি — টিপ দিয়ে কানেক্ট করো";
+            String status;
+            if (connected) {
+                status = enabled ? "✅ কানেক্ট আছে, কাজ চালু" : "✅ কানেক্ট আছে, কাজ বন্ধ";
+            } else if (browserMode) {
+                status = enabled ? "🌐 ব্রাউজার মোড, কাজ চালু" : "🌐 ব্রাউজার মোড, কাজ বন্ধ";
+            } else {
+                status = "⚠️ Token বসানো বাকি — টিপ দিয়ে কানেক্ট করো";
+            }
             b.setText(name + "\n" + status);
             b.setTextColor(0xFFE8F4FF);
             b.setBackgroundResource(R.drawable.btn_secondary);

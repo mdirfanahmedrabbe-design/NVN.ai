@@ -4,7 +4,10 @@ import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.util.DisplayMetrics;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -191,6 +194,80 @@ public class ArcherAccessibilityService extends AccessibilityService {
         } catch (Exception e) {
             return "screen empty";
         }
+    }
+
+    // ---------- browser-mode helpers (used by ConnectWorker) ----------
+    public static void sleep(long ms) {
+        try { Thread.sleep(ms); } catch (Exception ignored) {}
+    }
+
+    public boolean isScreenOn() {
+        try {
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            return pm != null && pm.isInteractive();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void wakeScreen() {
+        try {
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            if (pm == null) return;
+            @SuppressWarnings("deprecation")
+            PowerManager.WakeLock wl = pm.newWakeLock(
+                    PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "nvn:browser");
+            wl.acquire(60 * 1000L);
+        } catch (Exception ignored) {}
+    }
+
+    public boolean openUrl(String url) {
+        try {
+            Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                i.setPackage("com.android.chrome");
+                startActivity(i);
+                return true;
+            } catch (Exception e) {
+                i.setPackage(null);
+                startActivity(i);
+                return true;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean hasText(String text) {
+        try {
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root == null) return false;
+            return nodeContains(root, text.toLowerCase(java.util.Locale.ROOT));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean nodeContains(AccessibilityNodeInfo node, String needleLower) {
+        if (node == null) return false;
+        CharSequence t = node.getText();
+        if (t != null && t.toString().toLowerCase(java.util.Locale.ROOT).contains(needleLower)) return true;
+        CharSequence d = node.getContentDescription();
+        if (d != null && d.toString().toLowerCase(java.util.Locale.ROOT).contains(needleLower)) return true;
+        for (int i = 0; i < node.getChildCount(); i++) {
+            if (nodeContains(node.getChild(i), needleLower)) return true;
+        }
+        return false;
+    }
+
+    public boolean waitForText(String text, long timeoutMs) {
+        long end = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < end) {
+            if (hasText(text)) return true;
+            sleep(800);
+        }
+        return hasText(text);
     }
 
     private void collectText(AccessibilityNodeInfo node, StringBuilder sb) {

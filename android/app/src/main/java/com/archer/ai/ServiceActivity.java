@@ -35,6 +35,8 @@ public class ServiceActivity extends Activity {
         CheckBox comments = findViewById(R.id.svcComments);
         CheckBox post = findViewById(R.id.svcPost);
         CheckBox approve = findViewById(R.id.svcApprove);
+        CheckBox browser = findViewById(R.id.svcBrowser);
+        EditText siteField = findViewById(R.id.svcSite);
 
         title.setText(ConnectWorker.svcName(svc));
         token.setText(prefs.getString("conn_" + svc + "_token", ""));
@@ -48,6 +50,9 @@ public class ServiceActivity extends Activity {
         comments.setChecked(prefs.getBoolean("conn_" + svc + "_comments", true));
         post.setChecked(prefs.getBoolean("conn_" + svc + "_post", false));
         approve.setChecked(prefs.getBoolean("conn_" + svc + "_approve", true));
+        browser.setChecked(prefs.getBoolean("conn_" + svc + "_browser", false));
+        String savedSite = prefs.getString("conn_" + svc + "_site", "");
+        siteField.setText(savedSite.isEmpty() ? ConnectWorker.defaultSiteUrl(svc) : savedSite);
 
         boolean isCustom = "custom".equals(svc);
         findViewById(R.id.svcCustomNameWrap).setVisibility(isCustom ? View.VISIBLE : View.GONE);
@@ -86,7 +91,9 @@ public class ServiceActivity extends Activity {
                     .putBoolean("conn_" + svc + "_enabled", enabled.isChecked())
                     .putBoolean("conn_" + svc + "_comments", comments.isChecked())
                     .putBoolean("conn_" + svc + "_post", post.isChecked())
-                    .putBoolean("conn_" + svc + "_approve", approve.isChecked());
+                    .putBoolean("conn_" + svc + "_approve", approve.isChecked())
+                    .putBoolean("conn_" + svc + "_browser", browser.isChecked())
+                    .putString("conn_" + svc + "_site", siteField.getText().toString().trim());
             if (isCustom) ed.putString("conn_custom_name", customName.getText().toString().trim());
             ed.apply();
             ConnectWorker.scheduleAll(getApplicationContext());
@@ -104,11 +111,11 @@ public class ServiceActivity extends Activity {
             case "facebook":
                 return "Token: তোমার Page-এর Access Token। ID: Page ID। কমেন্টের উত্তর আর পোস্ট — দুটোই অটো চলবে।";
             case "instagram":
-                return "Token: Instagram Graph API Token। ID: Instagram User ID। এই ভার্সনে পোস্টের ড্রাফট তৈরি হবে, অনুমোদনের পর অ্যাপে গিয়ে পোস্ট করতে হবে।";
+                return "Token: Instagram Graph API Token। ID: Instagram User ID। Token ছাড়া চালাতে চাইলে নিচে ব্রাউজার মোড চালু করো — Chrome-এ লগইন থাকলেই সে নিজে গিয়ে পোস্ট করবে।";
             case "threads":
                 return "Token: Threads API Token। ID: Threads User ID। টেক্সট পোস্ট অটো চলবে।";
             case "youtube":
-                return "Token: YouTube API Key। ID: Channel ID। এই ভার্সনে ভিডিওর টাইটেল/বর্ণনার ড্রাফট তৈরি হবে।";
+                return "Token: YouTube API Key। ID: Channel ID। Token ছাড়া চালাতে নিচে ব্রাউজার মোড চালু করো — Chrome-এ লগইন থাকলেই সে নিজে গিয়ে কাজ করবে।";
             case "telegram":
                 return "Token: BotFather থেকে বটের Token। ID: চ্যানেল/গ্রুপের ID (যেমন @mychannel বা -1001234567890)। বটকে চ্যানেল/গ্রুপে অ্যাডমিন করতে হবে।";
             case "website":
@@ -120,15 +127,15 @@ public class ServiceActivity extends Activity {
             case "wordpress":
                 return "ID: সাইটের ঠিকানা (যেমন https://example.com)। Username: তোমার WordPress username। Password: Application Password (সাইটের প্রোফাইল পেজ থেকে বানাতে হয়, আসল পাসওয়ার্ড না)। পোস্ট অটো চলবে।";
             case "tiktok":
-                return "TikTok-এ অটো পোস্টের জন্য TikTok-এর অনুমোদিত অ্যাপ লাগে। এই ভার্সনে ভিডিওর ক্যাপশন/ড্রাফট তৈরি হবে।";
+                return "TikTok-এর API অনুমোদন কঠিন। Token ছাড়া চালাতে নিচে ব্রাউজার মোড চালু করো — Chrome-এ TikTok লগইন থাকলেই সে নিজে গিয়ে কাজ করবে।";
             case "x":
-                return "X (Twitter)-এ অটো পোস্টের জন্য X Developer অ্যাকাউন্ট লাগে। এই ভার্সনে পোস্টের ড্রাফট তৈরি হবে।";
+                return "X-এর API-র জন্য Developer অ্যাকাউন্ট লাগে। Token ছাড়া চালাতে নিচে ব্রাউজার মোড চালু করো — Chrome-এ X লগইন থাকলেই সে নিজে গিয়ে পোস্ট করবে।";
             case "pinterest":
-                return "Token: Pinterest API Token। ID: Board ID। এই ভার্সনে পিনের ড্রাফট তৈরি হবে।";
+                return "Token: Pinterest API Token। ID: Board ID। Token ছাড়া চালাতে নিচে ব্রাউজার মোড চালু করো — Chrome-এ লগইন থাকলেই সে নিজে গিয়ে কাজ করবে।";
             case "whatsapp":
-                return "WhatsApp-এ ব্যক্তিগত অ্যাকাউন্টে অটো পোস্টের অফিসিয়াল উপায় নেই। এই ভার্সনে মেসেজের ড্রাফট তৈরি হবে।";
+                return "WhatsApp-এর অফিসিয়াল অটো উপায় নেই। ব্রাউজার মোড চালু করলে সে WhatsApp Web-এ গিয়ে কাজ করবে (Chrome-এ লগইন/QR স্ক্যান থাকতে হবে)।";
             case "gmail":
-                return "Token: Google OAuth Access Token। এই ভার্সনে ইমেইলের ড্রাফট তৈরি হবে।";
+                return "Token: Google OAuth Access Token। Token ছাড়া চালাতে নিচে ব্রাউজার মোড চালু করো — Chrome-এ Gmail লগইন থাকলেই সে নিজে গিয়ে কাজ করবে।";
             default:
                 return "";
         }

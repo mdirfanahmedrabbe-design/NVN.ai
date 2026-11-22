@@ -49,6 +49,142 @@ public class ConnectWorker {
                 && !p.getString("conn_" + svc + "_pass", "").trim().isEmpty();
     }
 
+    // ---------- browser mode (works in the owner's Chrome, already logged in — no token) ----------
+    public static boolean isBrowserMode(Context ctx, String svc) {
+        return prefs(ctx).getBoolean("conn_" + svc + "_browser", false);
+    }
+
+    public static String defaultSiteUrl(String svc) {
+        switch (svc) {
+            case "facebook": return "https://www.facebook.com";
+            case "instagram": return "https://www.instagram.com";
+            case "threads": return "https://www.threads.net";
+            case "youtube": return "https://www.youtube.com";
+            case "telegram": return "https://web.telegram.org";
+            case "blogger": return "https://www.blogger.com";
+            case "tiktok": return "https://www.tiktok.com";
+            case "x": return "https://x.com";
+            case "pinterest": return "https://www.pinterest.com";
+            case "whatsapp": return "https://web.whatsapp.com";
+            case "gmail": return "https://mail.google.com";
+            default: return "";
+        }
+    }
+
+    public static String siteUrl(Context ctx, String svc) {
+        String u = prefs(ctx).getString("conn_" + svc + "_site", "").trim();
+        if (!u.isEmpty()) return u;
+        if ("wordpress".equals(svc) || "website".equals(svc) || "custom".equals(svc)) {
+            String id = prefs(ctx).getString("conn_" + svc + "_id", "").trim();
+            if (id.startsWith("http")) return id;
+        }
+        return defaultSiteUrl(svc);
+    }
+
+    static String[] composerHints(String svc) {
+        switch (svc) {
+            case "facebook": return new String[]{"What's on your mind", "কী ভাবছেন", "Create post", "Write something"};
+            case "instagram": return new String[]{"New post", "Create", "What's on your mind"};
+            case "threads": return new String[]{"Start a thread", "New thread", "What's new"};
+            case "x": return new String[]{"What is happening", "What's happening", "Post your reply"};
+            case "tiktok": return new String[]{"Upload", "Create", "Post"};
+            case "pinterest": return new String[]{"Create Pin", "Create", "Add a title"};
+            case "youtube": return new String[]{"Create", "Upload video"};
+            case "whatsapp": return new String[]{"Type a message", "মেসেজ লিখুন"};
+            case "gmail": return new String[]{"Compose", "লিখুন"};
+            case "telegram": return new String[]{"Message", "মেসেজ"};
+            default: return new String[]{"Write", "Post", "লিখুন"};
+        }
+    }
+
+    static String[] postButtonTexts(String svc) {
+        switch (svc) {
+            case "x": return new String[]{"Post", "Tweet", "পোস্ট"};
+            case "threads": return new String[]{"Post", "পোস্ট"};
+            case "pinterest": return new String[]{"Publish", "Save", "Post"};
+            case "gmail": return new String[]{"Send", "পাঠাও"};
+            case "whatsapp": return new String[]{"Send", "পাঠাও"};
+            case "telegram": return new String[]{"Send", "পাঠাও"};
+            default: return new String[]{"Post", "Share", "Publish", "পোস্ট", "শেয়ার"};
+        }
+    }
+
+    static void dismissBanners(ArcherAccessibilityService a11y) {
+        String[] labels = {"Allow all cookies", "Accept all", "Accept", "Allow", "OK", "ঠিক আছে", "গ্রহণ করুন", "Not now", "পরে", "Close"};
+        for (String l : labels) {
+            try { a11y.tapText(l); } catch (Exception ignored) {}
+        }
+        ArcherAccessibilityService.sleep(600);
+    }
+
+    // Posts by opening the site in the owner's Chrome (already logged in) and tapping/typing
+    // through the Accessibility service — the same way the owner works by hand. No token needed.
+    // Needs: Accessibility ON, screen on (we wake it), phone unlocked (no PIN stop).
+    public static boolean browserPost(Context ctx, String svc, String text) {
+        String name = svcName(svc);
+        try {
+            ArcherAccessibilityService a11y = ArcherAccessibilityService.instance;
+            if (a11y == null) {
+                logHistory(ctx, name + " — ব্রাউজার মোড: Accessibility বন্ধ আছে, তাই কাজ হয়নি");
+                notifyUser(ctx, "NVN ব্রাউজার মোড", name + "-এ কাজ করতে Accessibility চালু লাগবে (Settings → Accessibility → NVN AI Voice Control)", false);
+                return false;
+            }
+            String url = siteUrl(ctx, svc);
+            if (url.isEmpty()) {
+                logHistory(ctx, name + " — ব্রাউজার মোড: সাইটের ঠিকানা বসানো নেই");
+                return false;
+            }
+            if (!a11y.isScreenOn()) {
+                a11y.wakeScreen();
+                ArcherAccessibilityService.sleep(2500);
+            }
+            if (!a11y.openUrl(url)) {
+                logHistory(ctx, name + " — ব্রাউজার মোড: Chrome খোলা যায়নি");
+                return false;
+            }
+            ArcherAccessibilityService.sleep(7000);
+            dismissBanners(a11y);
+            // If the phone is locked (PIN screen), the site text never appears.
+            boolean opened = false;
+            for (String hint : composerHints(svc)) {
+                if (a11y.hasText(hint)) { a11y.tapText(hint); opened = true; break; }
+            }
+            if (!opened) {
+                // Some sites open the editor directly; try typing anyway.
+                ArcherAccessibilityService.sleep(1500);
+            } else {
+                ArcherAccessibilityService.sleep(2500);
+                dismissBanners(a11y);
+            }
+            boolean typed = a11y.typeText(text);
+            if (!typed) {
+                ArcherAccessibilityService.sleep(1500);
+                typed = a11y.typeText(text);
+            }
+            if (!typed) {
+                logHistory(ctx, name + " — ব্রাউজার মোড: লেখার জায়গা পাওয়া যায়নি (ফোন লক থাকলে বা লগইন না থাকলে এমন হয়)");
+                notifyUser(ctx, "NVN ব্রাউজার মোড", name + "-এ লেখা বসানো যায়নি — ফোন আনলক আছে কিনা আর Chrome-এ লগইন আছে কিনা দেখো", false);
+                return false;
+            }
+            ArcherAccessibilityService.sleep(1200);
+            for (String btn : postButtonTexts(svc)) {
+                if (a11y.hasText(btn)) {
+                    a11y.tapText(btn);
+                    ArcherAccessibilityService.sleep(3000);
+                    logHistory(ctx, name + " — ব্রাউজার মোডে পোস্ট পাঠানো হয়েছে");
+                    return true;
+                }
+            }
+            // Typed but no Post button found — leave it typed for the owner to press Post.
+            logHistory(ctx, name + " — ব্রাউজার মোড: লেখা বসানো হয়েছে, Post বাটন পাওয়া যায়নি — নিজে টিপ দাও");
+            notifyUser(ctx, "NVN ব্রাউজার মোড", name + "-এ লেখা বসিয়ে দিয়েছি, Post বাটনে নিজে টিপ দাও", false);
+            return false;
+        } catch (Exception e) {
+            logHistory(ctx, name + " — ব্রাউজার মোডে সমস্যা হয়েছে");
+            return false;
+        }
+    }
+
     // ---------- history ----------
     public static void logHistory(Context ctx, String text) {
         try {
@@ -297,9 +433,11 @@ public class ConnectWorker {
         for (String svc : SVC_IDS) {
             if (!p.getBoolean("conn_" + svc + "_enabled", false)) continue;
             String token = p.getString("conn_" + svc + "_token", "").trim();
-            if (!isConnected(ctx, svc)) continue;
+            boolean connected = isConnected(ctx, svc);
+            boolean browser = isBrowserMode(ctx, svc);
+            if (!connected && !browser) continue;
             try {
-                if (p.getBoolean("conn_" + svc + "_comments", true)) {
+                if (connected && p.getBoolean("conn_" + svc + "_comments", true)) {
                     int n = handleComments(ctx, svc, token);
                     if (n > 0) report.add(svcName(svc) + ": " + n + "টি কমেন্টের কাজ হয়েছে");
                 }
@@ -468,6 +606,16 @@ public class ConnectWorker {
                 + "never share any phone number or personal info. Output only the post text, nothing else.";
         String post = geminiText(ctx, prompt);
         if (post == null || post.isEmpty()) return null;
+        // Browser mode without a token: post through the owner's Chrome instead of the API.
+        if (!isConnected(ctx, svc) && isBrowserMode(ctx, svc)) {
+            if (p.getBoolean("conn_" + svc + "_approve", true)) {
+                addToQueue(ctx, svc, "post", post, "");
+                logHistory(ctx, svcName(svc) + " — ব্রাউজার মোডের পোস্টের ড্রাফট অনুমোদনের অপেক্ষায়");
+                return "পোস্টের ড্রাফট তৈরি (অনুমোদনের অপেক্ষায়)";
+            }
+            boolean okB = browserPost(ctx, svc, post);
+            return okB ? "ব্রাউজার মোডে আজকের পোস্ট পাঠানো হয়েছে" : null;
+        }
         boolean draftOnly = "instagram".equals(svc) || "youtube".equals(svc)
                 || "tiktok".equals(svc) || "x".equals(svc) || "pinterest".equals(svc)
                 || "whatsapp".equals(svc) || "gmail".equals(svc);
@@ -573,7 +721,11 @@ public class ConnectWorker {
         String target = item.optString("target", "");
         String token = prefs(ctx).getString("conn_" + svc + "_token", "").trim();
         if (text.isEmpty()) return false;
-        if (token.isEmpty() && !"wordpress".equals(svc)) return false;
+        if (token.isEmpty() && !"wordpress".equals(svc)) {
+            // Approved draft for a browser-mode site: post it through Chrome.
+            if ("post".equals(kind) && isBrowserMode(ctx, svc)) return browserPost(ctx, svc, text);
+            return false;
+        }
         if ("reply".equals(kind)) return sendReply(ctx, svc, token, target, text);
         return sendPost(ctx, svc, token, text);
     }
