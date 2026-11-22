@@ -2,46 +2,55 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_main"
+    android:background="@drawable/bg_hacker"
     android:orientation="vertical"
-    android:padding="14dp">
+    android:padding="12dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/panel_hacker"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="10dp">
 
-        <View
-            android:layout_width="40dp"
-            android:layout_height="40dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚛"
+            android:textColor="#FF3B3B"
+            android:textSize="30sp" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
             android:layout_weight="1"
-            android:gravity="center"
             android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⚛ NVN AI"
-                android:textColor="#FFFFFF"
-                android:textSize="22sp"
+                android:text="NVN AI"
+                android:textColor="#FF4D4D"
+                android:textSize="24sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Your Personal Assistant"
-                android:textColor="#A78BFA"
+                android:textColor="#FCA5A5"
                 android:textSize="11sp" />
         </LinearLayout>
 
-        <View
-            android:layout_width="40dp"
-            android:layout_height="40dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:text="MODEL: NVN-VA-01&#10;REV 2.1 • SCALE 1:1"
+            android:textColor="#F87171"
+            android:textSize="8sp" />
     </LinearLayout>
 
     <FrameLayout
@@ -51,54 +60,178 @@
 
         <com.archer.ai.OrbView
             android:id="@+id/mainOrb"
-            android:layout_width="240dp"
-            android:layout_height="240dp"
+            android:layout_width="230dp"
+            android:layout_height="230dp"
             android:layout_gravity="center" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_marginTop="18dp"
+            android:fontFamily="monospace"
+            android:text="ORBIT RADIUS:&#10;45mm"
+            android:textColor="#F87171"
+            android:textSize="9sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            android:fontFamily="monospace"
+            android:text="PARTICLE COUNT:&#10;1200"
+            android:textColor="#F87171"
+            android:textSize="9sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginBottom="14dp"
+            android:fontFamily="monospace"
+            android:text="FIELD: ACTIVE&#10;2.4GHz"
+            android:textColor="#F87171"
+            android:textSize="9sp" />
     </FrameLayout>
 
-    <Button
-        android:id="@+id/liveBtn"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="6dp"
-        android:background="@drawable/btn_primary"
-        android:text="((•)) On Live ›"
-        android:textColor="#FFFFFF"
-        android:textSize="17sp"
-        android:textStyle="bold" />
-
-    <Button
-        android:id="@+id/chatBtn"
-        android:layout_width="match_parent"
-        android:layout_height="44dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/btn_secondary"
-        android:text="💬 চ্যাটে বলো"
-        android:textColor="#E8F4FF"
-        android:textSize="15sp" />
-
     <TextView
-        android:id="@+id/onlinePill"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/bg_card"
-        android:paddingStart="14dp"
-        android:paddingTop="6dp"
-        android:paddingEnd="14dp"
-        android:paddingBottom="6dp"
-        android:text="● Online for 0 min"
-        android:textColor="#4ADE80"
-        android:textSize="13sp" />
+        android:fontFamily="monospace"
+        android:text="VOICE ASSISTANT • STANDBY &gt; READY"
+        android:textColor="#FCA5A5"
+        android:textSize="10sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/bg_card"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/liveBtn"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/btn_hacker"
+            android:text="((•)) ON LIVE"
+            android:textColor="#FF6B6B"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/chatBtn"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginStart="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/btn_hacker2"
+            android:text="💬 CHAT"
+            android:textColor="#FCA5A5"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/panel_hacker"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:text="DASHBOARD // CONNECTED APPS &amp; TODAY'S USAGE"
+            android:textColor="#FF4D4D"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/dashText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:fontFamily="monospace"
+            android:text="CONNECTED APPS: 0"
+            android:textColor="#FECACA"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/onlinePill"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="monospace"
+            android:text="● Online for 0 min"
+            android:textColor="#4ADE80"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/quickTorch"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/btn_hacker2"
+            android:text="🔦&#10;টর্চ"
+            android:textColor="#FCA5A5"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/quickPrayer"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/btn_hacker2"
+            android:text="🕌&#10;নামাজ"
+            android:textColor="#FCA5A5"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/quickAlarm"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/btn_hacker2"
+            android:text="⏰&#10;অ্যালার্ম"
+            android:textColor="#FCA5A5"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/quickCamera"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/btn_hacker2"
+            android:text="📸&#10;ক্যামেরা"
+            android:textColor="#FCA5A5"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/panel_hacker"
         android:orientation="horizontal"
-        android:padding="6dp">
+        android:padding="4dp">
 
         <Button
             android:id="@+id/navHome"
@@ -106,8 +239,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:text="🏠\nHome"
-            android:textColor="#C084FC"
+            android:text="🏠&#10;Home"
+            android:textColor="#FF4D4D"
             android:textSize="11sp" />
 
         <Button
@@ -116,8 +249,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:text="🕐\nHistory"
-            android:textColor="#E8F4FF"
+            android:text="🕐&#10;History"
+            android:textColor="#FCA5A5"
             android:textSize="11sp" />
 
         <Button
@@ -126,8 +259,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:text="🔗\nShare"
-            android:textColor="#E8F4FF"
+            android:text="🔗&#10;Share"
+            android:textColor="#FCA5A5"
             android:textSize="11sp" />
 
         <Button
@@ -136,8 +269,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:text="⚙\nSettings"
-            android:textColor="#E8F4FF"
+            android:text="⚙&#10;Settings"
+            android:textColor="#FCA5A5"
             android:textSize="11sp" />
     </LinearLayout>
 </LinearLayout>
