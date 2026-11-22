@@ -247,6 +247,21 @@ public class ConnectWorker {
         try { return URLEncoder.encode(s, "UTF-8"); } catch (Exception e) { return s; }
     }
 
+    // Accepts a bare numeric ID or a pasted facebook.com URL and returns the numeric ID.
+    static String extractId(String raw) {
+        if (raw == null) return "";
+        String s = raw.trim();
+        int i = s.indexOf("id=");
+        if (i >= 0) s = s.substring(i + 3);
+        StringBuilder sb = new StringBuilder();
+        for (int j = 0; j < s.length(); j++) {
+            char c = s.charAt(j);
+            if (Character.isDigit(c)) sb.append(c);
+            else if (sb.length() > 0) break;
+        }
+        return sb.toString();
+    }
+
     // ---------- main run ----------
     public static void runAll(Context ctx, boolean manual) {
         SharedPreferences p = prefs(ctx);
@@ -345,7 +360,7 @@ public class ConnectWorker {
 
     static int facebookComments(Context ctx, String token) {
         SharedPreferences p = prefs(ctx);
-        String pageId = p.getString("conn_facebook_id", "").trim();
+        String pageId = extractId(p.getString("conn_facebook_id", ""));
         if (pageId.isEmpty()) return 0;
         String url = "https://graph.facebook.com/v19.0/" + pageId
                 + "/feed?fields=id,message,comments.limit(20){id,message,from,created_time}&limit=5&access_token=" + enc(token);
@@ -460,7 +475,7 @@ public class ConnectWorker {
         SharedPreferences p = prefs(ctx);
         try {
             if ("facebook".equals(svc)) {
-                String pageId = p.getString("conn_facebook_id", "").trim();
+                String pageId = extractId(p.getString("conn_facebook_id", ""));
                 if (pageId.isEmpty()) return false;
                 String res = httpPostForm("https://graph.facebook.com/v19.0/" + pageId + "/feed",
                         "message=" + enc(text) + "&access_token=" + enc(token));
