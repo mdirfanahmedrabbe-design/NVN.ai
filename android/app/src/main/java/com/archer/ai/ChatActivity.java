@@ -150,7 +150,7 @@ public class ChatActivity extends Activity {
             tv.setTextColor(0xFFFFFFFF);
         } else {
             tv.setBackgroundResource(R.drawable.bg_card);
-            tv.setTextColor(0xFFE8F4FF);
+            tv.setTextColor(0xFFF3E9C8);
         }
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -492,7 +492,7 @@ public class ChatActivity extends Activity {
                 box.setPadding((int) (16 * d), (int) (12 * d), (int) (16 * d), (int) (12 * d));
 
                 TextView note = new TextView(this);
-                note.setTextColor(0xFF94A3B8);
+                note.setTextColor(0xFFA8C3B2);
                 note.setTextSize(13);
                 box.addView(note);
 
@@ -527,7 +527,7 @@ public class ChatActivity extends Activity {
                     Button tb = new Button(this);
                     tb.setText("🔐 লগইন করে Token নাও (অফিসিয়াল পেজ)");
                     tb.setBackgroundResource(R.drawable.btn_secondary);
-                    tb.setTextColor(0xFFE8F4FF);
+                    tb.setTextColor(0xFFF3E9C8);
                     tb.setOnClickListener(v -> {
                         try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(tokenUrl))); }
                         catch (Exception e) { Toast.makeText(this, "পেজ খোলা যায়নি", Toast.LENGTH_SHORT).show(); }
@@ -538,7 +538,7 @@ public class ChatActivity extends Activity {
                 Button browserBtn = new Button(this);
                 browserBtn.setText("🌐 ব্রাউজার মোড চালু করো (Token লাগবে না)");
                 browserBtn.setBackgroundResource(R.drawable.btn_secondary);
-                browserBtn.setTextColor(0xFFE8F4FF);
+                browserBtn.setTextColor(0xFFF3E9C8);
                 browserBtn.setOnClickListener(v -> {
                     p.edit().putBoolean("conn_" + svc + "_browser", true)
                             .putBoolean("conn_" + svc + "_enabled", true).apply();
@@ -581,12 +581,12 @@ public class ChatActivity extends Activity {
     private EditText field(LinearLayout box, String label, boolean password, String value) {
         TextView tv = new TextView(this);
         tv.setText(label);
-        tv.setTextColor(0xFFE2E8F0);
+        tv.setTextColor(0xFFEDE6D6);
         tv.setTextSize(13);
         box.addView(tv);
         EditText et = new EditText(this);
         et.setBackgroundResource(R.drawable.bg_input);
-        et.setTextColor(0xFFE8F4FF);
+        et.setTextColor(0xFFF3E9C8);
         et.setPadding(24, 18, 24, 18);
         if (password) et.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         et.setText(value == null ? "" : value);

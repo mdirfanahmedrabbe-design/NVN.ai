@@ -115,7 +115,7 @@ public class MainActivity extends Activity {
                 android.widget.TextView row = new android.widget.TextView(this);
                 row.setTypeface(android.graphics.Typeface.MONOSPACE);
                 row.setTextSize(11);
-                row.setTextColor(0xFFE0F2FE);
+                row.setTextColor(0xFFD9F2E4);
                 row.setText(s[1] + " " + (on ? "●" : "●"));
                 // color only the dot: rebuild with span
                 android.text.SpannableString ss = new android.text.SpannableString(s[1] + " ●");
@@ -127,7 +127,7 @@ public class MainActivity extends Activity {
                         android.R.attr.progressBarStyleHorizontal);
                 bar.setMax(100);
                 bar.setProgress(on ? 100 : 0);
-                bar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFF38BDF8));
+                bar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFF34D399));
                 android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
                         android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 8);
                 lp.topMargin = 2;
@@ -190,13 +190,13 @@ public class MainActivity extends Activity {
         try {
             if (d.getWindow() != null) d.getWindow().setBackgroundDrawableResource(R.drawable.bg_card);
             android.widget.TextView msg = d.findViewById(android.R.id.message);
-            if (msg != null) msg.setTextColor(0xFFE8F4FF);
+            if (msg != null) msg.setTextColor(0xFFF3E9C8);
             android.widget.TextView title = d.findViewById(android.R.id.title);
-            if (title != null) title.setTextColor(0xFFC084FC);
+            if (title != null) title.setTextColor(0xFFE7C873);
             android.widget.Button pos = d.getButton(AlertDialog.BUTTON_POSITIVE);
-            if (pos != null) pos.setTextColor(0xFFC084FC);
+            if (pos != null) pos.setTextColor(0xFFE7C873);
             android.widget.Button neg = d.getButton(AlertDialog.BUTTON_NEGATIVE);
-            if (neg != null) neg.setTextColor(0xFFA78BFA);
+            if (neg != null) neg.setTextColor(0xFFC9A227);
             android.widget.Button neu = d.getButton(AlertDialog.BUTTON_NEUTRAL);
             if (neu != null) neu.setTextColor(0xFFFACC15);
         } catch (Exception ignored) {}

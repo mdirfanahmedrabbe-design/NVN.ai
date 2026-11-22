@@ -108,7 +108,7 @@ public class ConnectActivity extends Activity {
                 status += "\n" + info;
             }
             b.setText(name + "\n" + status);
-            b.setTextColor(0xFFE8F4FF);
+            b.setTextColor(0xFFF3E9C8);
             b.setBackgroundResource(R.drawable.btn_secondary);
             b.setPadding((int) (14 * density), (int) (12 * density), (int) (14 * density), (int) (12 * density));
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(

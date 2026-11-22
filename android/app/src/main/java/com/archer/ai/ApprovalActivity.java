@@ -46,14 +46,14 @@ public class ApprovalActivity extends Activity {
 
             TextView head = new TextView(this);
             head.setText(ConnectWorker.svcName(svc) + " — " + ("reply".equals(kind) ? "কমেন্টের উত্তর" : "পোস্ট"));
-            head.setTextColor(0xFFC084FC);
+            head.setTextColor(0xFFE7C873);
             head.setTextSize(14);
             head.setTypeface(null, android.graphics.Typeface.BOLD);
             card.addView(head);
 
             TextView body = new TextView(this);
             body.setText(text);
-            body.setTextColor(0xFFE8F4FF);
+            body.setTextColor(0xFFF3E9C8);
             body.setTextSize(14);
             body.setPadding(0, (int) (6 * density), 0, (int) (6 * density));
             card.addView(body);
@@ -89,7 +89,7 @@ public class ApprovalActivity extends Activity {
 
             Button drop = new Button(this);
             drop.setText("❌ বাদ দাও");
-            drop.setTextColor(0xFFE8F4FF);
+            drop.setTextColor(0xFFF3E9C8);
             drop.setBackgroundResource(R.drawable.btn_secondary);
             drop.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
             drop.setOnClickListener(v -> {

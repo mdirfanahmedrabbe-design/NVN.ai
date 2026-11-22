@@ -38,7 +38,7 @@ public class PremiumActivity extends Activity {
         Button verify = findViewById(R.id.premVerify);
 
         TextView features = new TextView(this);
-        features.setTextColor(0xFFE9D5FF);
+        features.setTextColor(0xFFF3E9C8);
         features.setTextSize(13);
         features.setPadding(0, 6, 0, 10);
         features.setText("প্রিমিয়ামে যা যা পাবেন:\n• প্রতিদিন বেশি Live মিনিট\n• প্রতিদিন বেশি AI প্রশ্ন\n• সব কমান্ড (অ্যাপ খোলা, কল, মেসেজ, টর্চ) সবসময় ফ্রি\n• লিমিট প্রতিদিন রিসেট হয়");
@@ -49,7 +49,7 @@ public class PremiumActivity extends Activity {
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setPadding(0, 10, 0, 10);
             TextView tv = new TextView(this);
-            tv.setTextColor(0xFFE2E8F0);
+            tv.setTextColor(0xFFEDE6D6);
             tv.setTextSize(14);
             tv.setText(NvnCore.TIER_NAMES[i] + " — ৳" + NvnCore.TIER_PRICE[i]
                     + " | Live " + NvnCore.TIER_LIVE_MIN[i] + " মিনিট/দিন, প্রশ্ন " + NvnCore.TIER_Q[i] + "/দিন");

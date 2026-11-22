@@ -143,11 +143,11 @@ public class SettingsActivity extends Activity {
         try {
             if (d.getWindow() != null) d.getWindow().setBackgroundDrawableResource(R.drawable.bg_card);
             android.widget.TextView m = d.findViewById(android.R.id.message);
-            if (m != null) m.setTextColor(0xFFE8F4FF);
+            if (m != null) m.setTextColor(0xFFF3E9C8);
             android.widget.TextView tt = d.findViewById(android.R.id.title);
-            if (tt != null) tt.setTextColor(0xFFC084FC);
+            if (tt != null) tt.setTextColor(0xFFE7C873);
             android.widget.Button pos = d.getButton(AlertDialog.BUTTON_POSITIVE);
-            if (pos != null) pos.setTextColor(0xFFC084FC);
+            if (pos != null) pos.setTextColor(0xFFE7C873);
             android.widget.Button neu = d.getButton(AlertDialog.BUTTON_NEUTRAL);
             if (neu != null) neu.setTextColor(0xFFFACC15);
         } catch (Exception ignored) {}

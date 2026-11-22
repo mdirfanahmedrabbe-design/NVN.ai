@@ -45,7 +45,7 @@ public class KeysActivity extends Activity {
 
     // 🟢 green = limit left, 🔴 red = today's limit finished (turns green again next day)
     private int keyColor(String value) {
-        if (value == null || value.trim().isEmpty()) return 0xFF64748B;
+        if (value == null || value.trim().isEmpty()) return 0xFFA8C3B2;
         return NvnCore.isKeyExhausted(this, value) ? 0xFFFF5252 : 0xFF4ADE80;
     }
 
@@ -65,7 +65,7 @@ public class KeysActivity extends Activity {
         et.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         et.setPadding(24, 20, 24, 20);
         et.setTextColor(keyColor(value));
-        et.setHintTextColor(0xFF64748B);
+        et.setHintTextColor(0xFFA8C3B2);
         et.setText(value);
         et.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
@@ -84,7 +84,7 @@ public class KeysActivity extends Activity {
         Button del = new Button(this);
         del.setText("✕");
         del.setBackgroundResource(R.drawable.btn_secondary);
-        del.setTextColor(0xFFE9D5FF);
+        del.setTextColor(0xFFF3E9C8);
         del.setOnClickListener(v -> {
             keysList.removeView(row);
             if (keysList.getChildCount() == 0) addKeyRow("");
