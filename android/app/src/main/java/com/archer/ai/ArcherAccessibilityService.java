@@ -36,6 +36,13 @@ public class ArcherAccessibilityService extends AccessibilityService {
         super.onDestroy();
     }
 
+    public boolean lockScreen() {
+        if (android.os.Build.VERSION.SDK_INT >= 28) {
+            return performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN);
+        }
+        return false;
+    }
+
     public String foregroundPackage() {
         try {
             AccessibilityNodeInfo root = getRootInActiveWindow();

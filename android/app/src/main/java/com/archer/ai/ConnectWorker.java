@@ -145,6 +145,33 @@ public class ConnectWorker {
     // Posts by opening the site in the owner's Chrome (already logged in) and tapping/typing
     // through the Accessibility service — the same way the owner works by hand. No token needed.
     // Needs: Accessibility ON, screen on (we wake it), phone unlocked (no PIN stop).
+    // "Work in progress" ongoing notification shown while browser work runs; cleared when done.
+    static void workNotify(Context ctx, String name) {
+        try {
+            NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (android.os.Build.VERSION.SDK_INT >= 26) {
+                android.app.NotificationChannel ch = new android.app.NotificationChannel(
+                        "nvn_connect", "NVN Connect", NotificationManager.IMPORTANCE_LOW);
+                nm.createNotificationChannel(ch);
+            }
+            android.app.Notification.Builder b = android.os.Build.VERSION.SDK_INT >= 26
+                    ? new android.app.Notification.Builder(ctx, "nvn_connect")
+                    : new android.app.Notification.Builder(ctx);
+            b.setSmallIcon(android.R.drawable.stat_sys_upload)
+                    .setContentTitle("🔄 NVN কাজ চলছে")
+                    .setContentText(name + "-এ কাজ হচ্ছে…")
+                    .setOngoing(true);
+            nm.notify(795, b.build());
+        } catch (Exception ignored) {}
+    }
+
+    static void workNotifyClear(Context ctx) {
+        try {
+            NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+            nm.cancel(795);
+        } catch (Exception ignored) {}
+    }
+
     public static boolean browserPost(Context ctx, String svc, String text) {
         String name = svcName(svc);
         try {
@@ -159,7 +186,18 @@ public class ConnectWorker {
                 logHistory(ctx, name + " — ব্রাউজার মোড: সাইটের ঠিকানা বসানো নেই");
                 return false;
             }
-            if (!a11y.isScreenOn()) {
+            boolean wasOff = !a11y.isScreenOn();
+            if (!wasOff) {
+                // Owner is using the phone (another app in front) — don't disturb; do it later.
+                String fg = a11y.foregroundPackage();
+                if (fg != null && !fg.isEmpty() && !fg.equals(ctx.getPackageName())
+                        && !fg.contains("launcher") && !fg.contains("home")) {
+                    logHistory(ctx, name + " — ব্রাউজার মোড: ফোন ব্যবহার হচ্ছিল, তাই এখন করা হয়নি — পরে করবে");
+                    return false;
+                }
+            }
+            workNotify(ctx, name);
+            if (wasOff) {
                 a11y.wakeScreen();
                 ArcherAccessibilityService.sleep(2500);
             }
@@ -170,6 +208,8 @@ public class ConnectWorker {
                 if (!a11y.openUrl(url)) {
                     logHistory(ctx, name + " — ব্রাউজার মোড: ব্রাউজার খোলা যায়নি");
                     workStatus(ctx, "❌ ব্রাউজার খোলা যায়নি");
+                    workNotifyClear(ctx);
+                    if (wasOff) a11y.lockScreen();
                     return false;
                 }
             }
@@ -199,6 +239,8 @@ public class ConnectWorker {
                 workShot(ctx, a11y);
                 logHistory(ctx, name + " — ব্রাউজার মোড: লেখার জায়গা পাওয়া যায়নি (ফোন লক থাকলে বা লগইন না থাকলে এমন হয়)");
                 notifyUser(ctx, "NVN ব্রাউজার মোড", name + "-এ লেখা বসানো যায়নি — ফোন আনলক আছে কিনা আর অ্যাপের ব্রাউজারে লগইন আছে কিনা দেখো", false);
+                workNotifyClear(ctx);
+                if (wasOff) a11y.lockScreen();
                 return false;
             }
             ArcherAccessibilityService.sleep(1200);
@@ -209,6 +251,8 @@ public class ConnectWorker {
                     workStatus(ctx, "✅ পোস্ট হয়ে গেছে — " + name);
                     workShot(ctx, a11y);
                     logHistory(ctx, name + " — ব্রাউজার মোডে পোস্ট পাঠানো হয়েছে");
+                    workNotifyClear(ctx);
+                    if (wasOff) a11y.lockScreen();
                     return true;
                 }
             }
@@ -217,9 +261,11 @@ public class ConnectWorker {
             workShot(ctx, a11y);
             logHistory(ctx, name + " — ব্রাউজার মোড: লেখা বসানো হয়েছে, Post বাটন পাওয়া যায়নি — নিজে টিপ দাও");
             notifyUser(ctx, "NVN ব্রাউজার মোড", name + "-এ লেখা বসিয়ে দিয়েছি, Post বাটনে নিজে টিপ দাও", false);
+            workNotifyClear(ctx);
             return false;
         } catch (Exception e) {
             logHistory(ctx, name + " — ব্রাউজার মোডে সমস্যা হয়েছে");
+            workNotifyClear(ctx);
             return false;
         }
     }
