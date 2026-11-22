@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="⚙️ Settings"
-        android:textColor="#C084FC"
+        android:textColor="#E7C873"
         android:textSize="22sp"
         android:textStyle="bold" />
 
@@ -43,7 +43,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="ভয়েসের গতি"
-        android:textColor="#E2E8F0" />
+        android:textColor="#EDE6D6" />
 
     <SeekBar
         android:id="@+id/setSpeed"
@@ -56,7 +56,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:text="ভয়েসের উচ্চতা (pitch)"
-        android:textColor="#E2E8F0" />
+        android:textColor="#EDE6D6" />
 
     <SeekBar
         android:id="@+id/setPitch"
@@ -70,7 +70,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
         android:text="English ভাষা"
-        android:textColor="#E2E8F0" />
+        android:textColor="#EDE6D6" />
 
     <CheckBox
         android:id="@+id/setMainVoice"
@@ -78,7 +78,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:text="মেইন স্ক্রিনে ভয়েস উত্তর"
-        android:textColor="#E2E8F0" />
+        android:textColor="#EDE6D6" />
 
     <CheckBox
         android:id="@+id/setFastMode"
@@ -86,7 +86,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:text="⚡ দ্রুত মোড (হালকা মডেল — ফাস্ট উত্তর, দিনে বেশি রিকোয়েস্ট)"
-        android:textColor="#E2E8F0" />
+        android:textColor="#EDE6D6" />
 
     <Button
         android:id="@+id/setOrbColorBtn"
@@ -96,7 +96,7 @@
         android:background="@drawable/btn_secondary"
         android:padding="12dp"
         android:text="🎨 বলের রং: অটো (রং বদলায়)"
-        android:textColor="#E8F4FF"
+        android:textColor="#F3E9C8"
         android:textSize="15sp" />
 
     <TextView
@@ -104,7 +104,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="bKash নম্বর (প্রিমিয়াম পেমেন্টের জন্য)"
-        android:textColor="#E2E8F0" />
+        android:textColor="#EDE6D6" />
 
     <EditText
         android:id="@+id/setBkash"
@@ -114,8 +114,8 @@
         android:hint="01XXXXXXXXX"
         android:inputType="phone"
         android:padding="12dp"
-        android:textColor="#E8F4FF"
-        android:textColorHint="#64748B" />
+        android:textColor="#F3E9C8"
+        android:textColorHint="#A8C3B2" />
 
     <Button
         android:id="@+id/setAnnounceBtn"
@@ -125,7 +125,7 @@
         android:background="@drawable/btn_secondary"
         android:padding="12dp"
         android:text="📢 ঘোষণা পেজ (আলাদা পেজ)"
-        android:textColor="#E8F4FF"
+        android:textColor="#F3E9C8"
         android:textSize="15sp" />
 
     <Button
@@ -147,7 +147,7 @@
         android:background="@drawable/btn_secondary"
         android:padding="12dp"
         android:text="🔔 নোটিফিকেশন ও অবস্থা"
-        android:textColor="#E8F4FF"
+        android:textColor="#F3E9C8"
         android:textSize="15sp" />
 
     <Button
@@ -158,7 +158,7 @@
         android:background="@drawable/btn_secondary"
         android:padding="12dp"
         android:text="ℹ️ অ্যাপ সম্পর্কে — কে তৈরি করেছে"
-        android:textColor="#E8F4FF"
+        android:textColor="#F3E9C8"
         android:textSize="15sp" />
 
     <Button
@@ -176,6 +176,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
-        android:textColor="#94A3B8"
+        android:textColor="#A8C3B2"
         android:textSize="12sp" />
 </LinearLayout>

@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="📋 অনুমোদনের অপেক্ষায়"
-        android:textColor="#C084FC"
+        android:textColor="#E7C873"
         android:textSize="22sp"
         android:textStyle="bold" />
 
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="সে যা তৈরি করেছে, তোমার হ্যাঁ পেলেই পাঠাবে।"
-        android:textColor="#A78BFA"
+        android:textColor="#C9A227"
         android:textSize="13sp" />
 
     <TextView
@@ -29,7 +29,7 @@
         android:layout_marginTop="20dp"
         android:gravity="center"
         android:text="অপেক্ষায় কিছু নেই।"
-        android:textColor="#94A3B8" />
+        android:textColor="#A8C3B2" />
 
     <ScrollView
         android:layout_width="match_parent"

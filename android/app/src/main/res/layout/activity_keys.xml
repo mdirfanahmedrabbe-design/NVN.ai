@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="🔑 Gemini Key-ঘর"
-        android:textColor="#C084FC"
+        android:textColor="#E7C873"
         android:textSize="22sp"
         android:textStyle="bold" />
 
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="একটা ঘরে Key বসিয়ে সেভ করলেই নিচে আরেকটা খালি ঘর খুলবে। যত খুশি Key বসাও — একটার লিমিট শেষ হলে অটোমেটিক পরেরটা চলবে, এক সেকেন্ডও দেরি হবে না।"
-        android:textColor="#A78BFA"
+        android:textColor="#C9A227"
         android:textSize="13sp" />
 
     <ScrollView
@@ -40,7 +40,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:textColor="#94A3B8"
+        android:textColor="#A8C3B2"
         android:textSize="12sp" />
 
     <Button
@@ -62,5 +62,5 @@
         android:background="@drawable/btn_secondary"
         android:padding="10dp"
         android:text="সব Key মুছো"
-        android:textColor="#E9D5FF" />
+        android:textColor="#F3E9C8" />
 </LinearLayout>

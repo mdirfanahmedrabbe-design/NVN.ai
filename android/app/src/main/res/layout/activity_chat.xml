@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="💬 NVN চ্যাট"
-        android:textColor="#C084FC"
+        android:textColor="#E7C873"
         android:textSize="20sp"
         android:textStyle="bold" />
 
@@ -37,7 +37,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:textColor="#E2E8F0"
+            android:textColor="#EDE6D6"
             android:textSize="13sp" />
 
         <ImageView
@@ -80,8 +80,8 @@
             android:hint="এখানে লিখে বলো…"
             android:maxLines="4"
             android:padding="12dp"
-            android:textColor="#E8F4FF"
-            android:textColorHint="#64748B" />
+            android:textColor="#F3E9C8"
+            android:textColorHint="#A8C3B2" />
 
         <Button
             android:id="@+id/chatSend"

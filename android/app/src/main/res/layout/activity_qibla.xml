@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="🧭 কিবলা কম্পাস"
-        android:textColor="#C084FC"
+        android:textColor="#E7C873"
         android:textSize="24sp"
         android:textStyle="bold" />
 
@@ -25,6 +25,6 @@
         android:gravity="center"
         android:padding="20dp"
         android:text="লোড হচ্ছে..."
-        android:textColor="#E2E8F0"
+        android:textColor="#EDE6D6"
         android:textSize="20sp" />
 </LinearLayout>

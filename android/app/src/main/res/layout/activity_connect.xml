@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="🔗 কানেক্ট সিস্টেম"
-        android:textColor="#C084FC"
+        android:textColor="#E7C873"
         android:textSize="22sp"
         android:textStyle="bold" />
 
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="যে সাইট কানেক্ট করবে, তার আলাদা পেজে কাজের নিয়ম লিখে দাও। সে প্রতিদিন শিডিউল অনুযায়ী কমেন্টের উত্তর আর পোস্ট করবে — স্ক্রিন অফ থাকলেও চলবে।"
-        android:textColor="#A78BFA"
+        android:textColor="#C9A227"
         android:textSize="13sp" />
 
     <EditText
@@ -30,8 +30,8 @@
         android:background="@drawable/bg_input"
         android:hint="🔍 সাইট/অ্যাপ খুঁজো (যেমন: facebook, blogger, tiktok)"
         android:padding="12dp"
-        android:textColor="#E8F4FF"
-        android:textColorHint="#64748B" />
+        android:textColor="#F3E9C8"
+        android:textColorHint="#A8C3B2" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -65,7 +65,7 @@
         android:background="@drawable/btn_secondary"
         android:padding="12dp"
         android:text="📋 অনুমোদনের অপেক্ষায়"
-        android:textColor="#E8F4FF" />
+        android:textColor="#F3E9C8" />
 
     <Button
         android:id="@+id/connHistory"
@@ -75,5 +75,5 @@
         android:background="@drawable/btn_secondary"
         android:padding="12dp"
         android:text="📜 কাজের ইতিহাস"
-        android:textColor="#E8F4FF" />
+        android:textColor="#F3E9C8" />
 </LinearLayout>

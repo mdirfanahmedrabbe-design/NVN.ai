@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="📢 ঘোষণা পেজ"
-        android:textColor="#C084FC"
+        android:textColor="#E7C873"
         android:textSize="22sp"
         android:textStyle="bold" />
 
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="এখানে লিখে পোস্ট করলেই সব ইউজারের অ্যাপে নোটিফিকেশন যাবে।"
-        android:textColor="#A78BFA"
+        android:textColor="#C9A227"
         android:textSize="13sp" />
 
     <EditText
@@ -30,8 +30,8 @@
         android:background="@drawable/bg_input"
         android:hint="শিরোনাম"
         android:padding="12dp"
-        android:textColor="#E8F4FF"
-        android:textColorHint="#64748B" />
+        android:textColor="#F3E9C8"
+        android:textColorHint="#A8C3B2" />
 
     <EditText
         android:id="@+id/annBody"
@@ -42,8 +42,8 @@
         android:hint="ঘোষণার লেখা"
         android:minLines="3"
         android:padding="12dp"
-        android:textColor="#E8F4FF"
-        android:textColorHint="#64748B" />
+        android:textColor="#F3E9C8"
+        android:textColorHint="#A8C3B2" />
 
     <EditText
         android:id="@+id/annToken"
@@ -54,8 +54,8 @@
         android:hint="সার্ভার টোকেন"
         android:inputType="textPassword"
         android:padding="12dp"
-        android:textColor="#E8F4FF"
-        android:textColorHint="#64748B" />
+        android:textColor="#F3E9C8"
+        android:textColorHint="#A8C3B2" />
 
     <Button
         android:id="@+id/annSend"
@@ -75,6 +75,6 @@
         android:layout_marginTop="16dp"
         android:background="@drawable/bg_card"
         android:padding="12dp"
-        android:textColor="#E8F4FF"
+        android:textColor="#F3E9C8"
         android:textSize="13sp" />
 </LinearLayout>

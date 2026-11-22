@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="📜 কাজের ইতিহাস"
-        android:textColor="#C084FC"
+        android:textColor="#E7C873"
         android:textSize="22sp"
         android:textStyle="bold" />
 
@@ -24,7 +24,7 @@
             android:id="@+id/histText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#E8F4FF"
+            android:textColor="#F3E9C8"
             android:textSize="13sp" />
     </ScrollView>
 </LinearLayout>

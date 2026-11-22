@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="👑 প্রিমিয়াম প্যাকেজ"
-            android:textColor="#C084FC"
+            android:textColor="#E7C873"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -27,7 +27,7 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_card"
             android:padding="12dp"
-            android:textColor="#E2E8F0"
+            android:textColor="#EDE6D6"
             android:textSize="14sp" />
 
         <LinearLayout
@@ -44,7 +44,7 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_card"
             android:padding="12dp"
-            android:textColor="#E9D5FF"
+            android:textColor="#F3E9C8"
             android:textSize="14sp" />
 
         <EditText
@@ -55,8 +55,8 @@
             android:background="@drawable/bg_input"
             android:hint="bKash TrxID (যেমন: ABC123XYZ9)"
             android:padding="12dp"
-            android:textColor="#E8F4FF"
-            android:textColorHint="#64748B" />
+            android:textColor="#F3E9C8"
+            android:textColorHint="#A8C3B2" />
 
         <Button
             android:id="@+id/premVerify"
@@ -73,7 +73,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="টাকা পাঠানোর পর TrxID দিলেই সাথে সাথে প্রিমিয়াম চালু হবে। লিমিট প্রতিদিন নতুন করে শুরু হয়।"
-            android:textColor="#94A3B8"
+            android:textColor="#A8C3B2"
             android:textSize="12sp" />
 
     </LinearLayout>

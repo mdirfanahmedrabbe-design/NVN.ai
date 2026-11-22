@@ -14,7 +14,7 @@
             android:id="@+id/svcTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#C084FC"
+            android:textColor="#E7C873"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -29,7 +29,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="সাইটের নাম"
-                android:textColor="#E2E8F0" />
+                android:textColor="#EDE6D6" />
 
             <EditText
                 android:id="@+id/svcCustomName"
@@ -39,8 +39,8 @@
                 android:background="@drawable/bg_input"
                 android:hint="যেমন: আমার ব্লগ"
                 android:padding="12dp"
-                android:textColor="#E8F4FF"
-                android:textColorHint="#64748B" />
+                android:textColor="#F3E9C8"
+                android:textColorHint="#A8C3B2" />
         </LinearLayout>
 
         <TextView
@@ -48,7 +48,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:text="Token / Key (শুধু তোমার ফোনেই থাকবে)"
-            android:textColor="#E2E8F0" />
+            android:textColor="#EDE6D6" />
 
         <EditText
             android:id="@+id/svcToken"
@@ -59,8 +59,8 @@
             android:hint="Token বসাও"
             android:inputType="textPassword"
             android:padding="12dp"
-            android:textColor="#E8F4FF"
-            android:textColorHint="#64748B" />
+            android:textColor="#F3E9C8"
+            android:textColorHint="#A8C3B2" />
 
         <Button
             android:id="@+id/svcTokenBtn"
@@ -70,14 +70,14 @@
             android:background="@drawable/btn_secondary"
             android:padding="12dp"
             android:text="🔐 লগইন করে Token নাও (অফিসিয়াল পেজ খুলবে)"
-            android:textColor="#E8F4FF" />
+            android:textColor="#F3E9C8" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:text="Username (যদি লাগে)"
-            android:textColor="#E2E8F0" />
+            android:textColor="#EDE6D6" />
 
         <EditText
             android:id="@+id/svcUser"
@@ -87,15 +87,15 @@
             android:background="@drawable/bg_input"
             android:hint="Username"
             android:padding="12dp"
-            android:textColor="#E8F4FF"
-            android:textColorHint="#64748B" />
+            android:textColor="#F3E9C8"
+            android:textColorHint="#A8C3B2" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:text="Password / App Password (যদি লাগে — শুধু তোমার ফোনেই থাকবে)"
-            android:textColor="#E2E8F0" />
+            android:textColor="#EDE6D6" />
 
         <EditText
             android:id="@+id/svcPass"
@@ -106,15 +106,15 @@
             android:hint="Password"
             android:inputType="textPassword"
             android:padding="12dp"
-            android:textColor="#E8F4FF"
-            android:textColorHint="#64748B" />
+            android:textColor="#F3E9C8"
+            android:textColorHint="#A8C3B2" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:text="ID / URL"
-            android:textColor="#E2E8F0" />
+            android:textColor="#EDE6D6" />
 
         <EditText
             android:id="@+id/svcId"
@@ -124,15 +124,15 @@
             android:background="@drawable/bg_input"
             android:hint="Page ID / Chat ID / URL"
             android:padding="12dp"
-            android:textColor="#E8F4FF"
-            android:textColorHint="#64748B" />
+            android:textColor="#F3E9C8"
+            android:textColorHint="#A8C3B2" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:text="✍️ কাজের নিয়ম (এই সাইটে সে কীভাবে কাজ করবে, নিজের ভাষায় লিখে দাও)"
-            android:textColor="#E2E8F0" />
+            android:textColor="#EDE6D6" />
 
         <EditText
             android:id="@+id/svcRules"
@@ -144,15 +144,15 @@
             android:hint="যেমন: প্রতিদিন সকালে একটা করে উপকারি পোস্ট করবে। কমেন্টে কেউ দাম জিজ্ঞেস করলে বলবে ইনবক্সে আসতে। রাগী কমেন্টে ঝগড়া করবে না।"
             android:minLines="5"
             android:padding="12dp"
-            android:textColor="#E8F4FF"
-            android:textColorHint="#64748B" />
+            android:textColor="#F3E9C8"
+            android:textColorHint="#A8C3B2" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:text="প্রতিদিনের পোস্টের সময় (ঘণ্টা : মিনিট, ২৪ ঘণ্টার হিসাব)"
-            android:textColor="#E2E8F0" />
+            android:textColor="#EDE6D6" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -169,8 +169,8 @@
                 android:hint="9"
                 android:inputType="number"
                 android:padding="12dp"
-                android:textColor="#E8F4FF"
-                android:textColorHint="#64748B" />
+                android:textColor="#F3E9C8"
+                android:textColorHint="#A8C3B2" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -178,7 +178,7 @@
                 android:layout_gravity="center_vertical"
                 android:padding="8dp"
                 android:text=":"
-                android:textColor="#E2E8F0" />
+                android:textColor="#EDE6D6" />
 
             <EditText
                 android:id="@+id/svcMinute"
@@ -189,8 +189,8 @@
                 android:hint="0"
                 android:inputType="number"
                 android:padding="12dp"
-                android:textColor="#E8F4FF"
-                android:textColorHint="#64748B" />
+                android:textColor="#F3E9C8"
+                android:textColorHint="#A8C3B2" />
         </LinearLayout>
 
         <CheckBox
@@ -199,7 +199,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="এই সাইটে কাজ চালু"
-            android:textColor="#E2E8F0" />
+            android:textColor="#EDE6D6" />
 
         <CheckBox
             android:id="@+id/svcComments"
@@ -207,7 +207,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="কমেন্ট দেখে উত্তর দেবে"
-            android:textColor="#E2E8F0" />
+            android:textColor="#EDE6D6" />
 
         <CheckBox
             android:id="@+id/svcPost"
@@ -215,7 +215,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="প্রতিদিন পোস্ট করবে"
-            android:textColor="#E2E8F0" />
+            android:textColor="#EDE6D6" />
 
         <CheckBox
             android:id="@+id/svcApprove"
@@ -223,7 +223,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="পাঠানোর আগে দেখিয়ে হ্যাঁ নাও (বন্ধ করলে অটো পাঠাবে)"
-            android:textColor="#E2E8F0" />
+            android:textColor="#EDE6D6" />
 
         <CheckBox
             android:id="@+id/svcBrowser"
@@ -231,14 +231,14 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="🌐 ব্রাউজার মোড (Token লাগবে না — Chrome-এ লগইন থাকলেই সে নিজে গিয়ে কাজ করবে)"
-            android:textColor="#E2E8F0" />
+            android:textColor="#EDE6D6" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:text="ব্রাউজার মোডের সাইটের ঠিকানা"
-            android:textColor="#E2E8F0" />
+            android:textColor="#EDE6D6" />
 
         <EditText
             android:id="@+id/svcSite"
@@ -249,8 +249,8 @@
             android:hint="https://…"
             android:inputType="textUri"
             android:padding="12dp"
-            android:textColor="#E8F4FF"
-            android:textColorHint="#64748B" />
+            android:textColor="#F3E9C8"
+            android:textColorHint="#A8C3B2" />
 
         <Button
             android:id="@+id/svcSave"
@@ -268,7 +268,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:textColor="#94A3B8"
+            android:textColor="#A8C3B2"
             android:textSize="12sp" />
     </LinearLayout>
 </ScrollView>

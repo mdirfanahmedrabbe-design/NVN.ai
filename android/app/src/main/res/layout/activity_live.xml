@@ -18,7 +18,7 @@
         android:background="@drawable/bg_card"
         android:padding="8dp"
         android:text="আজ Live: 0/5 মিনিট"
-        android:textColor="#E9D5FF"
+        android:textColor="#F3E9C8"
         android:textSize="13sp" />
 
     <LinearLayout
@@ -42,7 +42,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="লাইভ শুরু করলে ক্যামেরা দেখে কথা বলবে"
-            android:textColor="#C084FC"
+            android:textColor="#E7C873"
             android:textSize="14sp" />
 
         <Button
