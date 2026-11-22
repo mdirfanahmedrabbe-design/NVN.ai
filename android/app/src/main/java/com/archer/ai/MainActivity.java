@@ -25,7 +25,9 @@ import java.util.Locale;
 
 public class MainActivity extends Activity {
     private TextView onlinePill;
+    private TextView dashText;
     private Button liveBtn;
+    private boolean torchOn = false;
     private SharedPreferences prefs;
     private int tickCount = 0;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -52,8 +54,20 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         prefs = getSharedPreferences("archer", MODE_PRIVATE);
 
+        if (!prefs.contains("orb_color")) prefs.edit().putString("orb_color", "5").apply();
         onlinePill = findViewById(R.id.onlinePill);
+        dashText = findViewById(R.id.dashText);
         liveBtn = findViewById(R.id.liveBtn);
+        findViewById(R.id.quickTorch).setOnClickListener(v -> toggleTorch());
+        findViewById(R.id.quickPrayer).setOnClickListener(v -> showPrayer());
+        findViewById(R.id.quickAlarm).setOnClickListener(v -> {
+            try { startActivity(new Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS)); }
+            catch (Exception e) { android.widget.Toast.makeText(this, "অ্যালার্ম অ্যাপ পাইনি", android.widget.Toast.LENGTH_SHORT).show(); }
+        });
+        findViewById(R.id.quickCamera).setOnClickListener(v -> {
+            try { startActivity(new Intent("android.media.action.IMAGE_CAPTURE")); }
+            catch (Exception e) { android.widget.Toast.makeText(this, "ক্যামেরা খুলছে না", android.widget.Toast.LENGTH_SHORT).show(); }
+        });
         liveBtn.setOnClickListener(v -> openLive("camera"));
         findViewById(R.id.chatBtn).setOnClickListener(v ->
                 startActivity(new android.content.Intent(this, ChatActivity.class)));
@@ -75,6 +89,44 @@ public class MainActivity extends Activity {
         if (prefs.getString("girl_name", "").isEmpty()) showNameDialog();
     }
 
+
+    private int countConnected() {
+        String[] svcs = {"facebook", "instagram", "threads", "youtube", "telegram", "blogger",
+                "wordpress", "tiktok", "x", "pinterest", "whatsapp", "gmail", "website", "custom"};
+        int n = 0;
+        for (String s : svcs) {
+            String tok = prefs.getString("conn_" + s + "_token", "");
+            boolean br = prefs.getBoolean("conn_" + s + "_browser", false);
+            String user = prefs.getString("conn_" + s + "_user", "");
+            String pass = prefs.getString("conn_" + s + "_pass", "");
+            if ((tok != null && !tok.trim().isEmpty()) || br
+                    || (user != null && !user.isEmpty() && pass != null && !pass.isEmpty())) n++;
+        }
+        return n;
+    }
+
+    private void toggleTorch() {
+        try {
+            android.hardware.camera2.CameraManager cm =
+                    (android.hardware.camera2.CameraManager) getSystemService(CAMERA_SERVICE);
+            String id = cm.getCameraIdList()[0];
+            torchOn = !torchOn;
+            cm.setTorchMode(id, torchOn);
+            android.widget.Toast.makeText(this, torchOn ? "টর্চ জ্বলছে 🔦" : "টর্চ বন্ধ", android.widget.Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            android.widget.Toast.makeText(this, "টর্চ কাজ করছে না", android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showPrayer() {
+        new Thread(() -> {
+            String t = NvnCore.prayerTimesText(getApplicationContext());
+            runOnUiThread(() -> styleDialog(new AlertDialog.Builder(this)
+                    .setTitle("🕌 নামাজের সময়")
+                    .setMessage(t)
+                    .setPositiveButton("ঠিক আছে", null).create()).show());
+        }).start();
+    }
 
     private AlertDialog styleDialog(AlertDialog d) {
         try {
@@ -133,6 +185,7 @@ public class MainActivity extends Activity {
             int used = NvnCore.liveSecondsToday(this) / 60;
             int limit = NvnCore.TIER_LIVE_MIN[NvnCore.tierIndex(this)];
             onlinePill.setText(NvnCore.isOwner(this) ? "👑 মালিক — আনলিমিটেড" : "● Online for " + used + " min  (আজ " + used + "/" + limit + ")");
+            if (dashText != null) dashText.setText("CONNECTED APPS: " + countConnected() + "  •  SYS: ONLINE");
         } catch (Exception ignored) {}
     }
 

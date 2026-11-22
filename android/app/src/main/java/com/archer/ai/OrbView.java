@@ -53,6 +53,7 @@ public class OrbView extends View {
         {52, 211, 153, 45, 212, 191, 16, 185, 129},     // green-teal
         {252, 211, 77, 251, 146, 60, 245, 158, 11},     // gold-orange
         {240, 171, 252, 192, 132, 252, 217, 70, 239},   // magenta
+        {255, 70, 70, 255, 140, 140, 185, 25, 25},      // red (hacker fusion default)
     };
 
     private int[] currentPalette() {

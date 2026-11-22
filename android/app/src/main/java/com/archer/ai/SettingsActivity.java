@@ -37,7 +37,7 @@ public class SettingsActivity extends Activity {
         CheckBox fastMode = findViewById(R.id.setFastMode);
         fastMode.setChecked(prefs.getBoolean("fast_mode", true));
         Button orbBtn = findViewById(R.id.setOrbColorBtn);
-        String[] orbNames = {"অটো (রং বদলায়)", "বেগুনি", "নীল", "সবুজ", "সোনালি", "গোলাপি"};
+        String[] orbNames = {"অটো (রং বদলায়)", "বেগুনি", "নীল", "সবুজ", "সোনালি", "গোলাপি", "লাল"};
         int orbIdx = 0;
         try { orbIdx = Integer.parseInt(prefs.getString("orb_color", "-1")) + 1; } catch (Exception ignored) {}
         if (orbIdx < 0 || orbIdx >= orbNames.length) orbIdx = 0;
