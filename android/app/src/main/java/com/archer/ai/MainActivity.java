@@ -55,6 +55,8 @@ public class MainActivity extends Activity {
         onlinePill = findViewById(R.id.onlinePill);
         liveBtn = findViewById(R.id.liveBtn);
         liveBtn.setOnClickListener(v -> openLive("camera"));
+        findViewById(R.id.chatBtn).setOnClickListener(v ->
+                startActivity(new android.content.Intent(this, ChatActivity.class)));
         findViewById(R.id.navHome).setOnClickListener(v -> refreshUsage());
         findViewById(R.id.navHistory).setOnClickListener(v -> showHistory());
         findViewById(R.id.navShare).setOnClickListener(v -> shareApp());

@@ -270,6 +270,39 @@ public class ArcherAccessibilityService extends AccessibilityService {
         return hasText(text);
     }
 
+    // Saves a screenshot of the current screen to a file (for the browser card). API 30+.
+    public boolean captureScreenshot(java.io.File out) {
+        if (android.os.Build.VERSION.SDK_INT < 30) return false;
+        final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
+        final boolean[] ok = {false};
+        try {
+            takeScreenshot(android.view.Display.DEFAULT_DISPLAY, getMainExecutor(), new TakeScreenshotCallback() {
+                @Override
+                public void onSuccess(ScreenshotResult result) {
+                    try {
+                        android.graphics.Bitmap bmp = android.graphics.Bitmap.wrapHardwareBuffer(
+                                result.getHardwareBuffer(), result.getColorSpace());
+                        if (bmp != null) {
+                            android.graphics.Bitmap copy = bmp.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
+                            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(out)) {
+                                copy.compress(android.graphics.Bitmap.CompressFormat.PNG, 90, fos);
+                            }
+                            ok[0] = true;
+                        }
+                    } catch (Exception ignored) {}
+                    latch.countDown();
+                }
+
+                @Override
+                public void onFailure(int errorCode) {
+                    latch.countDown();
+                }
+            });
+            latch.await(8, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (Exception ignored) {}
+        return ok[0];
+    }
+
     private void collectText(AccessibilityNodeInfo node, StringBuilder sb) {
         if (node == null || sb.length() > 3000) return;
         CharSequence t = node.getText();

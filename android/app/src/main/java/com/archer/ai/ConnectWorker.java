@@ -117,6 +117,31 @@ public class ConnectWorker {
         ArcherAccessibilityService.sleep(600);
     }
 
+    // Live work status shown on the browser card inside the chat.
+    static void workStatus(Context ctx, String line) {
+        try {
+            SharedPreferences p = prefs(ctx);
+            String old = p.getString("conn_work_status", "");
+            String updated = old.isEmpty() ? line : old + "\n" + line;
+            String[] lines = updated.split("\n");
+            if (lines.length > 12) {
+                StringBuilder sb = new StringBuilder();
+                for (int i = lines.length - 12; i < lines.length; i++) sb.append(lines[i]).append("\n");
+                updated = sb.toString().trim();
+            }
+            p.edit().putString("conn_work_status", updated).apply();
+        } catch (Exception ignored) {}
+    }
+
+    static void workShot(Context ctx, ArcherAccessibilityService a11y) {
+        try {
+            java.io.File f = new java.io.File(ctx.getFilesDir(), "browser_shot.png");
+            if (a11y.captureScreenshot(f)) {
+                prefs(ctx).edit().putLong("conn_work_shot_ts", System.currentTimeMillis()).apply();
+            }
+        } catch (Exception ignored) {}
+    }
+
     // Posts by opening the site in the owner's Chrome (already logged in) and tapping/typing
     // through the Accessibility service — the same way the owner works by hand. No token needed.
     // Needs: Accessibility ON, screen on (we wake it), phone unlocked (no PIN stop).
@@ -138,11 +163,14 @@ public class ConnectWorker {
                 a11y.wakeScreen();
                 ArcherAccessibilityService.sleep(2500);
             }
+            workStatus(ctx, "🌐 " + name + " — Chrome-এ সাইট খুলছি…");
             if (!a11y.openUrl(url)) {
                 logHistory(ctx, name + " — ব্রাউজার মোড: Chrome খোলা যায়নি");
+                workStatus(ctx, "❌ Chrome খোলা যায়নি");
                 return false;
             }
             ArcherAccessibilityService.sleep(7000);
+            workShot(ctx, a11y);
             dismissBanners(a11y);
             // If the phone is locked (PIN screen), the site text never appears.
             boolean opened = false;
@@ -156,12 +184,15 @@ public class ConnectWorker {
                 ArcherAccessibilityService.sleep(2500);
                 dismissBanners(a11y);
             }
+            workStatus(ctx, "✍️ পোস্টের লেখা বসাচ্ছি…");
             boolean typed = a11y.typeText(text);
             if (!typed) {
                 ArcherAccessibilityService.sleep(1500);
                 typed = a11y.typeText(text);
             }
             if (!typed) {
+                workStatus(ctx, "❌ লেখার জায়গা পাওয়া যায়নি — ফোন আনলক + Chrome-এ লগইন আছে কিনা দেখো");
+                workShot(ctx, a11y);
                 logHistory(ctx, name + " — ব্রাউজার মোড: লেখার জায়গা পাওয়া যায়নি (ফোন লক থাকলে বা লগইন না থাকলে এমন হয়)");
                 notifyUser(ctx, "NVN ব্রাউজার মোড", name + "-এ লেখা বসানো যায়নি — ফোন আনলক আছে কিনা আর Chrome-এ লগইন আছে কিনা দেখো", false);
                 return false;
@@ -171,11 +202,15 @@ public class ConnectWorker {
                 if (a11y.hasText(btn)) {
                     a11y.tapText(btn);
                     ArcherAccessibilityService.sleep(3000);
+                    workStatus(ctx, "✅ পোস্ট হয়ে গেছে — " + name);
+                    workShot(ctx, a11y);
                     logHistory(ctx, name + " — ব্রাউজার মোডে পোস্ট পাঠানো হয়েছে");
                     return true;
                 }
             }
             // Typed but no Post button found — leave it typed for the owner to press Post.
+            workStatus(ctx, "✍️ লেখা বসানো হয়েছে — Post বাটনে নিজে টিপ দাও");
+            workShot(ctx, a11y);
             logHistory(ctx, name + " — ব্রাউজার মোড: লেখা বসানো হয়েছে, Post বাটন পাওয়া যায়নি — নিজে টিপ দাও");
             notifyUser(ctx, "NVN ব্রাউজার মোড", name + "-এ লেখা বসিয়ে দিয়েছি, Post বাটনে নিজে টিপ দাও", false);
             return false;

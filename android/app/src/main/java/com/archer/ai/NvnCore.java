@@ -243,6 +243,16 @@ public class NvnCore {
         fns.put(fnDefNoArg("press_enter", "Press Enter or Send or Search on the keyboard"));
         fns.put(fnDefNoArg("read_screen", "Read all visible text on the current screen"));
         fns.put(fnDefNoArg("take_screenshot", "Take a screenshot"));
+        fns.put(fnDef("open_screen", "Open a screen inside the NVN app: qibla compass, tasbih counter, premium packages, settings, connect system, or chat", "screen", "One of: qibla, tasbih, premium, settings, connect, chat"));
+        fns.put(fnDefNoArg("end_call", "End the current phone call"));
+        fns.put(fnDef("remember_fact", "Remember a fact about the user forever (name, likes, work, family, anything he says to remember)", "fact", "The fact to remember, in the user's own words"));
+        fns.put(fnDef2("set_service_rules", "Save the owner's work rules for a connected site so you remember them forever. Use this whenever the user explains what work to do on a site (what to post, how to reply to comments, when).", "service", "Site name: facebook, instagram, threads, youtube, telegram, blogger, wordpress, tiktok, x, pinterest, whatsapp, gmail, website, custom", "rules", "The work rules in the user's own words, complete"));
+        fns.put(fnDef2("set_service_schedule", "Set the daily post time for a connected site", "service", "Site name", "time", "Time in 24-hour HH:MM format, e.g. 09:00"));
+        fns.put(fnDef2("toggle_service", "Turn daily work on or off for a connected site", "service", "Site name", "state", "One of: on, off"));
+        fns.put(fnDef2("set_browser_mode", "Turn Browser Mode on or off for a site. Browser Mode works without any token: NVN opens the site in the owner's Chrome browser (already logged in) and posts by tapping and typing, the way the owner works by hand.", "service", "Site name", "state", "One of: on, off"));
+        fns.put(fnDefNoArg("connect_status", "Report which sites are connected, which have daily work on, and what rules are saved"));
+        fns.put(fnDefNoArg("run_connect_work", "Run the connected-sites work right now (check comments, reply, post)"));
+        fns.put(fnDef("connect_site", "Connect a site: opens the secure connect box in this chat (login/token/password) so the owner can connect it without leaving the chat", "service", "Site name"));
         return fns;
     }
 
@@ -295,9 +305,141 @@ public class NvnCore {
                 return setVolume(ctx, args.optString("direction", ""));
             case "torch":
                 return setTorch(ctx, "on".equalsIgnoreCase(args.optString("state", "")));
+            case "open_screen": {
+                String screen = args.optString("screen", "").toLowerCase(Locale.ROOT);
+                Class<?> target = null;
+                if (screen.contains("qibla")) target = QiblaActivity.class;
+                else if (screen.contains("tasbih")) target = TasbihActivity.class;
+                else if (screen.contains("premium")) target = PremiumActivity.class;
+                else if (screen.contains("settings")) target = SettingsActivity.class;
+                else if (screen.contains("connect")) target = ConnectActivity.class;
+                else if (screen.contains("chat")) target = ChatActivity.class;
+                if (target == null) return "unknown screen";
+                try {
+                    Intent i = new Intent(ctx, target);
+                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    ctx.startActivity(i);
+                    return "opened " + screen;
+                } catch (Exception e) {
+                    return "could not open " + screen;
+                }
+            }
+            case "end_call": {
+                try {
+                    android.telecom.TelecomManager tm = (android.telecom.TelecomManager) ctx.getSystemService(Context.TELECOM_SERVICE);
+                    if (tm != null && Build.VERSION.SDK_INT >= 28) {
+                        return tm.endCall() ? "call ended" : "no call to end";
+                    }
+                    return "end call not supported";
+                } catch (Exception e) {
+                    return "end call failed";
+                }
+            }
+            case "remember_fact": {
+                String fact = args.optString("fact", "").trim();
+                if (fact.isEmpty()) return "no fact given";
+                SharedPreferences p = ctx.getSharedPreferences("archer", Context.MODE_PRIVATE);
+                String old = p.getString("memory_facts", "");
+                String merged = old == null || old.trim().isEmpty() ? fact : old.trim() + "; " + fact;
+                p.edit().putString("memory_facts", merged).apply();
+                backupData(ctx);
+                return "remembered forever: " + fact;
+            }
+            case "set_service_rules": {
+                String svcId = normalizeService(args.optString("service", ""));
+                String rules = args.optString("rules", "").trim();
+                if (svcId == null) return "unknown service: " + args.optString("service", "");
+                if (rules.isEmpty()) return "no rules given";
+                SharedPreferences p = ctx.getSharedPreferences("archer", Context.MODE_PRIVATE);
+                String old = p.getString("conn_" + svcId + "_rules", "");
+                String merged = old == null || old.trim().isEmpty() ? rules : old.trim() + "\n" + rules;
+                p.edit().putString("conn_" + svcId + "_rules", merged)
+                        .putBoolean("conn_" + svcId + "_enabled", true).apply();
+                ConnectWorker.logHistory(ctx, ConnectWorker.svcName(svcId) + " — চ্যাটে নিয়ম সেভ হয়েছে");
+                return "rules saved for " + svcId + " and remembered forever";
+            }
+            case "set_service_schedule": {
+                String svcId = normalizeService(args.optString("service", ""));
+                String time = args.optString("time", "").trim();
+                if (svcId == null) return "unknown service";
+                try {
+                    String[] parts = time.split(":");
+                    int h = Integer.parseInt(parts[0].trim());
+                    int m = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 0;
+                    if (h < 0 || h > 23 || m < 0 || m > 59) return "bad time";
+                    ctx.getSharedPreferences("archer", Context.MODE_PRIVATE).edit()
+                            .putInt("conn_" + svcId + "_hour", h).putInt("conn_" + svcId + "_minute", m).apply();
+                    return "schedule set for " + svcId + " at " + time;
+                } catch (Exception e) {
+                    return "bad time format";
+                }
+            }
+            case "toggle_service": {
+                String svcId = normalizeService(args.optString("service", ""));
+                if (svcId == null) return "unknown service";
+                boolean on = "on".equalsIgnoreCase(args.optString("state", ""));
+                ctx.getSharedPreferences("archer", Context.MODE_PRIVATE).edit()
+                        .putBoolean("conn_" + svcId + "_enabled", on).apply();
+                return svcId + " daily work " + (on ? "on" : "off");
+            }
+            case "set_browser_mode": {
+                String svcId = normalizeService(args.optString("service", ""));
+                if (svcId == null) return "unknown service";
+                boolean on = "on".equalsIgnoreCase(args.optString("state", ""));
+                ctx.getSharedPreferences("archer", Context.MODE_PRIVATE).edit()
+                        .putBoolean("conn_" + svcId + "_browser", on)
+                        .putBoolean("conn_" + svcId + "_enabled", true).apply();
+                ConnectWorker.logHistory(ctx, ConnectWorker.svcName(svcId) + " — ব্রাউজার মোড " + (on ? "চালু" : "বন্ধ") + " (চ্যাট থেকে)");
+                return svcId + " browser mode " + (on ? "on — will work through Chrome without a token" : "off");
+            }
+            case "connect_status": {
+                SharedPreferences p = ctx.getSharedPreferences("archer", Context.MODE_PRIVATE);
+                StringBuilder sb = new StringBuilder();
+                for (String svcId : ConnectWorker.SVC_IDS) {
+                    boolean connected = ConnectWorker.isConnected(ctx, svcId);
+                    boolean enabled = p.getBoolean("conn_" + svcId + "_enabled", false);
+                    String rules = p.getString("conn_" + svcId + "_rules", "");
+                    sb.append(ConnectWorker.svcName(svcId)).append(": ")
+                            .append(connected ? "connected" : (ConnectWorker.isBrowserMode(ctx, svcId) ? "browser mode (no token)" : "not connected"))
+                            .append(enabled ? ", daily work ON" : ", daily work off")
+                            .append(rules != null && !rules.trim().isEmpty() ? ", rules saved" : ", no rules yet")
+                            .append(". ");
+                }
+                return sb.toString();
+            }
+            case "run_connect_work": {
+                ConnectWorker.runInBackground(ctx.getApplicationContext(), true);
+                return "connect work started";
+            }
+            case "connect_site": {
+                String svcId = normalizeService(args.optString("service", ""));
+                if (svcId == null) return "unknown service";
+                return "CONNECT_DIALOG:" + svcId;
+            }
             default:
                 return "unknown function";
         }
+    }
+
+    public static String normalizeService(String s) {
+        if (s == null) return null;
+        String q = s.toLowerCase(Locale.ROOT).trim();
+        if (q.contains("facebook") || q.contains("ফেসবুক") || q.contains("fb")) return "facebook";
+        if (q.contains("instagram") || q.contains("ইনস্টাগ্রাম") || q.contains("insta")) return "instagram";
+        if (q.contains("threads") || q.contains("থ্রেড")) return "threads";
+        if (q.contains("youtube") || q.contains("ইউটিউব")) return "youtube";
+        if (q.contains("telegram") || q.contains("টেলিগ্রাম")) return "telegram";
+        if (q.contains("blogger") || q.contains("ব্লগার")) return "blogger";
+        if (q.contains("wordpress") || q.contains("ওয়ার্ডপ্রেস")) return "wordpress";
+        if (q.contains("tiktok") || q.contains("টিকটক")) return "tiktok";
+        if (q.contains("pinterest") || q.contains("পিন্টারেস্ট")) return "pinterest";
+        if (q.contains("whatsapp") || q.contains("হোয়াটসঅ্যাপ")) return "whatsapp";
+        if (q.contains("gmail") || q.contains("জিমেইল") || q.contains("email") || q.contains("ইমেইল")) return "gmail";
+        if (q.contains("twitter") || q.contains("টুইটার") || q.equals("x") || q.contains("এক্স")) return "x";
+        if (q.contains("website") || q.contains("ওয়েবসাইট") || q.contains("site") || q.contains("সাইট")) return "website";
+        if (q.contains("custom") || q.contains("কাস্টম")) return "custom";
+        for (String id : ConnectWorker.SVC_IDS) if (id.equals(q)) return id;
+        return null;
     }
 
     public static boolean openAppByName(Context ctx, String appName) {
