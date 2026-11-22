@@ -58,6 +58,10 @@ public class MainActivity extends Activity {
         if (!prefs.getBoolean("emerald_design_applied", false)) {
             prefs.edit().putString("orb_color", "2").putBoolean("emerald_design_applied", true).apply();
         }
+        if (prefs.getBoolean("bubble_on", false)
+                && (android.os.Build.VERSION.SDK_INT < 23 || android.provider.Settings.canDrawOverlays(this))) {
+            try { startService(new Intent(this, BubbleService.class)); } catch (Exception ignored) {}
+        }
         onlinePill = findViewById(R.id.onlinePill);
         dashText = findViewById(R.id.dashText);
         liveBtn = findViewById(R.id.liveBtn);

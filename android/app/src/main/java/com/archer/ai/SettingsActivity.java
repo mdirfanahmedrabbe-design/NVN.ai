@@ -36,6 +36,22 @@ public class SettingsActivity extends Activity {
         mainVoice.setChecked(prefs.getBoolean("main_voice", false));
         CheckBox fastMode = findViewById(R.id.setFastMode);
         fastMode.setChecked(prefs.getBoolean("fast_mode", true));
+        CheckBox bubbleBox = findViewById(R.id.setBubble);
+        bubbleBox.setChecked(prefs.getBoolean("bubble_on", false));
+        bubbleBox.setOnCheckedChangeListener((bv, on) -> {
+            prefs.edit().putBoolean("bubble_on", on).apply();
+            if (on) {
+                if (android.os.Build.VERSION.SDK_INT >= 23 && !android.provider.Settings.canDrawOverlays(this)) {
+                    startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            android.net.Uri.parse("package:" + getPackageName())));
+                    android.widget.Toast.makeText(this, "NVN-কে 'অন্য অ্যাপের উপরে দেখাও' অনুমতি দাও, তারপর আবার চালু করো", android.widget.Toast.LENGTH_LONG).show();
+                } else {
+                    startService(new Intent(this, BubbleService.class));
+                }
+            } else {
+                stopService(new Intent(this, BubbleService.class));
+            }
+        });
         Button orbBtn = findViewById(R.id.setOrbColorBtn);
         String[] orbNames = {"অটো (রং বদলায়)", "বেগুনি", "নীল", "সবুজ", "সোনালি", "গোলাপি", "লাল"};
         int orbIdx = 0;
