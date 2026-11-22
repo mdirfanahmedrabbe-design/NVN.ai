@@ -54,7 +54,11 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         prefs = getSharedPreferences("archer", MODE_PRIVATE);
 
-        if (!prefs.contains("orb_color")) prefs.edit().putString("orb_color", "5").apply();
+        // Blue blueprint design: ball defaults to blue (palette 1); migrate the old red default once
+        if (!prefs.contains("orb_color") || ("5".equals(prefs.getString("orb_color", ""))
+                && !prefs.getBoolean("blue_design_applied", false))) {
+            prefs.edit().putString("orb_color", "1").putBoolean("blue_design_applied", true).apply();
+        }
         onlinePill = findViewById(R.id.onlinePill);
         dashText = findViewById(R.id.dashText);
         liveBtn = findViewById(R.id.liveBtn);
@@ -89,6 +93,61 @@ public class MainActivity extends Activity {
         if (prefs.getString("girl_name", "").isEmpty()) showNameDialog();
     }
 
+
+    // Dashboard: one row per connected service — name + ONE status light (green=connected, red=not) + bar
+    private void updateDashboard(int usedMin, int limitMin) {
+        try {
+            android.widget.LinearLayout box = findViewById(R.id.dashApps);
+            if (box == null) return;
+            box.removeAllViews();
+            String[][] svcs = {
+                    {"facebook", "Facebook"}, {"instagram", "Instagram"}, {"threads", "Threads"},
+                    {"youtube", "YouTube"}, {"telegram", "Telegram"}, {"blogger", "Blogger"},
+                    {"wordpress", "WordPress"}, {"tiktok", "TikTok"}, {"x", "X"},
+                    {"pinterest", "Pinterest"}, {"whatsapp", "WhatsApp"}, {"gmail", "Gmail"},
+                    {"website", "Website"}, {"custom", "Custom"}};
+            for (String[] s : svcs) {
+                String tok = prefs.getString("conn_" + s[0] + "_token", "");
+                boolean br = prefs.getBoolean("conn_" + s[0] + "_browser", false);
+                String user = prefs.getString("conn_" + s[0] + "_user", "");
+                String pass = prefs.getString("conn_" + s[0] + "_pass", "");
+                boolean on = (tok != null && !tok.trim().isEmpty()) || br
+                        || (user != null && !user.isEmpty() && pass != null && !pass.isEmpty());
+                android.widget.TextView row = new android.widget.TextView(this);
+                row.setTypeface(android.graphics.Typeface.MONOSPACE);
+                row.setTextSize(11);
+                row.setTextColor(0xFFE0F2FE);
+                row.setText(s[1] + " " + (on ? "●" : "●"));
+                // color only the dot: rebuild with span
+                android.text.SpannableString ss = new android.text.SpannableString(s[1] + " ●");
+                ss.setSpan(new android.text.style.ForegroundColorSpan(on ? 0xFF4ADE80 : 0xFFFF5252),
+                        s[1].length() + 1, s[1].length() + 2, 0);
+                row.setText(ss);
+                box.addView(row);
+                android.widget.ProgressBar bar = new android.widget.ProgressBar(this, null,
+                        android.R.attr.progressBarStyleHorizontal);
+                bar.setMax(100);
+                bar.setProgress(on ? 100 : 0);
+                bar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFF38BDF8));
+                android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 8);
+                lp.topMargin = 2;
+                lp.bottomMargin = 4;
+                bar.setLayoutParams(lp);
+                box.addView(bar);
+            }
+            // usage bars (real counters)
+            String today = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(new java.util.Date());
+            int qUsed = today.equals(prefs.getString("q_date", "")) ? prefs.getInt("q_count", 0) : 0;
+            int qLimit = NvnCore.TIER_Q[NvnCore.tierIndex(this)];
+            android.widget.TextView usage = findViewById(R.id.dashUsage);
+            if (usage != null) usage.setText("TODAY'S USAGE — প্রশ্ন " + qUsed + "/" + qLimit + " • Live " + usedMin + "/" + limitMin + " min");
+            android.widget.ProgressBar bq = findViewById(R.id.barQuestions);
+            if (bq != null) bq.setProgress(qLimit > 0 ? Math.min(100, qUsed * 100 / qLimit) : 0);
+            android.widget.ProgressBar bl = findViewById(R.id.barLive);
+            if (bl != null) bl.setProgress(limitMin > 0 ? Math.min(100, usedMin * 100 / limitMin) : 0);
+        } catch (Exception ignored) {}
+    }
 
     private int countConnected() {
         String[] svcs = {"facebook", "instagram", "threads", "youtube", "telegram", "blogger",
@@ -186,6 +245,7 @@ public class MainActivity extends Activity {
             int limit = NvnCore.TIER_LIVE_MIN[NvnCore.tierIndex(this)];
             onlinePill.setText(NvnCore.isOwner(this) ? "👑 মালিক — আনলিমিটেড" : "● Online for " + used + " min  (আজ " + used + "/" + limit + ")");
             if (dashText != null) dashText.setText("CONNECTED APPS: " + countConnected() + "  •  SYS: ONLINE");
+            updateDashboard(used, limit);
         } catch (Exception ignored) {}
     }
 
