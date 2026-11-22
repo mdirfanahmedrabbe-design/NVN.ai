@@ -64,6 +64,12 @@
         <activity
             android:name=".HistoryActivity"
             android:exported="false" />
+        <activity
+            android:name=".ChatActivity"
+            android:exported="false" />
+        <activity
+            android:name=".OAuthActivity"
+            android:exported="false" />
 
         <receiver
             android:name=".ConnectReceiver"
