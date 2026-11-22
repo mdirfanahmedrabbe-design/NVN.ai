@@ -50,7 +50,7 @@ public class OrbView extends View {
     private static final int[][] PALETTES = {
         {216, 180, 254, 244, 114, 182, 168, 85, 247},   // purple-pink
         {125, 211, 252, 96, 165, 250, 59, 130, 246},    // blue
-        {52, 211, 153, 45, 212, 191, 16, 185, 129},     // green-teal
+        {52, 211, 153, 251, 191, 36, 16, 185, 129},     // emerald + gold (Emerald Palace)
         {252, 211, 77, 251, 146, 60, 245, 158, 11},     // gold-orange
         {240, 171, 252, 192, 132, 252, 217, 70, 239},   // magenta
         {255, 70, 70, 255, 140, 140, 185, 25, 25},      // red (hacker fusion default)

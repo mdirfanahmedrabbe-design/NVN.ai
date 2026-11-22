@@ -54,10 +54,9 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         prefs = getSharedPreferences("archer", MODE_PRIVATE);
 
-        // Blue blueprint design: ball defaults to blue (palette 1); migrate the old red default once
-        if (!prefs.contains("orb_color") || ("5".equals(prefs.getString("orb_color", ""))
-                && !prefs.getBoolean("blue_design_applied", false))) {
-            prefs.edit().putString("orb_color", "1").putBoolean("blue_design_applied", true).apply();
+        // Emerald Palace design: ball defaults to emerald+gold (palette 2); migrate old defaults once
+        if (!prefs.getBoolean("emerald_design_applied", false)) {
+            prefs.edit().putString("orb_color", "2").putBoolean("emerald_design_applied", true).apply();
         }
         onlinePill = findViewById(R.id.onlinePill);
         dashText = findViewById(R.id.dashText);
