@@ -95,6 +95,13 @@
         android:layout_marginTop="10dp"
         android:text="⚡ দ্রুত মোড (হালকা মডেল — ফাস্ট উত্তর, দিনে বেশি রিকোয়েস্ট)"
         android:textColor="#EDE6D6" />
+        <CheckBox
+            android:id="@+id/setBubble"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="🫧 ভাসমান বল (স্ক্রিনের উপরে)"
+            android:textColor="#F3E9C8" />
 
     <Button
         android:id="@+id/setOrbColorBtn"
