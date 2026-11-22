@@ -70,6 +70,10 @@
         <activity
             android:name=".OAuthActivity"
             android:exported="false" />
+        <activity
+            android:name=".BrowserActivity"
+            android:exported="false"
+            android:launchMode="singleTop" />
 
         <receiver
             android:name=".ReminderReceiver"
