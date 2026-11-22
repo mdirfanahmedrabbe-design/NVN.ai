@@ -66,6 +66,7 @@ public class MainActivity extends Activity {
         });
 
         NvnCore.restoreData(this);
+        ConnectWorker.scheduleAll(getApplicationContext());
         fetchServerConfig();
         refreshUsage();
         if (prefs.getString("girl_name", "").isEmpty()) showNameDialog();

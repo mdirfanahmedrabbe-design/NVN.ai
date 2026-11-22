@@ -583,7 +583,15 @@ public class NvnCore {
     private static final String[] BACKUP_STRING_KEYS = {
             "girl_name", "user_name", "memory_facts", "todo_list", "chat_history",
             "premium_tier", "gemini_keys", "gemini_key", "bkash_number", "owner_pin_hash",
-            "personality", "voice_lang", "last_announce_title", "last_announce_body"
+            "personality", "voice_lang", "last_announce_title", "last_announce_body",
+            "conn_queue", "conn_history", "conn_custom_name",
+            "conn_facebook_token", "conn_facebook_id", "conn_facebook_rules",
+            "conn_instagram_token", "conn_instagram_id", "conn_instagram_rules",
+            "conn_threads_token", "conn_threads_id", "conn_threads_rules",
+            "conn_youtube_token", "conn_youtube_id", "conn_youtube_rules",
+            "conn_telegram_token", "conn_telegram_id", "conn_telegram_rules",
+            "conn_website_token", "conn_website_id", "conn_website_rules",
+            "conn_custom_token", "conn_custom_id", "conn_custom_rules"
     };
 
     public static void backupData(Context ctx) {

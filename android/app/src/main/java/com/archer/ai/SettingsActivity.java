@@ -47,6 +47,8 @@ public class SettingsActivity extends Activity {
         ownerBtn.setOnClickListener(v -> ownerPinDialog());
         findViewById(R.id.setKeysBtn).setOnClickListener(v ->
                 startActivity(new Intent(this, KeysActivity.class)));
+        findViewById(R.id.setConnectBtn).setOnClickListener(v ->
+                startActivity(new Intent(this, ConnectActivity.class)));
         findViewById(R.id.setAnnounceBtn).setOnClickListener(v ->
                 startActivity(new Intent(this, AnnounceActivity.class)));
         findViewById(R.id.setAboutBtn).setOnClickListener(v ->
