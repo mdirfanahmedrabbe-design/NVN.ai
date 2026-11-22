@@ -290,9 +290,14 @@ public class LiveActivity extends Activity {
                 fns.put(fnDef2("send_whatsapp", "Send a WhatsApp message to a phone number", "number", "Phone number with country code digits, e.g. 8801XXXXXXXXX", "text", "Message text to send"));
                 fns.put(fnDef("find_contact", "Find a contact's phone number by name", "name", "Contact name as saved in the phone"));
                 fns.put(fnDef2("call_and_talk", "Call a phone number and speak a message aloud on speaker for the user", "number", "Phone number, digits only", "message", "What to say on the call, in Bengali"));
-                fns.put(fnDef("open_screen", "Open a screen inside the NVN app: qibla compass, tasbih counter, premium packages, or settings", "screen", "One of: qibla, tasbih, premium, settings"));
+                fns.put(fnDef("open_screen", "Open a screen inside the NVN app: qibla compass, tasbih counter, premium packages, settings, or the connect system", "screen", "One of: qibla, tasbih, premium, settings, connect"));
                 fns.put(fnDefNoArg("see_screen", "Start seeing the phone screen (asks the user permission once)"));
                 fns.put(fnDefNoArg("end_call", "End the current phone call"));
+                fns.put(fnDef2("set_service_rules", "Save the owner's work rules for a connected site so you remember them forever. Use this whenever the user explains what work to do on a site (what to post, how to reply to comments, when).", "service", "Site name: facebook, instagram, threads, youtube, telegram, blogger, wordpress, tiktok, x, pinterest, whatsapp, gmail, website, custom", "rules", "The work rules in the user's own words, complete"));
+                fns.put(fnDef2("set_service_schedule", "Set the daily post time for a connected site", "service", "Site name", "time", "Time in 24-hour HH:MM format, e.g. 09:00"));
+                fns.put(fnDef2("toggle_service", "Turn daily work on or off for a connected site", "service", "Site name", "state", "One of: on, off"));
+                fns.put(fnDefNoArg("connect_status", "Report which sites are connected, which have daily work on, and what rules are saved"));
+                fns.put(fnDefNoArg("run_connect_work", "Run the connected-sites work right now (check comments, reply, post)"));
                 JSONArray tools = new JSONArray().put(new JSONObject().put("functionDeclarations", fns));
                 JSONObject setup = new JSONObject()
                         .put("model", "models/gemini-3.1-flash-live-preview")
@@ -304,7 +309,8 @@ public class LiveActivity extends Activity {
                                         "Reply in Bengali, short and natural, like a real conversation. Describe what you see when asked. " +
                                         "You are NOT a chatbot that only talks. You are a working assistant with REAL control of this phone through your functions: open_app, call_number, call_contact, call_and_talk, send_sms, send_whatsapp, find_contact, tap_text, type_text, press_enter, scroll_down, scroll_up, press_back, press_home, set_volume, torch, take_screenshot, read_screen, open_screen. " +
                                         "When the user asks you to do ANY work, you MUST call the matching function immediately. NEVER say you cannot do work. NEVER say you are only an AI or that you have no hands or cannot touch the phone. Ordinary phone work is always possible for you through functions. " +
-                                        "Call the function FIRST, then speak a short Bengali confirmation after it runs. For open_app always pass the English app name (Facebook, WhatsApp, YouTube, TikTok, bKash) even when the user says the name in Bengali. Use read_screen to see what is on screen before tapping. If the user asks what is on the screen or to look at the screen and you cannot see it yet, call see_screen once. If a function result says it failed or accessibility is off, tell the user in Bengali exactly what failed and what to switch on."))));
+                                        "Call the function FIRST, then speak a short Bengali confirmation after it runs. For open_app always pass the English app name (Facebook, WhatsApp, YouTube, TikTok, bKash) even when the user says the name in Bengali. Use read_screen to see what is on screen before tapping. If the user asks what is on the screen or to look at the screen and you cannot see it yet, call see_screen once. If a function result says it failed or accessibility is off, tell the user in Bengali exactly what failed and what to switch on. " +
+                                        "You also manage the owner's connected sites (the Connect system): facebook, instagram, threads, youtube, telegram, blogger, wordpress, tiktok, x, pinterest, whatsapp, gmail, website, custom. The owner explains work to you in conversation, exactly like he explains to a trusted assistant, and you remember EVERYTHING permanently. When he explains what to do on a site (posting, comment replies, timing, style), save it with set_service_rules and confirm in Bengali what you saved. When he asks about connected sites or their work, call connect_status. When he says to do the connect work now, call run_connect_work. Never forget saved rules; they stay forever."))));
                 ws.sendText(new JSONObject().put("setup", setup).toString());
             } catch (Exception e) {
                 runOnUiThread(() -> {
@@ -576,14 +582,92 @@ public class LiveActivity extends Activity {
                 else if (screen.contains("tasbih")) target = TasbihActivity.class;
                 else if (screen.contains("premium")) target = PremiumActivity.class;
                 else if (screen.contains("settings")) target = SettingsActivity.class;
+                else if (screen.contains("connect")) target = ConnectActivity.class;
                 if (target == null) return "unknown screen";
                 final Class<?> cls = target;
                 runOnUiThread(() -> startActivity(new Intent(this, cls)));
                 return "opened " + screen;
             }
+            case "set_service_rules": {
+                String svc = normalizeService(args.optString("service", ""));
+                String rules = args.optString("rules", "").trim();
+                if (svc == null) return "unknown service: " + args.optString("service", "");
+                if (rules.isEmpty()) return "no rules given";
+                android.content.SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
+                String old = p.getString("conn_" + svc + "_rules", "");
+                String merged = old == null || old.trim().isEmpty() ? rules : old.trim() + "\n" + rules;
+                p.edit().putString("conn_" + svc + "_rules", merged)
+                        .putBoolean("conn_" + svc + "_enabled", true).apply();
+                ConnectWorker.logHistory(this, ConnectWorker.svcName(svc) + " — Live-এ নিয়ম সেভ হয়েছে");
+                return "rules saved for " + svc + " and remembered forever";
+            }
+            case "set_service_schedule": {
+                String svc = normalizeService(args.optString("service", ""));
+                String time = args.optString("time", "").trim();
+                if (svc == null) return "unknown service";
+                try {
+                    String[] parts = time.split(":");
+                    int h = Integer.parseInt(parts[0].trim());
+                    int m = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 0;
+                    if (h < 0 || h > 23 || m < 0 || m > 59) return "bad time";
+                    getSharedPreferences("archer", MODE_PRIVATE).edit()
+                            .putInt("conn_" + svc + "_hour", h).putInt("conn_" + svc + "_minute", m).apply();
+                    return "schedule set for " + svc + " at " + time;
+                } catch (Exception e) {
+                    return "bad time format";
+                }
+            }
+            case "toggle_service": {
+                String svc = normalizeService(args.optString("service", ""));
+                if (svc == null) return "unknown service";
+                boolean on = "on".equalsIgnoreCase(args.optString("state", ""));
+                getSharedPreferences("archer", MODE_PRIVATE).edit()
+                        .putBoolean("conn_" + svc + "_enabled", on).apply();
+                return svc + " daily work " + (on ? "on" : "off");
+            }
+            case "connect_status": {
+                android.content.SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
+                StringBuilder sb = new StringBuilder();
+                for (String svc : ConnectWorker.SVC_IDS) {
+                    boolean connected = ConnectWorker.isConnected(this, svc);
+                    boolean enabled = p.getBoolean("conn_" + svc + "_enabled", false);
+                    String rules = p.getString("conn_" + svc + "_rules", "");
+                    sb.append(ConnectWorker.svcName(svc)).append(": ")
+                            .append(connected ? "connected" : "not connected")
+                            .append(enabled ? ", daily work ON" : ", daily work off")
+                            .append(rules != null && !rules.trim().isEmpty() ? ", rules saved" : ", no rules yet")
+                            .append(". ");
+                }
+                return sb.toString();
+            }
+            case "run_connect_work": {
+                ConnectWorker.runInBackground(getApplicationContext(), true);
+                return "connect work started";
+            }
             default:
                 return "unknown function";
         }
+    }
+
+    private String normalizeService(String s) {
+        if (s == null) return null;
+        String q = s.toLowerCase(java.util.Locale.ROOT).trim();
+        if (q.contains("facebook") || q.contains("ফেসবুক") || q.contains("fb")) return "facebook";
+        if (q.contains("instagram") || q.contains("ইনস্টাগ্রাম") || q.contains("insta")) return "instagram";
+        if (q.contains("threads") || q.contains("থ্রেড")) return "threads";
+        if (q.contains("youtube") || q.contains("ইউটিউব")) return "youtube";
+        if (q.contains("telegram") || q.contains("টেলিগ্রাম")) return "telegram";
+        if (q.contains("blogger") || q.contains("ব্লগার")) return "blogger";
+        if (q.contains("wordpress") || q.contains("ওয়ার্ডপ্রেস")) return "wordpress";
+        if (q.contains("tiktok") || q.contains("টিকটক")) return "tiktok";
+        if (q.contains("pinterest") || q.contains("পিন্টারেস্ট")) return "pinterest";
+        if (q.contains("whatsapp") || q.contains("হোয়াটসঅ্যাপ")) return "whatsapp";
+        if (q.contains("gmail") || q.contains("জিমেইল") || q.contains("email") || q.contains("ইমেইল")) return "gmail";
+        if (q.contains("twitter") || q.contains("টুইটার") || q.equals("x") || q.contains("এক্স")) return "x";
+        if (q.contains("website") || q.contains("ওয়েবসাইট") || q.contains("site") || q.contains("সাইট")) return "website";
+        if (q.contains("custom") || q.contains("কাস্টম")) return "custom";
+        for (String id : ConnectWorker.SVC_IDS) if (id.equals(q)) return id;
+        return null;
     }
 
     private String callNumber(String number) {

@@ -30,8 +30,8 @@ import java.util.Locale;
 
 public class ConnectWorker {
 
-    public static final String[] SVC_IDS = {"facebook", "instagram", "threads", "youtube", "telegram", "website", "custom"};
-    public static final String[] SVC_NAMES = {"📘 Facebook Page", "📸 Instagram", "🧵 Threads", "▶️ YouTube", "✈️ Telegram", "🌐 ওয়েবসাইট", "🔗 কাস্টম সাইট"};
+    public static final String[] SVC_IDS = {"facebook", "instagram", "threads", "youtube", "telegram", "blogger", "wordpress", "tiktok", "x", "pinterest", "whatsapp", "gmail", "website", "custom"};
+    public static final String[] SVC_NAMES = {"📘 Facebook Page", "📸 Instagram", "🧵 Threads", "▶️ YouTube", "✈️ Telegram", "📝 Blogger", "📰 WordPress", "🎵 TikTok", "🐦 X (Twitter)", "📌 Pinterest", "💬 WhatsApp", "📧 Gmail", "🌐 ওয়েবসাইট", "🔗 কাস্টম সাইট"};
 
     public static String svcName(String svc) {
         for (int i = 0; i < SVC_IDS.length; i++) if (SVC_IDS[i].equals(svc)) return SVC_NAMES[i];
@@ -43,7 +43,10 @@ public class ConnectWorker {
     }
 
     public static boolean isConnected(Context ctx, String svc) {
-        return !prefs(ctx).getString("conn_" + svc + "_token", "").trim().isEmpty();
+        SharedPreferences p = prefs(ctx);
+        if (!p.getString("conn_" + svc + "_token", "").trim().isEmpty()) return true;
+        return !p.getString("conn_" + svc + "_user", "").trim().isEmpty()
+                && !p.getString("conn_" + svc + "_pass", "").trim().isEmpty();
     }
 
     // ---------- history ----------
@@ -219,6 +222,31 @@ public class ConnectWorker {
         }
     }
 
+    static String httpPostJsonAuth(String urlStr, String json, String authHeader) {
+        try {
+            HttpURLConnection conn = (HttpURLConnection) new URL(urlStr).openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(25000);
+            conn.setRequestProperty("Content-Type", "application/json");
+            if (authHeader != null && !authHeader.isEmpty()) conn.setRequestProperty("Authorization", authHeader);
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(json.getBytes(StandardCharsets.UTF_8));
+            }
+            StringBuilder sb = new StringBuilder();
+            java.io.InputStream is = conn.getResponseCode() < 400 ? conn.getInputStream() : conn.getErrorStream();
+            if (is == null) return null;
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = br.readLine()) != null) sb.append(line);
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     static String httpPostForm(String urlStr, String form) {
         try {
             HttpURLConnection conn = (HttpURLConnection) new URL(urlStr).openConnection();
@@ -269,7 +297,7 @@ public class ConnectWorker {
         for (String svc : SVC_IDS) {
             if (!p.getBoolean("conn_" + svc + "_enabled", false)) continue;
             String token = p.getString("conn_" + svc + "_token", "").trim();
-            if (token.isEmpty()) continue;
+            if (!isConnected(ctx, svc)) continue;
             try {
                 if (p.getBoolean("conn_" + svc + "_comments", true)) {
                     int n = handleComments(ctx, svc, token);
@@ -440,7 +468,9 @@ public class ConnectWorker {
                 + "never share any phone number or personal info. Output only the post text, nothing else.";
         String post = geminiText(ctx, prompt);
         if (post == null || post.isEmpty()) return null;
-        boolean draftOnly = "instagram".equals(svc) || "youtube".equals(svc);
+        boolean draftOnly = "instagram".equals(svc) || "youtube".equals(svc)
+                || "tiktok".equals(svc) || "x".equals(svc) || "pinterest".equals(svc)
+                || "whatsapp".equals(svc) || "gmail".equals(svc);
         if (draftOnly || p.getBoolean("conn_" + svc + "_approve", true)) {
             addToQueue(ctx, svc, "post", post, "");
             logHistory(ctx, svcName(svc) + " — আজকের পোস্টের ড্রাফট অনুমোদনের অপেক্ষায়");
@@ -507,6 +537,31 @@ public class ConnectWorker {
                 String res = httpPostJson(url, o.toString(), token);
                 return res != null;
             }
+            if ("blogger".equals(svc)) {
+                String blogId = extractId(p.getString("conn_blogger_id", ""));
+                if (blogId.isEmpty()) return false;
+                String title = text.length() > 60 ? text.substring(0, 60) : text;
+                JSONObject o = new JSONObject().put("kind", "blogger#post")
+                        .put("title", title).put("content", text);
+                String res = httpPostJson("https://www.googleapis.com/blogger/v3/blogs/" + blogId + "/posts",
+                        o.toString(), token);
+                return res != null && res.contains("\"id\"");
+            }
+            if ("wordpress".equals(svc)) {
+                String site = p.getString("conn_wordpress_id", "").trim();
+                String user = p.getString("conn_wordpress_user", "").trim();
+                String pass = p.getString("conn_wordpress_pass", "").trim();
+                if (pass.isEmpty()) pass = token;
+                if (site.isEmpty() || user.isEmpty() || pass.isEmpty()) return false;
+                if (site.endsWith("/")) site = site.substring(0, site.length() - 1);
+                String title = text.length() > 60 ? text.substring(0, 60) : text;
+                JSONObject o = new JSONObject().put("title", title)
+                        .put("content", text).put("status", "publish");
+                String basic = "Basic " + android.util.Base64.encodeToString(
+                        (user + ":" + pass).getBytes(StandardCharsets.UTF_8), android.util.Base64.NO_WRAP);
+                String res = httpPostJsonAuth(site + "/wp-json/wp/v2/posts", o.toString(), basic);
+                return res != null && res.contains("\"id\"");
+            }
         } catch (Exception ignored) {}
         return false;
     }
@@ -517,7 +572,8 @@ public class ConnectWorker {
         String text = item.optString("text", "");
         String target = item.optString("target", "");
         String token = prefs(ctx).getString("conn_" + svc + "_token", "").trim();
-        if (token.isEmpty() || text.isEmpty()) return false;
+        if (text.isEmpty()) return false;
+        if (token.isEmpty() && !"wordpress".equals(svc)) return false;
         if ("reply".equals(kind)) return sendReply(ctx, svc, token, target, text);
         return sendPost(ctx, svc, token, text);
     }

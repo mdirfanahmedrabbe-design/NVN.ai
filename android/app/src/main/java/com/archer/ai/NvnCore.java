@@ -591,7 +591,28 @@ public class NvnCore {
             "conn_youtube_token", "conn_youtube_id", "conn_youtube_rules",
             "conn_telegram_token", "conn_telegram_id", "conn_telegram_rules",
             "conn_website_token", "conn_website_id", "conn_website_rules",
-            "conn_custom_token", "conn_custom_id", "conn_custom_rules"
+            "conn_custom_token", "conn_custom_id", "conn_custom_rules",
+            "conn_blogger_token", "conn_blogger_id", "conn_blogger_rules",
+            "conn_wordpress_token", "conn_wordpress_id", "conn_wordpress_rules",
+            "conn_tiktok_token", "conn_tiktok_id", "conn_tiktok_rules",
+            "conn_x_token", "conn_x_id", "conn_x_rules",
+            "conn_pinterest_token", "conn_pinterest_id", "conn_pinterest_rules",
+            "conn_whatsapp_token", "conn_whatsapp_id", "conn_whatsapp_rules",
+            "conn_gmail_token", "conn_gmail_id", "conn_gmail_rules",
+            "conn_facebook_user", "conn_facebook_pass",
+            "conn_instagram_user", "conn_instagram_pass",
+            "conn_threads_user", "conn_threads_pass",
+            "conn_youtube_user", "conn_youtube_pass",
+            "conn_telegram_user", "conn_telegram_pass",
+            "conn_blogger_user", "conn_blogger_pass",
+            "conn_wordpress_user", "conn_wordpress_pass",
+            "conn_tiktok_user", "conn_tiktok_pass",
+            "conn_x_user", "conn_x_pass",
+            "conn_pinterest_user", "conn_pinterest_pass",
+            "conn_whatsapp_user", "conn_whatsapp_pass",
+            "conn_gmail_user", "conn_gmail_pass",
+            "conn_website_user", "conn_website_pass",
+            "conn_custom_user", "conn_custom_pass"
     };
 
     public static void backupData(Context ctx) {
