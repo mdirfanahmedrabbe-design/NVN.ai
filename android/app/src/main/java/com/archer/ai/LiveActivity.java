@@ -589,50 +589,50 @@ public class LiveActivity extends Activity {
                 return "opened " + screen;
             }
             case "set_service_rules": {
-                String svc = normalizeService(args.optString("service", ""));
+                String svcId = normalizeService(args.optString("service", ""));
                 String rules = args.optString("rules", "").trim();
-                if (svc == null) return "unknown service: " + args.optString("service", "");
+                if (svcId == null) return "unknown service: " + args.optString("service", "");
                 if (rules.isEmpty()) return "no rules given";
                 android.content.SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
-                String old = p.getString("conn_" + svc + "_rules", "");
+                String old = p.getString("conn_" + svcId + "_rules", "");
                 String merged = old == null || old.trim().isEmpty() ? rules : old.trim() + "\n" + rules;
-                p.edit().putString("conn_" + svc + "_rules", merged)
-                        .putBoolean("conn_" + svc + "_enabled", true).apply();
-                ConnectWorker.logHistory(this, ConnectWorker.svcName(svc) + " — Live-এ নিয়ম সেভ হয়েছে");
-                return "rules saved for " + svc + " and remembered forever";
+                p.edit().putString("conn_" + svcId + "_rules", merged)
+                        .putBoolean("conn_" + svcId + "_enabled", true).apply();
+                ConnectWorker.logHistory(this, ConnectWorker.svcName(svcId) + " — Live-এ নিয়ম সেভ হয়েছে");
+                return "rules saved for " + svcId + " and remembered forever";
             }
             case "set_service_schedule": {
-                String svc = normalizeService(args.optString("service", ""));
+                String svcId = normalizeService(args.optString("service", ""));
                 String time = args.optString("time", "").trim();
-                if (svc == null) return "unknown service";
+                if (svcId == null) return "unknown service";
                 try {
                     String[] parts = time.split(":");
                     int h = Integer.parseInt(parts[0].trim());
                     int m = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 0;
                     if (h < 0 || h > 23 || m < 0 || m > 59) return "bad time";
                     getSharedPreferences("archer", MODE_PRIVATE).edit()
-                            .putInt("conn_" + svc + "_hour", h).putInt("conn_" + svc + "_minute", m).apply();
-                    return "schedule set for " + svc + " at " + time;
+                            .putInt("conn_" + svcId + "_hour", h).putInt("conn_" + svcId + "_minute", m).apply();
+                    return "schedule set for " + svcId + " at " + time;
                 } catch (Exception e) {
                     return "bad time format";
                 }
             }
             case "toggle_service": {
-                String svc = normalizeService(args.optString("service", ""));
-                if (svc == null) return "unknown service";
+                String svcId = normalizeService(args.optString("service", ""));
+                if (svcId == null) return "unknown service";
                 boolean on = "on".equalsIgnoreCase(args.optString("state", ""));
                 getSharedPreferences("archer", MODE_PRIVATE).edit()
-                        .putBoolean("conn_" + svc + "_enabled", on).apply();
-                return svc + " daily work " + (on ? "on" : "off");
+                        .putBoolean("conn_" + svcId + "_enabled", on).apply();
+                return svcId + " daily work " + (on ? "on" : "off");
             }
             case "connect_status": {
                 android.content.SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
                 StringBuilder sb = new StringBuilder();
-                for (String svc : ConnectWorker.SVC_IDS) {
-                    boolean connected = ConnectWorker.isConnected(this, svc);
-                    boolean enabled = p.getBoolean("conn_" + svc + "_enabled", false);
-                    String rules = p.getString("conn_" + svc + "_rules", "");
-                    sb.append(ConnectWorker.svcName(svc)).append(": ")
+                for (String svcId : ConnectWorker.SVC_IDS) {
+                    boolean connected = ConnectWorker.isConnected(this, svcId);
+                    boolean enabled = p.getBoolean("conn_" + svcId + "_enabled", false);
+                    String rules = p.getString("conn_" + svcId + "_rules", "");
+                    sb.append(ConnectWorker.svcName(svcId)).append(": ")
                             .append(connected ? "connected" : "not connected")
                             .append(enabled ? ", daily work ON" : ", daily work off")
                             .append(rules != null && !rules.trim().isEmpty() ? ", rules saved" : ", no rules yet")
