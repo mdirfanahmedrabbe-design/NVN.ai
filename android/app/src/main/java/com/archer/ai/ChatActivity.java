@@ -232,17 +232,25 @@ public class ChatActivity extends Activity {
                                 .put("functionDeclarations", NvnCore.fnDeclarations())));
 
                 String res = null;
-                for (int attempt = 0; attempt < 2; attempt++) {
+                // Flash-Lite free tier: ~500 requests/day per project (Flash: ~20).
+                // Falls back to Flash automatically if Lite ever returns an error.
+                String model = "gemini-3.5-flash-lite";
+                for (int attempt = 0; attempt < 3; attempt++) {
                     String key = NvnCore.currentKey(getSharedPreferences("archer", MODE_PRIVATE));
                     if (key == null || key.trim().isEmpty()) {
                         runOnUiThread(() -> startActivity(new Intent(this, KeysActivity.class)));
                         return "মাস্টার, Gemini Key বসানো নেই — Key-ঘরটা খুলে দিয়েছি, Key বসিয়ে সেভ করে আবার বলুন।";
                     }
                     res = NvnCore.httpPost(
-                            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + key.trim(),
+                            "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + key.trim(),
                             body.toString());
                     if (res != null && NvnCore.isQuotaError(res)) {
                         NvnCore.rotateKey(getSharedPreferences("archer", MODE_PRIVATE));
+                        res = null;
+                        continue;
+                    }
+                    if (res != null && res.contains("\"error\"") && model.equals("gemini-3.5-flash-lite")) {
+                        model = "gemini-3.5-flash";
                         res = null;
                         continue;
                     }
@@ -381,6 +389,7 @@ public class ChatActivity extends Activity {
                                     .putString("conn_" + svc + "_pass", passF.getText().toString().trim())
                                     .putBoolean("conn_" + svc + "_enabled", true)
                                     .apply();
+                            NvnCore.markConnected(this, svc, null);
                             ConnectWorker.logHistory(getApplicationContext(),
                                     ConnectWorker.svcName(svc) + " — চ্যাট থেকে কানেক্ট হয়েছে");
                             new Thread(() -> NvnCore.backupData(getApplicationContext())).start();

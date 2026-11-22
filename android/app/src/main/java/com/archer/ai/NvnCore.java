@@ -759,7 +759,21 @@ public class NvnCore {
             "conn_youtube_site", "conn_telegram_site", "conn_blogger_site",
             "conn_wordpress_site", "conn_tiktok_site", "conn_x_site",
             "conn_pinterest_site", "conn_whatsapp_site", "conn_gmail_site",
-            "conn_website_site", "conn_custom_site"
+            "conn_website_site", "conn_custom_site",
+            "conn_facebook_account", "conn_facebook_device", "conn_facebook_since",
+            "conn_instagram_account", "conn_instagram_device", "conn_instagram_since",
+            "conn_threads_account", "conn_threads_device", "conn_threads_since",
+            "conn_youtube_account", "conn_youtube_device", "conn_youtube_since",
+            "conn_telegram_account", "conn_telegram_device", "conn_telegram_since",
+            "conn_blogger_account", "conn_blogger_device", "conn_blogger_since",
+            "conn_wordpress_account", "conn_wordpress_device", "conn_wordpress_since",
+            "conn_tiktok_account", "conn_tiktok_device", "conn_tiktok_since",
+            "conn_x_account", "conn_x_device", "conn_x_since",
+            "conn_pinterest_account", "conn_pinterest_device", "conn_pinterest_since",
+            "conn_whatsapp_account", "conn_whatsapp_device", "conn_whatsapp_since",
+            "conn_gmail_account", "conn_gmail_device", "conn_gmail_since",
+            "conn_website_account", "conn_website_device", "conn_website_since",
+            "conn_custom_account", "conn_custom_device", "conn_custom_since"
     };
 
     private static final String[] BACKUP_BOOL_KEYS = {
@@ -769,6 +783,31 @@ public class NvnCore {
             "conn_pinterest_browser", "conn_whatsapp_browser", "conn_gmail_browser",
             "conn_website_browser", "conn_custom_browser"
     };
+
+    // This phone's name, e.g. "Infinix SMART 9 HD"
+    public static String deviceName() {
+        String m = (Build.MANUFACTURER == null ? "" : Build.MANUFACTURER.trim());
+        String model = (Build.MODEL == null ? "" : Build.MODEL.trim());
+        String name = (m + " " + model).trim();
+        return name.isEmpty() ? "এই ফোন" : name;
+    }
+
+    // Remember WHICH phone + account a service was connected on, and when (Composio-style)
+    public static void markConnected(Context ctx, String svc, String account) {
+        try {
+            SharedPreferences p = ctx.getSharedPreferences("archer", Context.MODE_PRIVATE);
+            SharedPreferences.Editor ed = p.edit();
+            ed.putString("conn_" + svc + "_device", deviceName());
+            if (account != null && !account.trim().isEmpty())
+                ed.putString("conn_" + svc + "_account", account.trim());
+            if (p.getString("conn_" + svc + "_since", "").isEmpty())
+                ed.putString("conn_" + svc + "_since",
+                        new java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.ENGLISH)
+                                .format(new java.util.Date()));
+            ed.apply();
+        } catch (Exception ignored) {
+        }
+    }
 
     public static void backupData(Context ctx) {
         try {

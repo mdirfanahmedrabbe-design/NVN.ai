@@ -134,6 +134,7 @@ public class OAuthActivity extends Activity {
                 .putString("conn_facebook_id", pageId)
                 .putBoolean("conn_facebook_enabled", true)
                 .apply();
+        NvnCore.markConnected(this, "facebook", pageName);
         ConnectWorker.logHistory(getApplicationContext(),
                 "📘 Facebook Page — লগইন করে কানেক্ট হয়েছে (" + pageName + ")");
         new Thread(() -> NvnCore.backupData(getApplicationContext())).start();

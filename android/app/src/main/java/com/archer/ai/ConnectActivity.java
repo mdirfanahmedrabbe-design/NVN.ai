@@ -94,6 +94,19 @@ public class ConnectActivity extends Activity {
             } else {
                 status = "⚠️ Token বসানো বাকি — টিপ দিয়ে কানেক্ট করো";
             }
+            if (connected || browserMode) {
+                // Composio-style: show which phone + account this connection is on
+                android.content.SharedPreferences pp =
+                        getSharedPreferences("archer", MODE_PRIVATE);
+                String device = pp.getString("conn_" + svc + "_device", "");
+                if (device.isEmpty()) device = NvnCore.deviceName();
+                String account = pp.getString("conn_" + svc + "_account", "");
+                String since = pp.getString("conn_" + svc + "_since", "");
+                StringBuilder info = new StringBuilder("📱 " + device);
+                if (!account.isEmpty()) info.append(" · ").append(account);
+                if (!since.isEmpty()) info.append(" · কানেক্ট: ").append(since);
+                status += "\n" + info;
+            }
             b.setText(name + "\n" + status);
             b.setTextColor(0xFFE8F4FF);
             b.setBackgroundResource(R.drawable.btn_secondary);
