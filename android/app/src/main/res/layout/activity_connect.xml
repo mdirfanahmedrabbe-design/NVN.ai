@@ -22,6 +22,17 @@
         android:textColor="#A78BFA"
         android:textSize="13sp" />
 
+    <EditText
+        android:id="@+id/connSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_input"
+        android:hint="🔍 সাইট/অ্যাপ খুঁজো (যেমন: facebook, blogger, tiktok)"
+        android:padding="12dp"
+        android:textColor="#E8F4FF"
+        android:textColorHint="#64748B" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"

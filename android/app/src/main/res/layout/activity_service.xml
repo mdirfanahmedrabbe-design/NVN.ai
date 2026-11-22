@@ -62,6 +62,53 @@
             android:textColor="#E8F4FF"
             android:textColorHint="#64748B" />
 
+        <Button
+            android:id="@+id/svcTokenBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/btn_secondary"
+            android:padding="12dp"
+            android:text="🔐 লগইন করে Token নাও (অফিসিয়াল পেজ খুলবে)"
+            android:textColor="#E8F4FF" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Username (যদি লাগে)"
+            android:textColor="#E2E8F0" />
+
+        <EditText
+            android:id="@+id/svcUser"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_input"
+            android:hint="Username"
+            android:padding="12dp"
+            android:textColor="#E8F4FF"
+            android:textColorHint="#64748B" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Password / App Password (যদি লাগে — শুধু তোমার ফোনেই থাকবে)"
+            android:textColor="#E2E8F0" />
+
+        <EditText
+            android:id="@+id/svcPass"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_input"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:padding="12dp"
+            android:textColor="#E8F4FF"
+            android:textColorHint="#64748B" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
