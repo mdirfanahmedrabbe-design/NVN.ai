@@ -80,6 +80,25 @@
         android:text="মেইন স্ক্রিনে ভয়েস উত্তর"
         android:textColor="#E2E8F0" />
 
+    <CheckBox
+        android:id="@+id/setFastMode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="⚡ দ্রুত মোড (হালকা মডেল — ফাস্ট উত্তর, দিনে বেশি রিকোয়েস্ট)"
+        android:textColor="#E2E8F0" />
+
+    <Button
+        android:id="@+id/setOrbColorBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/btn_secondary"
+        android:padding="12dp"
+        android:text="🎨 বলের রং: অটো (রং বদলায়)"
+        android:textColor="#E8F4FF"
+        android:textSize="15sp" />
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
