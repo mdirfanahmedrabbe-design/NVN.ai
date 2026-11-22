@@ -37,6 +37,14 @@
         android:textColor="#FFFFFF"
         android:textSize="15sp"
         android:textStyle="bold" />
+        <Button
+            android:id="@+id/setBrowserBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/btn_secondary"
+            android:text="🌐 অ্যাপের ব্রাউজার (সাইটে লগইন করার জন্য)"
+            android:textColor="#F3E9C8" />
 
     <TextView
         android:layout_width="match_parent"
