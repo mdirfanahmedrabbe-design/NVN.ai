@@ -43,24 +43,37 @@ public class KeysActivity extends Activity {
         });
     }
 
+    // 🟢 green = limit left, 🔴 red = today's limit finished (turns green again next day)
+    private int keyColor(String value) {
+        if (value == null || value.trim().isEmpty()) return 0xFF64748B;
+        return NvnCore.isKeyExhausted(this, value) ? 0xFFFF5252 : 0xFF4ADE80;
+    }
+
     private void addKeyRow(String value) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setPadding(0, 5, 0, 5);
+        TextView dot = new TextView(this);
+        dot.setText("●");
+        dot.setTextSize(18);
+        dot.setPadding(8, 18, 10, 0);
+        dot.setTextColor(keyColor(value));
         EditText et = new EditText(this);
         et.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
         et.setBackgroundResource(R.drawable.bg_input);
         et.setHint("Gemini Key বসাও");
         et.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         et.setPadding(24, 20, 24, 20);
-        et.setTextColor(NvnCore.isKeyExhausted(this, value) ? 0xFFFF5252 : 0xFFE8F4FF);
+        et.setTextColor(keyColor(value));
         et.setHintTextColor(0xFF64748B);
         et.setText(value);
         et.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void afterTextChanged(Editable s) {
-                et.setTextColor(NvnCore.isKeyExhausted(KeysActivity.this, s.toString()) ? 0xFFFF5252 : 0xFFE8F4FF);
+                int c = keyColor(s.toString());
+                et.setTextColor(c);
+                dot.setTextColor(c);
                 updateCount();
                 // last box filled -> a new empty box opens below automatically
                 if (!s.toString().trim().isEmpty() && keysList.getChildAt(keysList.getChildCount() - 1) == row) {
@@ -77,6 +90,7 @@ public class KeysActivity extends Activity {
             if (keysList.getChildCount() == 0) addKeyRow("");
             updateCount();
         });
+        row.addView(dot);
         row.addView(et);
         row.addView(del);
         keysList.addView(row);
@@ -127,6 +141,6 @@ public class KeysActivity extends Activity {
 
     private void updateCount() {
         int count = collect().size();
-        keyCount.setText("মোট Key: " + count + "টি — একটার লিমিট শেষ হলে অটোমেটিক পরেরটায় চলে যাবে");
+        keyCount.setText("মোট Key: " + count + "টি — 🟢 লিমিট আছে · 🔴 আজকের লিমিট শেষ (কাল আবার সবুজ হবে)। একটার লিমিট শেষ হলে অটোমেটিক পরেরটায় চলে যাবে");
     }
 }
