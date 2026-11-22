@@ -225,6 +225,33 @@
             android:text="পাঠানোর আগে দেখিয়ে হ্যাঁ নাও (বন্ধ করলে অটো পাঠাবে)"
             android:textColor="#E2E8F0" />
 
+        <CheckBox
+            android:id="@+id/svcBrowser"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="🌐 ব্রাউজার মোড (Token লাগবে না — Chrome-এ লগইন থাকলেই সে নিজে গিয়ে কাজ করবে)"
+            android:textColor="#E2E8F0" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="ব্রাউজার মোডের সাইটের ঠিকানা"
+            android:textColor="#E2E8F0" />
+
+        <EditText
+            android:id="@+id/svcSite"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_input"
+            android:hint="https://…"
+            android:inputType="textUri"
+            android:padding="12dp"
+            android:textColor="#E8F4FF"
+            android:textColorHint="#64748B" />
+
         <Button
             android:id="@+id/svcSave"
             android:layout_width="match_parent"
