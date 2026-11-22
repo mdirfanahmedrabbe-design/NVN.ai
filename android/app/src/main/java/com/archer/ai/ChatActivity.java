@@ -319,11 +319,17 @@ public class ChatActivity extends Activity {
         try {
             android.net.ConnectivityManager cm = (android.net.ConnectivityManager)
                     getSystemService(CONNECTIVITY_SERVICE);
-            if (cm == null) return false;
+            if (cm == null) return true; // cannot tell -> try the call anyway
+            if (android.os.Build.VERSION.SDK_INT >= 23) {
+                android.net.Network n = cm.getActiveNetwork();
+                if (n == null) return false;
+                android.net.NetworkCapabilities cap = cm.getNetworkCapabilities(n);
+                return cap != null && cap.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET);
+            }
             android.net.NetworkInfo ni = cm.getActiveNetworkInfo();
             return ni != null && ni.isConnected();
         } catch (Exception e) {
-            return false;
+            return true; // on any doubt, try the call
         }
     }
 
@@ -340,6 +346,43 @@ public class ChatActivity extends Activity {
         try {
             String t = raw.trim();
             String low = bnToEn(t).toLowerCase(java.util.Locale.ROOT);
+
+            // "ফেসবুক কি তোমার সাথে যুক্ত আছে" — answer from saved state, no internet needed
+            if (low.contains("যুক্ত") || low.contains("কানেক্ট") || low.contains("connected") || low.contains("সংযোগ")) {
+                String svc = NvnCore.normalizeService(t);
+                if (svc != null) {
+                    android.content.SharedPreferences pp = getSharedPreferences("archer", MODE_PRIVATE);
+                    String tok = pp.getString("conn_" + svc + "_token", "");
+                    String usr = pp.getString("conn_" + svc + "_user", "");
+                    boolean browser = pp.getBoolean("conn_" + svc + "_browser", false);
+                    String acc = pp.getString("conn_" + svc + "_account", "");
+                    String nm = ConnectWorker.svcName(svc);
+                    if ((tok != null && !tok.isEmpty()) || (usr != null && !usr.isEmpty())) {
+                        return "হ্যাঁ মাস্টার, " + nm + " আমার সাথে যুক্ত আছে" + (acc != null && !acc.isEmpty() ? " (" + acc + ")" : "") + "।";
+                    }
+                    if (browser) {
+                        return "হ্যাঁ মাস্টার, " + nm + " ব্রাউজার মোডে যুক্ত আছে — অ্যাপের ব্রাউজারে লগইন থাকলে আমি কাজ করতে পারব।";
+                    }
+                    return "না মাস্টার, " + nm + " এখনো যুক্ত নেই। চ্যাটে লিখুন '" + nm + " কানেক্ট করো' — আমি লগইন বাক্স খুলে দেব।";
+                }
+            }
+
+            // "ব্রাউজার এ গিয়ে ইউটিউব লগইন করো" — open NVN built-in browser at that site
+            if (low.contains("ব্রাউজার") || low.contains("browser")) {
+                String u = "";
+                if (low.contains("ইউটিউব") || low.contains("youtube")) u = "https://www.youtube.com";
+                else if (low.contains("ফেসবুক") || low.contains("facebook")) u = "https://www.facebook.com";
+                else if (low.contains("টিকটক") || low.contains("tiktok")) u = "https://www.tiktok.com";
+                else if (low.contains("ইনস্টাগ্রাম") || low.contains("instagram")) u = "https://www.instagram.com";
+                else if (low.contains("থ্রেডস") || low.contains("threads")) u = "https://www.threads.net";
+                else if (low.contains("টেলিগ্রাম") || low.contains("telegram")) u = "https://web.telegram.org";
+                else if (low.contains("টুইটার") || low.contains("twitter") || low.contains("এক্স")) u = "https://x.com";
+                else if (low.contains("পিন্টারেস্ট") || low.contains("pinterest")) u = "https://www.pinterest.com";
+                else if (low.contains("হোয়াটসঅ্যাপ") || low.contains("whatsapp")) u = "https://web.whatsapp.com";
+                else if (low.contains("জিমেইল") || low.contains("gmail")) u = "https://mail.google.com";
+                BrowserActivity.open(this, u);
+                return "মাস্টার, অ্যাপের ব্রাউজার খুলে দিয়েছি" + (u.isEmpty() ? "।" : " — " + u + " এ লগইন করে রাখুন, তারপর আমি সেখানেই কাজ করব।");
+            }
 
             // reminder: "৩০ মিনিট পর মনে করিয়ে দাও ..."
             if (low.contains("মনে করিয়ে") || low.contains("remind")) {
