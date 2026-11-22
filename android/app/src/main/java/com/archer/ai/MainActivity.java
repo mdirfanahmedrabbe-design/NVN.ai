@@ -58,6 +58,9 @@ public class MainActivity extends Activity {
         if (!prefs.getBoolean("emerald_design_applied", false)) {
             prefs.edit().putString("orb_color", "2").putBoolean("emerald_design_applied", true).apply();
         }
+        if (!prefs.getBoolean("emerald2_applied", false)) {
+            prefs.edit().putString("orb_color", "2").putBoolean("emerald2_applied", true).apply();
+        }
         if (prefs.getBoolean("bubble_on", false)
                 && (android.os.Build.VERSION.SDK_INT < 23 || android.provider.Settings.canDrawOverlays(this))) {
             try { startService(new Intent(this, BubbleService.class)); } catch (Exception ignored) {}
@@ -248,6 +251,8 @@ public class MainActivity extends Activity {
             int limit = NvnCore.TIER_LIVE_MIN[NvnCore.tierIndex(this)];
             onlinePill.setText(NvnCore.isOwner(this) ? "👑 মালিক — আনলিমিটেড" : "● Online for " + used + " min  (আজ " + used + "/" + limit + ")");
             if (dashText != null) dashText.setText("CONNECTED APPS: " + countConnected() + "  •  SYS: ONLINE");
+            TextView sl = findViewById(R.id.statusLine);
+            if (sl != null) sl.setText("> NVN ready | voice ready | apps connected: " + countConnected() + " | standby: off");
             updateDashboard(used, limit);
         } catch (Exception ignored) {}
     }
