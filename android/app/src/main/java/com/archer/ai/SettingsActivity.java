@@ -63,6 +63,7 @@ public class SettingsActivity extends Activity {
                 startActivity(new Intent(this, KeysActivity.class)));
         findViewById(R.id.setConnectBtn).setOnClickListener(v ->
                 startActivity(new Intent(this, ConnectActivity.class)));
+        findViewById(R.id.setBrowserBtn).setOnClickListener(v -> BrowserActivity.open(this, ""));
         findViewById(R.id.setAnnounceBtn).setOnClickListener(v ->
                 startActivity(new Intent(this, AnnounceActivity.class)));
         findViewById(R.id.setAboutBtn).setOnClickListener(v ->

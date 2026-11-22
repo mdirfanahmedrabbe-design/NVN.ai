@@ -163,11 +163,15 @@ public class ConnectWorker {
                 a11y.wakeScreen();
                 ArcherAccessibilityService.sleep(2500);
             }
-            workStatus(ctx, "🌐 " + name + " — Chrome-এ সাইট খুলছি…");
-            if (!a11y.openUrl(url)) {
-                logHistory(ctx, name + " — ব্রাউজার মোড: Chrome খোলা যায়নি");
-                workStatus(ctx, "❌ Chrome খোলা যায়নি");
-                return false;
+            workStatus(ctx, "🌐 " + name + " — অ্যাপের ব্রাউজারে সাইট খুলছি…");
+            try {
+                BrowserActivity.open(ctx, url);
+            } catch (Exception e) {
+                if (!a11y.openUrl(url)) {
+                    logHistory(ctx, name + " — ব্রাউজার মোড: ব্রাউজার খোলা যায়নি");
+                    workStatus(ctx, "❌ ব্রাউজার খোলা যায়নি");
+                    return false;
+                }
             }
             ArcherAccessibilityService.sleep(7000);
             workShot(ctx, a11y);
@@ -191,10 +195,10 @@ public class ConnectWorker {
                 typed = a11y.typeText(text);
             }
             if (!typed) {
-                workStatus(ctx, "❌ লেখার জায়গা পাওয়া যায়নি — ফোন আনলক + Chrome-এ লগইন আছে কিনা দেখো");
+                workStatus(ctx, "❌ লেখার জায়গা পাওয়া যায়নি — ফোন আনলক + অ্যাপের ব্রাউজারে লগইন আছে কিনা দেখো");
                 workShot(ctx, a11y);
                 logHistory(ctx, name + " — ব্রাউজার মোড: লেখার জায়গা পাওয়া যায়নি (ফোন লক থাকলে বা লগইন না থাকলে এমন হয়)");
-                notifyUser(ctx, "NVN ব্রাউজার মোড", name + "-এ লেখা বসানো যায়নি — ফোন আনলক আছে কিনা আর Chrome-এ লগইন আছে কিনা দেখো", false);
+                notifyUser(ctx, "NVN ব্রাউজার মোড", name + "-এ লেখা বসানো যায়নি — ফোন আনলক আছে কিনা আর অ্যাপের ব্রাউজারে লগইন আছে কিনা দেখো", false);
                 return false;
             }
             ArcherAccessibilityService.sleep(1200);

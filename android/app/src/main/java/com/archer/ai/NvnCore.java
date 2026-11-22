@@ -251,6 +251,7 @@ public class NvnCore {
         fns.put(fnDef2("set_service_schedule", "Set the daily post time for a connected site", "service", "Site name", "time", "Time in 24-hour HH:MM format, e.g. 09:00"));
         fns.put(fnDef2("toggle_service", "Turn daily work on or off for a connected site", "service", "Site name", "state", "One of: on, off"));
         fns.put(fnDef2("set_browser_mode", "Turn Browser Mode on or off for a site. Browser Mode works without any token: NVN opens the site in the owner's Chrome browser (already logged in) and posts by tapping and typing, the way the owner works by hand.", "service", "Site name", "state", "One of: on, off"));
+        fns.put(fnDef("open_browser", "Open NVN built-in browser so the user can log in to a website inside the app, or to show a website", "url", "Website URL to open, e.g. https://www.facebook.com (can be empty)"));
         fns.put(fnDefNoArg("connect_status", "Report which sites are connected, which have daily work on, and what rules are saved"));
         fns.put(fnDefNoArg("run_connect_work", "Run the connected-sites work right now (check comments, reply, post)"));
         fns.put(fnDef("connect_site", "Connect a site: opens the secure connect box in this chat (login/token/password) so the owner can connect it without leaving the chat", "service", "Site name"));
@@ -400,6 +401,11 @@ public class NvnCore {
                         .putBoolean("conn_" + svcId + "_enabled", true).apply();
                 ConnectWorker.logHistory(ctx, ConnectWorker.svcName(svcId) + " — ব্রাউজার মোড " + (on ? "চালু" : "বন্ধ") + " (চ্যাট থেকে)");
                 return svcId + " browser mode " + (on ? "on — will work through Chrome without a token" : "off");
+            }
+            case "open_browser": {
+                String u = args.optString("url", "").trim();
+                BrowserActivity.open(ctx, u);
+                return "NVN built-in browser opened" + (u.isEmpty() ? "" : " at " + u);
             }
             case "connect_status": {
                 SharedPreferences p = ctx.getSharedPreferences("archer", Context.MODE_PRIVATE);
