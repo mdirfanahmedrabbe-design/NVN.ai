@@ -136,6 +136,7 @@ public class OAuthActivity extends Activity {
                 .apply();
         ConnectWorker.logHistory(getApplicationContext(),
                 "📘 Facebook Page — লগইন করে কানেক্ট হয়েছে (" + pageName + ")");
+        new Thread(() -> NvnCore.backupData(getApplicationContext())).start();
         runOnUiThread(() -> {
             Toast.makeText(this, "✅ Facebook Page কানেক্ট হয়েছে: " + pageName, Toast.LENGTH_LONG).show();
             finish();

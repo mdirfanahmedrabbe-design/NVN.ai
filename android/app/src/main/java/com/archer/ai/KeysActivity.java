@@ -107,6 +107,7 @@ public class KeysActivity extends Activity {
                 .putString("gemini_keys", String.join("\n", all))
                 .putInt("key_index", 0)
                 .apply();
+        new Thread(() -> NvnCore.backupData(getApplicationContext())).start();
         Toast.makeText(this, "সেভ হয়েছে — মোট " + all.size() + "টি Key", Toast.LENGTH_SHORT).show();
         // after save, a fresh empty box opens below
         boolean lastEmpty = false;

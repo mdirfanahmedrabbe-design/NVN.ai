@@ -208,6 +208,7 @@ public class ChatActivity extends Activity {
 
     private String chatLoop(String userText) {
         try {
+            NvnCore.restoreKeysIfMissing(this);
             if (!NvnCore.tryCountQuestion(this)) {
                 return "আজকের ফ্রি প্রশ্ন শেষ হয়ে গেছে মাস্টার 💜 প্রিমিয়াম নিলে প্রতিদিন অনেক বেশি পাবেন।";
             }
@@ -233,7 +234,10 @@ public class ChatActivity extends Activity {
                 String res = null;
                 for (int attempt = 0; attempt < 2; attempt++) {
                     String key = NvnCore.currentKey(getSharedPreferences("archer", MODE_PRIVATE));
-                    if (key == null || key.trim().isEmpty()) return "মাস্টার, Gemini Key বসানো নেই — Settings থেকে Key বসিয়ে দিন।";
+                    if (key == null || key.trim().isEmpty()) {
+                        runOnUiThread(() -> startActivity(new Intent(this, KeysActivity.class)));
+                        return "মাস্টার, Gemini Key বসানো নেই — Key-ঘরটা খুলে দিয়েছি, Key বসিয়ে সেভ করে আবার বলুন।";
+                    }
                     res = NvnCore.httpPost(
                             "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + key.trim(),
                             body.toString());
@@ -379,6 +383,7 @@ public class ChatActivity extends Activity {
                                     .apply();
                             ConnectWorker.logHistory(getApplicationContext(),
                                     ConnectWorker.svcName(svc) + " — চ্যাট থেকে কানেক্ট হয়েছে");
+                            new Thread(() -> NvnCore.backupData(getApplicationContext())).start();
                             result[0] = "connected " + svc;
                             latch.countDown();
                         })

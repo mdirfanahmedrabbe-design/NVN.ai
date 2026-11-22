@@ -62,6 +62,7 @@ public class SettingsActivity extends Activity {
                     .putBoolean("main_voice", mainVoice.isChecked())
                     .putString("bkash_number", bkash.getText().toString().trim());
             ed.apply();
+            new Thread(() -> NvnCore.backupData(getApplicationContext())).start();
             Toast.makeText(this, "সেভ হয়েছে", Toast.LENGTH_SHORT).show();
             finish();
         });

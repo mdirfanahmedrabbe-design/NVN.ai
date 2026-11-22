@@ -96,6 +96,7 @@ public class ServiceActivity extends Activity {
                     .putString("conn_" + svc + "_site", siteField.getText().toString().trim());
             if (isCustom) ed.putString("conn_custom_name", customName.getText().toString().trim());
             ed.apply();
+            new Thread(() -> NvnCore.backupData(getApplicationContext())).start();
             ConnectWorker.scheduleAll(getApplicationContext());
             Toast.makeText(this, "সেভ হয়েছে", Toast.LENGTH_SHORT).show();
             finish();

@@ -817,6 +817,65 @@ public class NvnCore {
         } catch (Exception ignored) {}
     }
 
+    // If the Gemini keys (or connect tokens) are missing — e.g. after a reinstall where the
+    // name was re-entered so restoreData() skipped — pull ONLY those back from the backup file.
+    public static void restoreKeysIfMissing(Context ctx) {
+        try {
+            SharedPreferences p = ctx.getSharedPreferences("archer", Context.MODE_PRIVATE);
+            if (!getKeys(p).isEmpty()) return;
+            String json = readBackupJson(ctx);
+            if (json == null || json.trim().isEmpty()) return;
+            JSONObject o = new JSONObject(json);
+            SharedPreferences.Editor e = p.edit();
+            String[] keys = {"gemini_keys", "gemini_key"};
+            for (String k : keys) if (o.has(k)) e.putString(k, o.optString(k, ""));
+            for (String k : BACKUP_STRING_KEYS) {
+                if ((k.startsWith("conn_") && (k.endsWith("_token") || k.endsWith("_id")
+                        || k.endsWith("_user") || k.endsWith("_pass") || k.endsWith("_site")))
+                        && o.has(k) && p.getString(k, "").isEmpty()) {
+                    e.putString(k, o.optString(k, ""));
+                }
+            }
+            e.apply();
+        } catch (Exception ignored) {}
+    }
+
+    private static String readBackupJson(Context ctx) {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                android.content.ContentResolver cr = ctx.getContentResolver();
+                String rel = android.os.Environment.DIRECTORY_DOCUMENTS + "/NVNAI";
+                try (android.database.Cursor c = cr.query(android.provider.MediaStore.Files.getContentUri("external"),
+                        new String[]{android.provider.MediaStore.MediaColumns._ID},
+                        android.provider.MediaStore.MediaColumns.RELATIVE_PATH + "=? AND " + android.provider.MediaStore.MediaColumns.DISPLAY_NAME + "=?",
+                        new String[]{rel, "nvn_backup.json"}, null)) {
+                    if (c != null && c.moveToFirst()) {
+                        long id = c.getLong(0);
+                        android.net.Uri uri = android.content.ContentUris.withAppendedId(android.provider.MediaStore.Files.getContentUri("external"), id);
+                        try (java.io.InputStream is = cr.openInputStream(uri);
+                             java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
+                            StringBuilder sb = new StringBuilder();
+                            String line;
+                            while ((line = br.readLine()) != null) sb.append(line);
+                            return sb.toString();
+                        }
+                    }
+                }
+            } else {
+                java.io.File f = new java.io.File(new java.io.File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOCUMENTS), "NVNAI"), "nvn_backup.json");
+                if (f.exists()) {
+                    StringBuilder sb = new StringBuilder();
+                    try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(f))) {
+                        String line;
+                        while ((line = br.readLine()) != null) sb.append(line);
+                    }
+                    return sb.toString();
+                }
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
     public static void restoreData(Context ctx) {
         try {
             SharedPreferences p = ctx.getSharedPreferences("archer", Context.MODE_PRIVATE);

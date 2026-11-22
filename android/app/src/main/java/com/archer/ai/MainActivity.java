@@ -68,6 +68,7 @@ public class MainActivity extends Activity {
         });
 
         NvnCore.restoreData(this);
+        NvnCore.restoreKeysIfMissing(this);
         ConnectWorker.scheduleAll(getApplicationContext());
         fetchServerConfig();
         refreshUsage();
