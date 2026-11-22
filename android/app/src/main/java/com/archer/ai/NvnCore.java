@@ -807,6 +807,30 @@ public class NvnCore {
             ed.apply();
         } catch (Exception ignored) {
         }
+        notifyConnected(ctx, svc, account);
+    }
+
+    // "✅ Connected Success" notification whenever a service connects
+    public static void notifyConnected(Context ctx, String svc, String account) {
+        try {
+            android.app.NotificationManager nm = (android.app.NotificationManager)
+                    ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm == null) return;
+            String channelId = "nvn_connect";
+            if (android.os.Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(channelId) == null) {
+                nm.createNotificationChannel(new android.app.NotificationChannel(
+                        channelId, "NVN Connect", android.app.NotificationManager.IMPORTANCE_DEFAULT));
+            }
+            android.app.Notification.Builder b = android.os.Build.VERSION.SDK_INT >= 26
+                    ? new android.app.Notification.Builder(ctx, channelId)
+                    : new android.app.Notification.Builder(ctx);
+            String text = ConnectWorker.svcName(svc) + " কানেক্ট হয়েছে — " + deviceName();
+            if (account != null && !account.trim().isEmpty()) text += " · " + account.trim();
+            b.setContentTitle("✅ Connected Success").setContentText(text)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info).setAutoCancel(true);
+            nm.notify(780 + Math.abs(svc.hashCode() % 100), b.build());
+        } catch (Exception ignored) {
+        }
     }
 
     public static void backupData(Context ctx) {
