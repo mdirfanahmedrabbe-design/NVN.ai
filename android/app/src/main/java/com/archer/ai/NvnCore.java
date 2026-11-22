@@ -246,6 +246,7 @@ public class NvnCore {
         fns.put(fnDef("open_screen", "Open a screen inside the NVN app: qibla compass, tasbih counter, premium packages, settings, connect system, or chat", "screen", "One of: qibla, tasbih, premium, settings, connect, chat"));
         fns.put(fnDefNoArg("end_call", "End the current phone call"));
         fns.put(fnDef("remember_fact", "Remember a fact about the user forever (name, likes, work, family, anything he says to remember)", "fact", "The fact to remember, in the user's own words"));
+        fns.put(fnDef2("set_reminder", "Set a reminder that will notify the user later, even if the app is closed. Use when he says remind me / মনে করিয়ে দাও.", "text", "What to remind him about, in his own words", "minutes", "After how many minutes, digits only, e.g. 30"));
         fns.put(fnDef2("set_service_rules", "Save the owner's work rules for a connected site so you remember them forever. Use this whenever the user explains what work to do on a site (what to post, how to reply to comments, when).", "service", "Site name: facebook, instagram, threads, youtube, telegram, blogger, wordpress, tiktok, x, pinterest, whatsapp, gmail, website, custom", "rules", "The work rules in the user's own words, complete"));
         fns.put(fnDef2("set_service_schedule", "Set the daily post time for a connected site", "service", "Site name", "time", "Time in 24-hour HH:MM format, e.g. 09:00"));
         fns.put(fnDef2("toggle_service", "Turn daily work on or off for a connected site", "service", "Site name", "state", "One of: on, off"));
@@ -344,6 +345,14 @@ public class NvnCore {
                 p.edit().putString("memory_facts", merged).apply();
                 backupData(ctx);
                 return "remembered forever: " + fact;
+            }
+            case "set_reminder": {
+                String text = args.optString("text", "").trim();
+                int mins = 0;
+                try { mins = Integer.parseInt(args.optString("minutes", "0").replaceAll("[^0-9]", "")); } catch (Exception ignored) {}
+                if (text.isEmpty()) return "no reminder text given";
+                if (mins <= 0) mins = 30;
+                return setReminder(ctx, text, mins) ? "reminder set in " + mins + " minutes: " + text : "reminder failed";
             }
             case "set_service_rules": {
                 String svcId = normalizeService(args.optString("service", ""));
@@ -773,7 +782,8 @@ public class NvnCore {
             "conn_whatsapp_account", "conn_whatsapp_device", "conn_whatsapp_since",
             "conn_gmail_account", "conn_gmail_device", "conn_gmail_since",
             "conn_website_account", "conn_website_device", "conn_website_since",
-            "conn_custom_account", "conn_custom_device", "conn_custom_since"
+            "conn_custom_account", "conn_custom_device", "conn_custom_since",
+            "orb_color", "qa_cache", "prayer_cache", "prayer_cache_date", "last_brief_date"
     };
 
     private static final String[] BACKUP_BOOL_KEYS = {
@@ -781,7 +791,7 @@ public class NvnCore {
             "conn_youtube_browser", "conn_telegram_browser", "conn_blogger_browser",
             "conn_wordpress_browser", "conn_tiktok_browser", "conn_x_browser",
             "conn_pinterest_browser", "conn_whatsapp_browser", "conn_gmail_browser",
-            "conn_website_browser", "conn_custom_browser"
+            "conn_website_browser", "conn_custom_browser", "fast_mode"
     };
 
     // This phone's name, e.g. "Infinix SMART 9 HD"
@@ -831,6 +841,47 @@ public class NvnCore {
             nm.notify(780 + Math.abs(svc.hashCode() % 100), b.build());
         } catch (Exception ignored) {
         }
+    }
+
+    // Reminder that fires later even if the app is closed (works while he's away)
+    public static boolean setReminder(Context ctx, String text, int minutes) {
+        try {
+            android.app.AlarmManager am = (android.app.AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+            if (am == null) return false;
+            android.content.Intent i = new android.content.Intent(ctx, ReminderReceiver.class);
+            i.putExtra("text", text);
+            int code = (int) (System.currentTimeMillis() % 100000);
+            android.app.PendingIntent pi = android.app.PendingIntent.getBroadcast(ctx, code, i,
+                    android.os.Build.VERSION.SDK_INT >= 23
+                            ? android.app.PendingIntent.FLAG_IMMUTABLE | android.app.PendingIntent.FLAG_UPDATE_CURRENT
+                            : android.app.PendingIntent.FLAG_UPDATE_CURRENT);
+            long at = System.currentTimeMillis() + minutes * 60_000L;
+            if (android.os.Build.VERSION.SDK_INT >= 23) am.setAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, at, pi);
+            else am.set(android.app.AlarmManager.RTC_WAKEUP, at, pi);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // Today's prayer times (Dhamrai) — fetched once, then served from cache offline
+    public static String prayerTimesText(Context ctx) {
+        SharedPreferences p = ctx.getSharedPreferences("archer", Context.MODE_PRIVATE);
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(new java.util.Date());
+        String cached = p.getString("prayer_cache", "");
+        if (today.equals(p.getString("prayer_cache_date", "")) && !cached.isEmpty()) return cached;
+        try {
+            String res = httpGet("https://api.aladhan.com/v1/timings?latitude=23.92&longitude=90.21&method=1");
+            if (res != null) {
+                org.json.JSONObject t = new org.json.JSONObject(res).getJSONObject("data").getJSONObject("timings");
+                String out = "🕌 আজকের নামাজের সময় (ধামরাই):\nফজর " + t.optString("Fajr")
+                        + "\nযোহর " + t.optString("Dhuhr") + "\nআসর " + t.optString("Asr")
+                        + "\nমাগরিব " + t.optString("Maghrib") + "\nএশা " + t.optString("Isha");
+                p.edit().putString("prayer_cache", out).putString("prayer_cache_date", today).apply();
+                return out;
+            }
+        } catch (Exception ignored) {}
+        return cached.isEmpty() ? "নামাজের সময় এখন আনা যাচ্ছে না মাস্টার — ইন্টারনেট এলে আবার বলুন।" : cached;
     }
 
     public static void backupData(Context ctx) {

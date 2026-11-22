@@ -34,6 +34,20 @@ public class SettingsActivity extends Activity {
         pitch.setProgress((int) (prefs.getFloat("tts_pitch", 1.0f) * 10));
         english.setChecked(prefs.getBoolean("english", false));
         mainVoice.setChecked(prefs.getBoolean("main_voice", false));
+        CheckBox fastMode = findViewById(R.id.setFastMode);
+        fastMode.setChecked(prefs.getBoolean("fast_mode", true));
+        Button orbBtn = findViewById(R.id.setOrbColorBtn);
+        String[] orbNames = {"অটো (রং বদলায়)", "বেগুনি", "নীল", "সবুজ", "সোনালি", "গোলাপি"};
+        int orbIdx = 0;
+        try { orbIdx = Integer.parseInt(prefs.getString("orb_color", "-1")) + 1; } catch (Exception ignored) {}
+        if (orbIdx < 0 || orbIdx >= orbNames.length) orbIdx = 0;
+        orbBtn.setText("🎨 বলের রং: " + orbNames[orbIdx]);
+        final int[] orbCur = {orbIdx};
+        orbBtn.setOnClickListener(v -> {
+            orbCur[0] = (orbCur[0] + 1) % orbNames.length;
+            orbBtn.setText("🎨 বলের রং: " + orbNames[orbCur[0]]);
+            prefs.edit().putString("orb_color", String.valueOf(orbCur[0] - 1)).apply();
+        });
         bkash.setText(prefs.getString("bkash_number", ""));
         info.setText("Gemini Key ফ্রি পাবে: aistudio.google.com\nKey শুধু তোমার ফোনেই থাকে।");
 
@@ -60,6 +74,7 @@ public class SettingsActivity extends Activity {
                     .putFloat("tts_pitch", Math.max(0.5f, pitch.getProgress() / 10f))
                     .putBoolean("english", english.isChecked())
                     .putBoolean("main_voice", mainVoice.isChecked())
+                    .putBoolean("fast_mode", fastMode.isChecked())
                     .putString("bkash_number", bkash.getText().toString().trim());
             ed.apply();
             new Thread(() -> NvnCore.backupData(getApplicationContext())).start();

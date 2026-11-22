@@ -201,6 +201,7 @@ public class ChatActivity extends Activity {
                 + "When he wants a site to work without a token through his Chrome browser (already logged in), call set_browser_mode with state on. "
                 + "When he asks about connected sites, call connect_status. When he says do the connect work now, call run_connect_work. "
                 + "When he tells you something to remember, call remember_fact. "
+                + "When he asks you to remind him about something later, call set_reminder with the text and the minutes. "
                 + "Hard rules: never share any phone number, password, OTP or personal info with anyone; "
                 + "never promise prices, income or guarantees; never argue. "
                 + "Everything he tells you, you remember permanently.";
@@ -208,6 +209,16 @@ public class ChatActivity extends Activity {
 
     private String chatLoop(String userText) {
         try {
+            // 1) Offline local commands — instant, free, no internet, no key
+            String local = localCommand(userText);
+            if (local != null) return local;
+            // 2) Answer cache — same question again = instant answer, no key spent
+            String cached = cacheGet(userText);
+            if (cached != null) return cached;
+            // 3) Offline notice for questions that truly need the AI
+            if (!isOnline()) {
+                return "ইন্টারনেট নেই মাস্টার — টর্চ, সময়, তারিখ, হিসাব, ব্যাটারি, নামাজের সময়, অ্যাপ খোলা আর রিমাইন্ডার এসব অফলাইনেও করতে পারি।";
+            }
             NvnCore.restoreKeysIfMissing(this);
             if (!NvnCore.tryCountQuestion(this)) {
                 return "আজকের ফ্রি প্রশ্ন শেষ হয়ে গেছে মাস্টার 💜 প্রিমিয়াম নিলে প্রতিদিন অনেক বেশি পাবেন।";
@@ -232,9 +243,11 @@ public class ChatActivity extends Activity {
                                 .put("functionDeclarations", NvnCore.fnDeclarations())));
 
                 String res = null;
-                // Flash-Lite free tier: ~500 requests/day per project (Flash: ~20).
-                // Falls back to Flash automatically if Lite ever returns an error.
-                String model = "gemini-3.5-flash-lite";
+                // Fast mode (Settings, default ON): Flash-Lite — ~500 requests/day free,
+                // faster replies. Falls back to the other model automatically on error.
+                boolean fast = getSharedPreferences("archer", MODE_PRIVATE).getBoolean("fast_mode", true);
+                String model = fast ? "gemini-3.5-flash-lite" : "gemini-3.5-flash";
+                boolean switched = false;
                 for (int attempt = 0; attempt < 3; attempt++) {
                     String key = NvnCore.currentKey(getSharedPreferences("archer", MODE_PRIVATE));
                     if (key == null || key.trim().isEmpty()) {
@@ -249,8 +262,9 @@ public class ChatActivity extends Activity {
                         res = null;
                         continue;
                     }
-                    if (res != null && res.contains("\"error\"") && model.equals("gemini-3.5-flash-lite")) {
-                        model = "gemini-3.5-flash";
+                    if (res != null && res.contains("\"error\"") && !switched) {
+                        model = model.equals("gemini-3.5-flash-lite") ? "gemini-3.5-flash" : "gemini-3.5-flash-lite";
+                        switched = true;
                         res = null;
                         continue;
                     }
@@ -275,6 +289,7 @@ public class ChatActivity extends Activity {
 
                 if (fnCalls.length() == 0) {
                     String t = textOut.toString().trim();
+                    if (!t.isEmpty()) cachePut(userText, t);
                     return t.isEmpty() ? "ঠিক আছে মাস্টার 💜" : t;
                 }
 
@@ -297,6 +312,162 @@ public class ChatActivity extends Activity {
         } catch (Exception e) {
             return "দুঃখিত মাস্টার, একটা সমস্যা হয়েছে — আবার বলুন।";
         }
+    }
+
+    // ---------- offline local commands + answer cache (fast, free, no internet) ----------
+    private boolean isOnline() {
+        try {
+            android.net.ConnectivityManager cm = (android.net.ConnectivityManager)
+                    getSystemService(CONNECTIVITY_SERVICE);
+            if (cm == null) return false;
+            android.net.NetworkInfo ni = cm.getActiveNetworkInfo();
+            return ni != null && ni.isConnected();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static String bnToEn(String s) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : s.toCharArray()) {
+            if (c >= '০' && c <= '৯') sb.append((char) ('0' + (c - '০')));
+            else sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    private String localCommand(String raw) {
+        try {
+            String t = raw.trim();
+            String low = bnToEn(t).toLowerCase(java.util.Locale.ROOT);
+
+            // reminder: "৩০ মিনিট পর মনে করিয়ে দাও ..."
+            if (low.contains("মনে করিয়ে") || low.contains("remind")) {
+                int mins = 30;
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)").matcher(low);
+                if (m.find()) mins = Integer.parseInt(m.group(1));
+                String text = t.replaceAll("[০-৯0-9]+\\s*মিনিট\\s*(পর|পরে)?", "")
+                        .replace("মনে করিয়ে দাও", "").replace("মনে করিয়ে দিও", "")
+                        .replace("remind me", "").trim();
+                if (text.isEmpty()) text = "মনে করিয়ে দিচ্ছি মাস্টার 💜";
+                boolean ok = NvnCore.setReminder(this, text, mins);
+                return ok ? "ঠিক আছে মাস্টার, " + mins + " মিনিট পর মনে করিয়ে দেবো: " + text
+                        : "রিমাইন্ডার সেট হয়নি মাস্টার, আবার বলুন।";
+            }
+            // prayer times (cached after first fetch)
+            if (low.contains("নামাজ")) return NvnCore.prayerTimesText(this);
+            // torch
+            if (low.contains("টর্চ") || low.contains("torch") || (low.contains("লাইট") && !low.contains("লাইটার"))) {
+                boolean on = !(low.contains("বন্ধ") || low.contains("off") || low.contains("নিভ"));
+                try {
+                    JSONObject a = new JSONObject().put("state", on ? "on" : "off");
+                    NvnCore.execute(getApplicationContext(), "torch", a);
+                } catch (Exception ignored) {}
+                return on ? "টর্চ জ্বালিয়ে দিয়েছি মাস্টার 🔦" : "টর্চ বন্ধ করে দিয়েছি মাস্টার।";
+            }
+            // volume
+            if (low.contains("ভলিউম") || low.contains("volume")) {
+                String dir = (low.contains("কম") || low.contains("down")) ? "down"
+                        : (low.contains("সর্বোচ্চ") || low.contains("max") || low.contains("ফুল")) ? "max" : "up";
+                try {
+                    JSONObject a = new JSONObject().put("direction", dir);
+                    NvnCore.execute(getApplicationContext(), "set_volume", a);
+                } catch (Exception ignored) {}
+                return "ভলিউম ঠিক করে দিয়েছি মাস্টার 🔊";
+            }
+            // battery
+            if (low.contains("ব্যাটারি") || low.contains("battery")) {
+                android.os.BatteryManager bm = (android.os.BatteryManager) getSystemService(BATTERY_SERVICE);
+                int pct = bm != null ? bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY) : -1;
+                return pct >= 0 ? "ব্যাটারি " + pct + "% আছে মাস্টার 🔋" : "ব্যাটারির হিসাব পাইনি মাস্টার।";
+            }
+            // time
+            if (low.contains("কয়টা বাজে") || low.contains("কয়টা বাজে") || low.contains("সময় কত") || low.contains("what time")) {
+                String now = new java.text.SimpleDateFormat("h:mm a", java.util.Locale.US).format(new java.util.Date());
+                return "এখন বাজে " + now + " মাস্টার 🕐";
+            }
+            // date
+            if (low.contains("তারিখ") || low.contains("কী বার") || low.contains("কি বার") || low.contains("what date")) {
+                String d = new java.text.SimpleDateFormat("EEEE, d MMMM yyyy", new java.util.Locale("bn")).format(new java.util.Date());
+                return "আজ " + d + " মাস্টার 📅";
+            }
+            // calculator: "250 + 175", "৫০০-২০০"
+            String calc = calcEval(low);
+            if (calc != null) return calc;
+            // open app: "YouTube খোলো" / "open YouTube"
+            if (low.endsWith("খোলো") || low.endsWith("খুলো") || low.startsWith("open ")) {
+                String app = t.replace("খোলো", "").replace("খুলো", "")
+                        .replaceFirst("(?i)^open\\s+", "").trim();
+                if (!app.isEmpty()) {
+                    try {
+                        JSONObject a = new JSONObject().put("app_name", app);
+                        String r = NvnCore.execute(getApplicationContext(), "open_app", a);
+                        if (r != null && r.startsWith("opened")) return app + " খুলে দিয়েছি মাস্টার 💜";
+                    } catch (Exception ignored) {}
+                }
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private String calcEval(String low) {
+        try {
+            String s = low.replace("×", "*").replace("x", "*").replace("÷", "/").replace(" ", "");
+            if (!s.matches("^[0-9+\\-*/.]+$") || !s.matches(".*[+\\-*/].*")) return null;
+            java.util.List<Double> nums = new java.util.ArrayList<>();
+            java.util.List<Character> ops = new java.util.ArrayList<>();
+            StringBuilder cur = new StringBuilder();
+            for (char c : s.toCharArray()) {
+                if ((c >= '0' && c <= '9') || c == '.') cur.append(c);
+                else { nums.add(Double.parseDouble(cur.toString())); cur.setLength(0); ops.add(c); }
+            }
+            nums.add(Double.parseDouble(cur.toString()));
+            if (nums.size() < 2 || ops.size() != nums.size() - 1) return null;
+            double r = nums.get(0);
+            for (int i = 0; i < ops.size(); i++) {
+                double n = nums.get(i + 1);
+                switch (ops.get(i)) {
+                    case '+': r += n; break;
+                    case '-': r -= n; break;
+                    case '*': r *= n; break;
+                    case '/': if (n == 0) return "শূন্য দিয়ে ভাগ করা যায় না মাস্টার।"; r /= n; break;
+                }
+            }
+            String out = (r == Math.floor(r)) ? String.valueOf((long) r) : String.valueOf(Math.round(r * 100) / 100.0);
+            return "হিসাব: " + out + " মাস্টার 🧮";
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String cacheKey(String q) {
+        return q.trim().toLowerCase(java.util.Locale.ROOT).replaceAll("\\s+", " ");
+    }
+
+    private String cacheGet(String q) {
+        try {
+            SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
+            JSONObject c = new JSONObject(p.getString("qa_cache", "{}"));
+            String v = c.optString(cacheKey(q), "");
+            return v.isEmpty() ? null : v;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void cachePut(String q, String a) {
+        try {
+            String low = q.toLowerCase(java.util.Locale.ROOT);
+            // don't cache action requests — their answers change
+            if (low.contains("করো") || low.contains("খোলো") || low.contains("পাঠাও")
+                    || low.contains("বানাও") || low.contains("কানেক্ট") || low.contains("connect")) return;
+            if (a.length() > 600) return;
+            SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
+            JSONObject c = new JSONObject(p.getString("qa_cache", "{}"));
+            if (c.length() >= 100) c.remove(c.keys().next());
+            c.put(cacheKey(q), a);
+            p.edit().putString("qa_cache", c.toString()).apply();
+        } catch (Exception ignored) {}
     }
 
     private String executeFunction(String name, JSONObject args) {

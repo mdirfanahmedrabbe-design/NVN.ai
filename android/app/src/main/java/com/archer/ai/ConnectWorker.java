@@ -320,9 +320,12 @@ public class ConnectWorker {
     }
 
     // ---------- Gemini text ----------
+    // Flash-Lite free tier allows ~500 requests/day per project (vs ~20 for Flash),
+    // so background Connect work uses Lite; falls back to Flash if Lite ever errors.
     static String geminiText(Context ctx, String prompt) {
         SharedPreferences p = prefs(ctx);
-        for (int attempt = 0; attempt < 2; attempt++) {
+        String model = "gemini-3.5-flash-lite";
+        for (int attempt = 0; attempt < 3; attempt++) {
             String key = NvnCore.currentKey(p);
             if (key == null || key.trim().isEmpty()) return null;
             try {
@@ -330,11 +333,15 @@ public class ConnectWorker {
                 JSONObject content = new JSONObject().put("parts", new JSONArray().put(part));
                 JSONObject body = new JSONObject().put("contents", new JSONArray().put(content));
                 String res = httpPostJson(
-                        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + key.trim(),
+                        "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + key.trim(),
                         body.toString(), null);
                 if (res == null) return null;
                 if (NvnCore.isQuotaError(res)) {
                     NvnCore.rotateKey(p);
+                    continue;
+                }
+                if (res.contains("\"error\"") && model.equals("gemini-3.5-flash-lite")) {
+                    model = "gemini-3.5-flash";
                     continue;
                 }
                 JSONObject o = new JSONObject(res);
@@ -464,6 +471,7 @@ public class ConnectWorker {
     // ---------- main run ----------
     public static void runAll(Context ctx, boolean manual) {
         SharedPreferences p = prefs(ctx);
+        dailyBrief(ctx, p);
         List<String> report = new ArrayList<>();
         for (String svc : SVC_IDS) {
             if (!p.getBoolean("conn_" + svc + "_enabled", false)) continue;
@@ -502,6 +510,23 @@ public class ConnectWorker {
         } else if (manual) {
             logHistory(ctx, "রান শেষ — নতুন কিছু নেই");
         }
+    }
+
+    // Once a day: morning brief — prayer times + connected apps (works while he's away)
+    static void dailyBrief(Context ctx, SharedPreferences p) {
+        try {
+            String today = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+            if (today.equals(p.getString("last_brief_date", ""))) return;
+            p.edit().putString("last_brief_date", today).apply();
+            int connected = 0;
+            for (String svc : SVC_IDS) if (isConnected(ctx, svc) || isBrowserMode(ctx, svc)) connected++;
+            String prayer = NvnCore.prayerTimesText(ctx);
+            String firstLine = prayer.contains("\n") ? prayer.substring(prayer.indexOf('\n') + 1) : prayer;
+            String body = "আসসালামু আলাইকুম মাস্টার 💜\n" + firstLine
+                    + "\n🔗 কানেক্টেড অ্যাপ: " + connected + "টি — আজকের কাজ নিজে নিজে চলবে।";
+            notifyUser(ctx, "🌅 আজকের দিন", body, false);
+            logHistory(ctx, "সকালের ব্রিফ পাঠানো হয়েছে");
+        } catch (Exception ignored) {}
     }
 
     // ---------- comments ----------

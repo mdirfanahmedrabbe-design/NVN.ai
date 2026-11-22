@@ -56,6 +56,13 @@ public class OrbView extends View {
     };
 
     private int[] currentPalette() {
+        // Fixed color chosen in Settings ("orb_color": -1 = auto-cycle, 0-4 = fixed palette)
+        try {
+            int fixed = Integer.parseInt(getContext()
+                    .getSharedPreferences("archer", Context.MODE_PRIVATE)
+                    .getString("orb_color", "-1"));
+            if (fixed >= 0 && fixed < PALETTES.length) return PALETTES[fixed];
+        } catch (Exception ignored) {}
         float cycle = 7f; // seconds per color
         float pos = (t * 0.03f * 30f) / cycle; // t advances 0.03 per ~33ms tick -> approx seconds = t
         pos = t / cycle;
