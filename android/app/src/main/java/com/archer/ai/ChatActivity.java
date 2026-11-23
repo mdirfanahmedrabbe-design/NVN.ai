@@ -58,13 +58,21 @@ public class ChatActivity extends Activity {
 
         loadHistory();
 
-        // WhatsApp-style header
+        // App init (chat is now the launcher screen)
+        try { ConnectWorker.scheduleAll(getApplicationContext()); } catch (Exception ignored) {}
+        try {
+            if (getSharedPreferences("archer", MODE_PRIVATE).getBoolean("bubble_on", false)) {
+                startService(new Intent(this, BubbleService.class));
+            }
+        } catch (Exception ignored) {}
+        fetchServerConfig();
+        if (getSharedPreferences("archer", MODE_PRIVATE).getString("girl_name", "").isEmpty()) showNameDialog();
+
+        // WhatsApp-style header: ball (orb) on top, name below, ⋮ menu
         String girl = getSharedPreferences("archer", MODE_PRIVATE).getString("girl_name", "NVN");
         TextView nameTv = findViewById(R.id.chatName);
         if (nameTv != null) nameTv.setText(girl);
         findViewById(R.id.chatBack).setOnClickListener(v -> finish());
-        findViewById(R.id.chatVideo).setOnClickListener(v -> openLive("camera"));
-        findViewById(R.id.chatCall).setOnClickListener(v -> openLive("voice"));
         findViewById(R.id.chatMenu).setOnClickListener(this::showChatMenu);
         findViewById(R.id.chatCamera).setOnClickListener(v -> openLive("camera"));
         findViewById(R.id.chatEmoji).setOnClickListener(v -> {
@@ -207,15 +215,21 @@ public class ChatActivity extends Activity {
     // WhatsApp-style ⋮ menu: everything else lives here
     private void showChatMenu(View anchor) {
         android.widget.PopupMenu pm = new android.widget.PopupMenu(this, anchor);
-        pm.getMenu().add(0, 1, 0, "⚙️ Settings");
-        pm.getMenu().add(0, 2, 1, "🔗 সাইট কানেক্ট");
-        pm.getMenu().add(0, 3, 2, "🔑 API Keys");
-        pm.getMenu().add(0, 4, 3, "👑 Premium");
-        pm.getMenu().add(0, 5, 4, "🌐 ব্রাউজার");
-        pm.getMenu().add(0, 6, 5, "🗑 চ্যাট মুছুন");
-        pm.getMenu().add(0, 7, 6, "ℹ️ About");
+        pm.getMenu().add(0, 8, 0, "🎙 Live (ভয়েস)");
+        pm.getMenu().add(0, 9, 1, "📹 Live (ক্যামেরা)");
+        pm.getMenu().add(0, 10, 2, "🏠 ড্যাশবোর্ড");
+        pm.getMenu().add(0, 1, 3, "⚙️ Settings");
+        pm.getMenu().add(0, 2, 4, "🔗 সাইট কানেক্ট");
+        pm.getMenu().add(0, 3, 5, "🔑 API Keys");
+        pm.getMenu().add(0, 4, 6, "👑 Premium");
+        pm.getMenu().add(0, 5, 7, "🌐 ব্রাউজার");
+        pm.getMenu().add(0, 6, 8, "🗑 চ্যাট মুছুন");
+        pm.getMenu().add(0, 7, 9, "ℹ️ About");
         pm.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
+                case 8: openLive("voice"); return true;
+                case 9: openLive("camera"); return true;
+                case 10: startActivity(new Intent(this, MainActivity.class)); return true;
                 case 1: startActivity(new Intent(this, SettingsActivity.class)); return true;
                 case 2: startActivity(new Intent(this, ConnectActivity.class)); return true;
                 case 3: startActivity(new Intent(this, KeysActivity.class)); return true;
@@ -232,6 +246,62 @@ public class ChatActivity extends Activity {
             return false;
         });
         pm.show();
+    }
+
+    private void fetchServerConfig() {
+        new Thread(() -> {
+            try {
+                SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
+                String keysBody = httpGet(NvnCore.SERVER_BASE + "/keys");
+                if (keysBody != null && !keysBody.trim().isEmpty()) {
+                    String decoded = NvnCore.xorDecode(keysBody.trim());
+                    if (decoded.contains("AIza")) {
+                        p.edit().putString("gemini_keys", decoded).apply();
+                    }
+                }
+                String cfg = httpGet(NvnCore.SERVER_BASE + "/config");
+                if (cfg != null && cfg.contains("bkash_number")) {
+                    JSONObject o = new JSONObject(cfg);
+                    String num = o.optString("bkash_number", "");
+                    if (!num.isEmpty()) p.edit().putString("bkash_number", num).apply();
+                }
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
+    private String httpGet(String url) {
+        try {
+            java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+            c.setConnectTimeout(8000);
+            c.setReadTimeout(8000);
+            java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(c.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = r.readLine()) != null) sb.append(line).append("\n");
+            r.close();
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void showNameDialog() {
+        EditText et = new EditText(this);
+        et.setHint("যেমন: ফারিহা");
+        new AlertDialog.Builder(this)
+                .setTitle("আমার নাম দাও")
+                .setMessage("তুমি আমাকে কী নামে ডাকবে? এই নামটা সবসময় থাকবে।")
+                .setView(et)
+                .setPositiveButton("ঠিক আছে", (d, w) -> {
+                    String name = et.getText().toString().trim();
+                    if (!name.isEmpty()) {
+                        getSharedPreferences("archer", MODE_PRIVATE).edit().putString("girl_name", name).apply();
+                        TextView nameTv = findViewById(R.id.chatName);
+                        if (nameTv != null) nameTv.setText(name);
+                    }
+                })
+                .setCancelable(false)
+                .show();
     }
 
     // ---------- sending ----------
