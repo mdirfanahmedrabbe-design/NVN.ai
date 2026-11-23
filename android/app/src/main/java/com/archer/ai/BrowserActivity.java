@@ -88,6 +88,7 @@ public class BrowserActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         bp = getSharedPreferences("nvn_browser", MODE_PRIVATE);
+        desktopMode = bp.getBoolean("desktop_default", false);
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -101,7 +102,16 @@ public class BrowserActivity extends Activity {
         top.setPadding(8, 10, 8, 10);
 
         TextView home = iconBtn("⌂");
-        home.setOnClickListener(v -> showStart(cur()));
+        home.setOnClickListener(v -> {
+            Tab t = cur();
+            if (t == null) return;
+            String hp = bp.getString("homepage", "");
+            if (hp != null && !hp.trim().isEmpty()) {
+                t.web.loadUrl(hp.trim().startsWith("http") ? hp.trim() : "https://" + hp.trim());
+            } else {
+                showStart(t);
+            }
+        });
 
         addr = new EditText(this);
         addr.setHint("Google-এ সার্চ করুন বা ঠিকানা লিখুন");
@@ -211,12 +221,11 @@ public class BrowserActivity extends Activity {
     private WebView makeWebView(Tab tab) {
         WebView web = new WebView(this);
         WebSettings s = web.getSettings();
-        s.setJavaScriptEnabled(true);
+        applyBrowserSettings(s);
         s.setDomStorageEnabled(true);
         s.setDatabaseEnabled(true);
         s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
-        s.setBuiltInZoomControls(true);
         s.setDisplayZoomControls(false);
         s.setSupportZoom(true);
         s.setMediaPlaybackRequiresUserGesture(false);
@@ -231,7 +240,7 @@ public class BrowserActivity extends Activity {
         if (android.os.Build.VERSION.SDK_INT >= 26) s.setSafeBrowsingEnabled(false);
 
         CookieManager cm = CookieManager.getInstance();
-        cm.setAcceptCookie(true);
+        cm.setAcceptCookie(bp.getBoolean("cookies_on", true));
         cm.setAcceptThirdPartyCookies(web, true);
 
         web.setWebChromeClient(new WebChromeClient() {
@@ -343,6 +352,21 @@ public class BrowserActivity extends Activity {
     private void closeTab(int idx) {
         if (idx < 0 || idx >= tabs.size()) return;
         Tab t = tabs.remove(idx);
+        // remember closed tabs (Chrome "Recent tabs")
+        try {
+            String u = t.web.getUrl();
+            if (!t.incognito && u != null && u.startsWith("http") && !u.contains("nvn.local")) {
+                String closed = bp.getString("closed_tabs", "");
+                String line = u + "\t" + (t.title == null ? "" : t.title) + "\n";
+                String merged = line + closed;
+                String[] lines = merged.split("\n");
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < Math.min(lines.length, 10); i++) {
+                    if (!lines[i].trim().isEmpty()) sb.append(lines[i]).append("\n");
+                }
+                bp.edit().putString("closed_tabs", sb.toString()).apply();
+            }
+        } catch (Exception ignored) {}
         if (t.incognito) t.web.clearCache(true);
         t.web.destroy();
         if (tabs.isEmpty()) {
@@ -399,7 +423,7 @@ public class BrowserActivity extends Activity {
         } else if (q.contains(".") && !q.contains(" ")) {
             t.web.loadUrl("https://" + q);
         } else {
-            t.web.loadUrl("https://www.google.com/search?q=" + Uri.encode(q));
+            t.web.loadUrl(searchUrl(q));
         }
         addr.clearFocus();
     }
@@ -491,6 +515,100 @@ public class BrowserActivity extends Activity {
         Toast.makeText(this, "বুকমার্ক করা হয়েছে", Toast.LENGTH_SHORT).show();
     }
 
+    // ---------- Chrome-style settings ----------
+    private void applyBrowserSettings(WebSettings s) {
+        s.setJavaScriptEnabled(bp.getBoolean("js_on", true));
+        s.setBlockNetworkImage(!bp.getBoolean("images_on", true));
+        s.setBuiltInZoomControls(bp.getBoolean("zoom_controls", true));
+        try {
+            s.setTextZoom(Integer.parseInt(bp.getString("text_zoom", "100")));
+        } catch (Exception ignored) {
+            s.setTextZoom(100);
+        }
+    }
+
+    private String searchUrl(String q) {
+        String engine = bp.getString("search_engine", "google");
+        String enc = Uri.encode(q);
+        if ("bing".equals(engine)) return "https://www.bing.com/search?q=" + enc;
+        if ("ddg".equals(engine)) return "https://duckduckgo.com/?q=" + enc;
+        return "https://www.google.com/search?q=" + enc;
+    }
+
+    private void showRecentTabs() {
+        String closed = bp.getString("closed_tabs", "");
+        if (closed == null || closed.trim().isEmpty()) {
+            Toast.makeText(this, "সাম্প্রতিক বন্ধ ট্যাব নেই", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String[] lines = closed.trim().split("\n");
+        String[] labels = new String[lines.length];
+        String[] urls = new String[lines.length];
+        for (int i = 0; i < lines.length; i++) {
+            String[] parts = lines[i].split("\t", 2);
+            urls[i] = parts[0];
+            labels[i] = parts.length > 1 && !parts[1].trim().isEmpty() ? parts[1] : hostOf(parts[0]);
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("সাম্প্রতিক ট্যাব")
+                .setItems(labels, (d, w) -> newTab(false, urls[w]))
+                .show();
+    }
+
+    private void printPage() {
+        Tab t = cur();
+        if (t == null) return;
+        try {
+            android.print.PrintManager pm = (android.print.PrintManager) getSystemService(PRINT_SERVICE);
+            String job = t.title != null && !t.title.isEmpty() ? t.title : "NVN পেজ";
+            pm.print(job, t.web.createPrintDocumentAdapter(job), null);
+        } catch (Exception e) {
+            Toast.makeText(this, "প্রিন্ট হয়নি", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void addHomeShortcut() {
+        Tab t = cur();
+        String u = t != null ? t.web.getUrl() : null;
+        if (u == null || !u.startsWith("http")) {
+            Toast.makeText(this, "আগে একটা পেজ খোলো", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (android.os.Build.VERSION.SDK_INT < 26) {
+            Toast.makeText(this, "এই ফোনে শর্টকাট হবে না", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            android.content.pm.ShortcutManager sm = getSystemService(android.content.pm.ShortcutManager.class);
+            if (sm != null && sm.isRequestPinShortcutSupported()) {
+                Intent target = new Intent(this, BrowserActivity.class);
+                target.setAction(Intent.ACTION_VIEW);
+                target.putExtra("url", u);
+                String label = t.title != null && !t.title.isEmpty() ? t.title : hostOf(u);
+                android.content.pm.ShortcutInfo info = new android.content.pm.ShortcutInfo.Builder(this, "nvn_page_" + System.currentTimeMillis())
+                        .setShortLabel(label)
+                        .setIcon(android.graphics.drawable.Icon.createWithResource(this, R.mipmap.ic_launcher))
+                        .setIntent(target)
+                        .build();
+                sm.requestPinShortcut(info, null);
+            } else {
+                Toast.makeText(this, "এই ফোনে শর্টকাট হবে না", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "শর্টকাট হয়নি", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Re-apply browser settings after returning from the settings page.
+        try {
+            CookieManager.getInstance().setAcceptCookie(bp.getBoolean("cookies_on", true));
+            for (Tab tb : tabs) applyBrowserSettings(tb.web.getSettings());
+        } catch (Exception ignored) {}
+    }
+
     private void showMenu(View anchor) {
         PopupMenu pm = new PopupMenu(this, anchor);
         pm.getMenu().add(0, 1, 0, "নতুন ট্যাব");
@@ -503,7 +621,12 @@ public class BrowserActivity extends Activity {
         pm.getMenu().add(0, 8, 7, "শেয়ার করুন");
         pm.getMenu().add(0, 9, 8, "পেজে খুঁজুন");
         pm.getMenu().add(0, 10, 9, desktopMode ? "ডেস্কটপ সাইট ✓" : "ডেস্কটপ সাইট");
-        pm.getMenu().add(0, 11, 10, "এই ট্যাব বন্ধ করুন");
+        pm.getMenu().add(0, 12, 10, "সাম্প্রতিক ট্যাব");
+        pm.getMenu().add(0, 13, 11, "অনুবাদ করুন");
+        pm.getMenu().add(0, 14, 12, "প্রিন্ট করুন");
+        pm.getMenu().add(0, 15, 13, "হোম স্ক্রিনে যোগ করুন");
+        pm.getMenu().add(0, 16, 14, "সেটিংস");
+        pm.getMenu().add(0, 11, 15, "এই ট্যাব বন্ধ করুন");
         pm.setOnMenuItemClickListener(item -> {
             Tab t = cur();
             switch (item.getItemId()) {
@@ -570,6 +693,25 @@ public class BrowserActivity extends Activity {
                     return true;
                 case 11:
                     closeTab(current);
+                    return true;
+                case 12:
+                    showRecentTabs();
+                    return true;
+                case 13: {
+                    String u = t != null ? t.web.getUrl() : null;
+                    if (u != null && u.startsWith("http")) {
+                        newTab(false, "https://translate.google.com/translate?sl=auto&tl=bn&u=" + Uri.encode(u));
+                    }
+                    return true;
+                }
+                case 14:
+                    printPage();
+                    return true;
+                case 15:
+                    addHomeShortcut();
+                    return true;
+                case 16:
+                    startActivity(new Intent(this, BrowserSettingsActivity.class));
                     return true;
             }
             return false;
