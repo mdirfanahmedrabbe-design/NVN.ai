@@ -223,7 +223,12 @@ public class BrowserActivity extends Activity {
         s.setUserAgentString(desktopMode ? UA_DESKTOP : UA_MOBILE);
         s.setAllowFileAccess(true);
         s.setAllowContentAccess(true);
-        if (tab.incognito) s.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        // speed: hardware rendering, cache on, no safe-browsing/form overhead
+        web.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        s.setCacheMode(tab.incognito ? WebSettings.LOAD_NO_CACHE : WebSettings.LOAD_DEFAULT);
+        s.setSaveFormData(false);
+        s.setGeolocationEnabled(false);
+        if (android.os.Build.VERSION.SDK_INT >= 26) s.setSafeBrowsingEnabled(false);
 
         CookieManager cm = CookieManager.getInstance();
         cm.setAcceptCookie(true);

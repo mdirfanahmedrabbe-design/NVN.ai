@@ -57,7 +57,35 @@ public class ChatActivity extends Activity {
         workShot = findViewById(R.id.workShot);
 
         loadHistory();
-        findViewById(R.id.chatSend).setOnClickListener(v -> sendMsg());
+
+        // WhatsApp-style header
+        String girl = getSharedPreferences("archer", MODE_PRIVATE).getString("girl_name", "NVN");
+        TextView nameTv = findViewById(R.id.chatName);
+        if (nameTv != null) nameTv.setText(girl);
+        findViewById(R.id.chatBack).setOnClickListener(v -> finish());
+        findViewById(R.id.chatVideo).setOnClickListener(v -> openLive("camera"));
+        findViewById(R.id.chatCall).setOnClickListener(v -> openLive("voice"));
+        findViewById(R.id.chatMenu).setOnClickListener(this::showChatMenu);
+        findViewById(R.id.chatCamera).setOnClickListener(v -> openLive("camera"));
+        findViewById(R.id.chatEmoji).setOnClickListener(v -> {
+            input.append("😊");
+            input.requestFocus();
+        });
+        findViewById(R.id.chatAttach).setOnClickListener(v -> BrowserActivity.open(this, ""));
+
+        // Mic/send button: 🎤 when empty (opens Live voice), ➤ when text present
+        TextView sendBtn = findViewById(R.id.chatSend);
+        sendBtn.setOnClickListener(v -> {
+            if (input.getText().toString().trim().isEmpty()) openLive("voice");
+            else sendMsg();
+        });
+        input.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void onTextChanged(CharSequence s, int a, int b, int c) {
+                sendBtn.setText(s.toString().trim().isEmpty() ? "🎤" : "➤");
+            }
+            @Override public void afterTextChanged(android.text.Editable s) {}
+        });
     }
 
     @Override
@@ -141,24 +169,69 @@ public class ChatActivity extends Activity {
 
     private void addBubble(boolean mine, String text) {
         TextView tv = new TextView(this);
-        tv.setText(text);
+        String time = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).format(new java.util.Date());
+        String stamp = "  " + time + (mine ? " ✓✓" : "");
+        android.text.SpannableString ss = new android.text.SpannableString(text + stamp);
+        ss.setSpan(new android.text.style.RelativeSizeSpan(0.72f), text.length(), text.length() + stamp.length(), 0);
+        ss.setSpan(new android.text.style.ForegroundColorSpan(mine ? 0xFF9FD8C9 : 0xFF8696A0),
+                text.length(), text.length() + stamp.length(), 0);
+        tv.setText(ss);
         tv.setTextSize(15);
         float d = getResources().getDisplayMetrics().density;
         tv.setPadding((int) (12 * d), (int) (9 * d), (int) (12 * d), (int) (9 * d));
         if (mine) {
-            tv.setBackgroundResource(R.drawable.btn_primary);
+            tv.setBackgroundResource(R.drawable.bubble_mine);
             tv.setTextColor(0xFFFFFFFF);
         } else {
-            tv.setBackgroundResource(R.drawable.bg_card);
+            tv.setBackgroundResource(R.drawable.bubble_her);
             tv.setTextColor(0xFFF3E9C8);
         }
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         lp.gravity = mine ? Gravity.END : Gravity.START;
         lp.bottomMargin = (int) (8 * d);
+        int maxW = (int) (getResources().getDisplayMetrics().widthPixels * 0.78);
+        tv.setMaxWidth(maxW);
         tv.setLayoutParams(lp);
         msgBox.addView(tv);
         scroll.post(() -> scroll.fullScroll(View.FOCUS_DOWN));
+    }
+
+    private void openLive(String mode) {
+        Intent i = new Intent(this, LiveActivity.class);
+        i.putExtra("mode", mode);
+        i.putExtra("autostart", true);
+        startActivity(i);
+    }
+
+    // WhatsApp-style ⋮ menu: everything else lives here
+    private void showChatMenu(View anchor) {
+        android.widget.PopupMenu pm = new android.widget.PopupMenu(this, anchor);
+        pm.getMenu().add(0, 1, 0, "⚙️ Settings");
+        pm.getMenu().add(0, 2, 1, "🔗 সাইট কানেক্ট");
+        pm.getMenu().add(0, 3, 2, "🔑 API Keys");
+        pm.getMenu().add(0, 4, 3, "👑 Premium");
+        pm.getMenu().add(0, 5, 4, "🌐 ব্রাউজার");
+        pm.getMenu().add(0, 6, 5, "🗑 চ্যাট মুছুন");
+        pm.getMenu().add(0, 7, 6, "ℹ️ About");
+        pm.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case 1: startActivity(new Intent(this, SettingsActivity.class)); return true;
+                case 2: startActivity(new Intent(this, ConnectActivity.class)); return true;
+                case 3: startActivity(new Intent(this, KeysActivity.class)); return true;
+                case 4: startActivity(new Intent(this, PremiumActivity.class)); return true;
+                case 5: BrowserActivity.open(this, ""); return true;
+                case 6:
+                    getSharedPreferences("archer", MODE_PRIVATE).edit()
+                            .remove("chat_msgs").remove("chat_history").apply();
+                    msgBox.removeAllViews();
+                    loadHistory();
+                    return true;
+                case 7: startActivity(new Intent(this, AboutActivity.class)); return true;
+            }
+            return false;
+        });
+        pm.show();
     }
 
     // ---------- sending ----------
