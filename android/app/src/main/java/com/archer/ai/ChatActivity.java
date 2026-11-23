@@ -70,7 +70,16 @@ public class ChatActivity extends Activity {
 
         // WhatsApp-style header: ball (orb) on top only, ⋮ menu
         findViewById(R.id.chatBack).setOnClickListener(v -> finish());
-        findViewById(R.id.chatMenu).setOnClickListener(this::showChatMenu);
+        findViewById(R.id.chatMenu).setOnClickListener(v -> togglePanel());
+        findViewById(R.id.panelDim).setOnClickListener(v -> togglePanel());
+        buildPanel();
+        String prefill = getIntent() != null ? getIntent().getStringExtra("prefill") : null;
+        if (prefill != null && !prefill.trim().isEmpty()) {
+            input.postDelayed(() -> {
+                input.setText(prefill);
+                sendMsg();
+            }, 400);
+        }
         findViewById(R.id.chatCamera).setOnClickListener(v -> openLive("camera"));
         findViewById(R.id.chatEmoji).setOnClickListener(v -> {
             input.append("😊");
@@ -282,6 +291,99 @@ public class ChatActivity extends Activity {
         }
     }
 
+    // ---------- side menu panel (like Muse WhatsApp ☰) ----------
+    private void togglePanel() {
+        View panel = findViewById(R.id.sidePanel);
+        View dim = findViewById(R.id.panelDim);
+        boolean show = panel.getVisibility() != View.VISIBLE;
+        panel.setVisibility(show ? View.VISIBLE : View.GONE);
+        dim.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
+    private void buildPanel() {
+        LinearLayout box = findViewById(R.id.panelItems);
+        float d = getResources().getDisplayMetrics().density;
+
+        TextView title = new TextView(this);
+        title.setText("Menu");
+        title.setTextColor(0xFFE7C873);
+        title.setTextSize(20);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        box.addView(title);
+
+        panelRow(box, d, "💡 Ideas", v -> { togglePanel(); startActivity(new Intent(this, IdeasActivity.class)); });
+        panelRow(box, d, "🗂 Library", v -> { togglePanel(); startActivity(new Intent(this, LibraryActivity.class)); });
+        panelRow(box, d, "🔗 Connectors", v -> { togglePanel(); startActivity(new Intent(this, ConnectActivity.class)); });
+
+        View div = new View(this);
+        LinearLayout.LayoutParams divLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, (int) (1 * d));
+        divLp.topMargin = (int) (8 * d);
+        divLp.bottomMargin = (int) (8 * d);
+        div.setLayoutParams(divLp);
+        div.setBackgroundColor(0xFF2A4A3A);
+        box.addView(div);
+
+        panelRow(box, d, "🎙 Live (ভয়েস)", v -> { togglePanel(); openLive("voice"); });
+        panelRow(box, d, "📹 Live (ক্যামেরা)", v -> { togglePanel(); openLive("camera"); });
+        panelRow(box, d, "🏠 ড্যাশবোর্ড", v -> { togglePanel(); startActivity(new Intent(this, MainActivity.class)); });
+        panelRow(box, d, "⚙️ Settings", v -> { togglePanel(); startActivity(new Intent(this, SettingsActivity.class)); });
+        panelRow(box, d, "🔑 API Keys", v -> { togglePanel(); startActivity(new Intent(this, KeysActivity.class)); });
+        panelRow(box, d, "👑 Premium", v -> { togglePanel(); startActivity(new Intent(this, PremiumActivity.class)); });
+        panelRow(box, d, "🌐 ব্রাউজার", v -> { togglePanel(); BrowserActivity.open(this, ""); });
+        panelRow(box, d, "🗑 চ্যাট মুছুন", v -> {
+            togglePanel();
+            getSharedPreferences("archer", MODE_PRIVATE).edit()
+                    .remove("chat_msgs").remove("chat_history").apply();
+            msgBox.removeAllViews();
+            loadHistory();
+        });
+        panelRow(box, d, "ℹ️ About", v -> { togglePanel(); startActivity(new Intent(this, AboutActivity.class)); });
+
+        // Profile row at the bottom (orb + name)
+        LinearLayout prof = new LinearLayout(this);
+        prof.setOrientation(LinearLayout.HORIZONTAL);
+        prof.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams profLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        profLp.topMargin = (int) (16 * d);
+        prof.setLayoutParams(profLp);
+        OrbView smallOrb = new OrbView(this);
+        smallOrb.setLayoutParams(new LinearLayout.LayoutParams((int) (42 * d), (int) (42 * d)));
+        prof.addView(smallOrb);
+        String girl = getSharedPreferences("archer", MODE_PRIVATE).getString("girl_name", "NVN");
+        TextView profName = new TextView(this);
+        profName.setText("  " + girl + "\n  NVN AI");
+        profName.setTextColor(0xFFF3E9C8);
+        profName.setTextSize(14);
+        prof.addView(profName);
+        prof.setOnClickListener(v -> { togglePanel(); startActivity(new Intent(this, ProfileActivity.class)); });
+        box.addView(prof);
+    }
+
+    private void panelRow(LinearLayout box, float d, String text, View.OnClickListener click) {
+        TextView row = new TextView(this);
+        row.setText(text);
+        row.setTextColor(0xFFF3E9C8);
+        row.setTextSize(15);
+        row.setPadding((int) (6 * d), (int) (12 * d), (int) (6 * d), (int) (12 * d));
+        row.setOnClickListener(click);
+        box.addView(row);
+    }
+
+    private void saveToLibrary(String name, byte[] bytes) {
+        try {
+            java.io.File dir = getExternalFilesDir("library");
+            if (dir == null) return;
+            if (!dir.exists()) dir.mkdirs();
+            String safe = name.replaceAll("[^A-Za-z0-9._-]", "_");
+            java.io.File out = new java.io.File(dir, safe);
+            java.io.FileOutputStream fos = new java.io.FileOutputStream(out);
+            fos.write(bytes);
+            fos.close();
+        } catch (Exception ignored) {}
+    }
+
     // ---------- attach: photo / video / file (WhatsApp-style) ----------
     private static final int REQ_IMAGE = 7001;
     private static final int REQ_VIDEO = 7002;
@@ -327,6 +429,7 @@ public class ChatActivity extends Activity {
                 saveMsg("user", "[ছবি পাঠানো হয়েছে]" + (caption.isEmpty() ? "" : " " + caption));
                 java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
                 bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, bos);
+                saveToLibrary("photo_" + System.currentTimeMillis() + ".jpg", bos.toByteArray());
                 String b64 = android.util.Base64.encodeToString(bos.toByteArray(), android.util.Base64.NO_WRAP);
                 String prompt = caption.isEmpty()
                         ? "এই ছবিটা দেখে বাংলায় বলো ছবিতে কী আছে।"
@@ -336,6 +439,7 @@ public class ChatActivity extends Activity {
                 saveMsg("model", reply);
             } else if (mime.startsWith("video/") || mime.equals("application/pdf")) {
                 byte[] bytes = readUriBytes(uri, 15 * 1024 * 1024);
+                if (bytes != null) saveToLibrary(name, bytes);
                 runOnUiThread(() -> addBubble(true, (mime.startsWith("video/") ? "🎬 " : "📄 ") + name));
                 if (bytes == null) {
                     postBubble(false, "মাস্টার, এটা অনেক বড় (15MB-এর বেশি) — ছোটটা দাও, দেখে বলছি।");
@@ -351,6 +455,7 @@ public class ChatActivity extends Activity {
                 saveMsg("model", reply);
             } else if (mime.startsWith("text/")) {
                 byte[] bytes = readUriBytes(uri, 200 * 1024);
+                if (bytes != null) saveToLibrary(name, bytes);
                 runOnUiThread(() -> addBubble(true, "📄 " + name));
                 if (bytes == null) { postBubble(false, "মাস্টার, ফাইলটা বড় — ছোটটা দাও।"); return; }
                 String text = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
