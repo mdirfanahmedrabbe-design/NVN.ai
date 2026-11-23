@@ -69,8 +69,7 @@ public class ChatActivity extends Activity {
         fetchServerConfig();
         if (getSharedPreferences("archer", MODE_PRIVATE).getString("girl_name", "").isEmpty()) showNameDialog();
 
-        // WhatsApp-style header: ball (orb) on top only, ⋮ menu
-        findViewById(R.id.chatBack).setOnClickListener(v -> finish());
+        // WhatsApp-style header: ☰ menu only
         findViewById(R.id.chatMenu).setOnClickListener(v -> togglePanel());
         findViewById(R.id.panelDim).setOnClickListener(v -> togglePanel());
         buildPanel();
@@ -88,16 +87,13 @@ public class ChatActivity extends Activity {
         });
         findViewById(R.id.chatAttach).setOnClickListener(this::showAttachMenu);
 
-        // Mic/send button: 🎤 when empty (opens Live voice), ➤ when text present
+        // Send button: ➤ only, shown when text is present (no mic button)
         TextView sendBtn = findViewById(R.id.chatSend);
-        sendBtn.setOnClickListener(v -> {
-            if (input.getText().toString().trim().isEmpty()) openLive("voice");
-            else sendMsg();
-        });
+        sendBtn.setOnClickListener(v -> sendMsg());
         input.addTextChangedListener(new android.text.TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) {
-                sendBtn.setText(s.toString().trim().isEmpty() ? "🎤" : "➤");
+                sendBtn.setVisibility(s.toString().trim().isEmpty() ? View.GONE : View.VISIBLE);
             }
             @Override public void afterTextChanged(android.text.Editable s) {}
         });
@@ -170,11 +166,7 @@ public class ChatActivity extends Activity {
 
     private void loadHistory() {
         JSONArray a = msgs();
-        if (a.length() == 0) {
-            String girl = getSharedPreferences("archer", MODE_PRIVATE).getString("girl_name", "NVN");
-            addBubble(false, "আসসালামু আলাইকুম মাস্টার! 💜 আমি " + girl + "। এখানে লিখে যা বলবেন, আমি তাই করবো — অ্যাপ খোলা, ফোন, মেসেজ, সাইট কানেক্ট করা, পোস্ট করা — সবকিছু।");
-            return;
-        }
+        if (a.length() == 0) return;
         for (int i = 0; i < a.length(); i++) {
             JSONObject m = a.optJSONObject(i);
             if (m == null) continue;
@@ -223,8 +215,6 @@ public class ChatActivity extends Activity {
     private void showChatMenu(View anchor) {
         android.widget.PopupMenu pm = new android.widget.PopupMenu(this, anchor);
         pm.getMenu().add(0, 8, 0, "🎙 Live (ভয়েস)");
-        pm.getMenu().add(0, 9, 1, "📹 Live (ক্যামেরা)");
-        pm.getMenu().add(0, 10, 2, "🏠 ড্যাশবোর্ড");
         pm.getMenu().add(0, 1, 3, "⚙️ Settings");
         pm.getMenu().add(0, 2, 4, "🔗 সাইট কানেক্ট");
         pm.getMenu().add(0, 3, 5, "🔑 API Keys");
@@ -235,8 +225,6 @@ public class ChatActivity extends Activity {
         pm.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case 8: openLive("voice"); return true;
-                case 9: openLive("camera"); return true;
-                case 10: startActivity(new Intent(this, MainActivity.class)); return true;
                 case 1: startActivity(new Intent(this, SettingsActivity.class)); return true;
                 case 2: startActivity(new Intent(this, ConnectActivity.class)); return true;
                 case 3: startActivity(new Intent(this, KeysActivity.class)); return true;
@@ -326,8 +314,7 @@ public class ChatActivity extends Activity {
         box.addView(div);
 
         panelRow(box, d, "🎙 Live (ভয়েস)", v -> { togglePanel(); openLive("voice"); });
-        panelRow(box, d, "📹 Live (ক্যামেরা)", v -> { togglePanel(); openLive("camera"); });
-        panelRow(box, d, "🏠 ড্যাশবোর্ড", v -> { togglePanel(); startActivity(new Intent(this, MainActivity.class)); });
+
         panelRow(box, d, "⚙️ Settings", v -> { togglePanel(); startActivity(new Intent(this, SettingsActivity.class)); });
         panelRow(box, d, "🔑 API Keys", v -> { togglePanel(); startActivity(new Intent(this, KeysActivity.class)); });
         panelRow(box, d, "👑 Premium", v -> { togglePanel(); startActivity(new Intent(this, PremiumActivity.class)); });

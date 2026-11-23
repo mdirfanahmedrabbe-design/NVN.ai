@@ -90,15 +90,6 @@ public class ConnectActivity extends Activity {
         });
 
         buildList();
-
-        findViewById(R.id.connRunNow).setOnClickListener(v -> {
-            ConnectWorker.runInBackground(getApplicationContext(), true);
-            Toast.makeText(this, "কাজ শুরু হয়েছে — শেষ হলে জানাবো", Toast.LENGTH_LONG).show();
-        });
-        findViewById(R.id.connApprovals).setOnClickListener(v ->
-                startActivity(new Intent(this, ApprovalActivity.class)));
-        findViewById(R.id.connHistory).setOnClickListener(v ->
-                startActivity(new Intent(this, HistoryActivity.class)));
     }
 
     @Override
@@ -197,9 +188,6 @@ public class ConnectActivity extends Activity {
             list.addView(row);
         }
 
-        int q = ConnectWorker.getQueue(this).length();
-        Button appr = findViewById(R.id.connApprovals);
-        appr.setText("📋 অনুমোদনের অপেক্ষায়" + (q > 0 ? " (" + q + ")" : ""));
     }
 
     private LinearLayout makeCard(String[] entry, float d, boolean left) {
