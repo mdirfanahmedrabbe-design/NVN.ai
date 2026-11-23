@@ -68,6 +68,39 @@ public class ServiceActivity extends Activity {
 
         info.setText(infoFor(svc));
 
+        // One-tap connect (browser mode): no token needed — she works through
+        // the in-app browser where the user is already logged in.
+        try {
+            android.widget.ScrollView scroll = (android.widget.ScrollView)
+                    ((android.view.ViewGroup) findViewById(android.R.id.content)).getChildAt(0);
+            android.widget.LinearLayout root = (android.widget.LinearLayout) scroll.getChildAt(0);
+            android.widget.Button oneTap = new android.widget.Button(this);
+            boolean alreadyBrowser = prefs.getBoolean("conn_" + svc + "_browser", false);
+            oneTap.setText(alreadyBrowser
+                    ? "✅ ব্রাউজার মোডে যুক্ত আছে — টোকেন লাগবে না"
+                    : "🌐 এক চাপে যুক্ত করুন (ব্রাউজার মোড — টোকেন লাগবে না)");
+            oneTap.setTextColor(0xFFFFFFFF);
+            oneTap.setTextSize(15);
+            oneTap.setBackgroundResource(R.drawable.btn_primary);
+            float d = getResources().getDisplayMetrics().density;
+            android.widget.LinearLayout.LayoutParams otpLp = new android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+            otpLp.topMargin = (int) (12 * d);
+            oneTap.setLayoutParams(otpLp);
+            oneTap.setOnClickListener(v -> {
+                prefs.edit()
+                        .putBoolean("conn_" + svc + "_browser", true)
+                        .putBoolean("conn_" + svc + "_enabled", true)
+                        .apply();
+                NvnCore.markConnected(this, svc, null);
+                ConnectWorker.scheduleAll(getApplicationContext());
+                Toast.makeText(this, "যুক্ত হয়েছে — ব্রাউজার মোডে কাজ করবে", Toast.LENGTH_LONG).show();
+                finish();
+            });
+            root.addView(oneTap, 1);
+        } catch (Exception ignored) {}
+
         String tokenUrl = tokenUrlFor(svc);
         android.view.View tokenBtn = findViewById(R.id.svcTokenBtn);
         if ("facebook".equals(svc)) {
