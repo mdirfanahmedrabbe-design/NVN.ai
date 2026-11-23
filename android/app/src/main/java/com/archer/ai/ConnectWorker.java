@@ -30,8 +30,10 @@ import java.util.Locale;
 
 public class ConnectWorker {
 
-    public static final String[] SVC_IDS = {"facebook", "instagram", "threads", "youtube", "telegram", "blogger", "wordpress", "tiktok", "x", "pinterest", "whatsapp", "gmail", "website", "custom"};
-    public static final String[] SVC_NAMES = {"📘 Facebook Page", "📸 Instagram", "🧵 Threads", "▶️ YouTube", "✈️ Telegram", "📝 Blogger", "📰 WordPress", "🎵 TikTok", "🐦 X (Twitter)", "📌 Pinterest", "💬 WhatsApp", "📧 Gmail", "🌐 ওয়েবসাইট", "🔗 কাস্টম সাইট"};
+    public static final String[] SVC_IDS = {"facebook", "instagram", "threads", "youtube", "telegram", "blogger", "wordpress", "tiktok", "x", "pinterest", "whatsapp", "gmail", "website", "custom",
+            "linkedin", "snapchat", "reddit", "discord", "medium", "substack", "shopify", "slack", "spotify", "github", "googledrive", "notion", "canva", "quora", "twitch", "viber", "imo", "likee", "tumblr", "mastodon"};
+    public static final String[] SVC_NAMES = {"📘 Facebook Page", "📸 Instagram", "🧵 Threads", "▶️ YouTube", "✈️ Telegram", "📝 Blogger", "📰 WordPress", "🎵 TikTok", "🐦 X (Twitter)", "📌 Pinterest", "💬 WhatsApp", "📧 Gmail", "🌐 ওয়েবসাইট", "🔗 কাস্টম সাইট",
+            "💼 LinkedIn", "👻 Snapchat", "🤖 Reddit", "🎮 Discord", "✍️ Medium", "📬 Substack", "🛍️ Shopify", "💬 Slack", "🎧 Spotify", "🐙 GitHub", "📁 Google Drive", "📓 Notion", "🎨 Canva", "❓ Quora", "🟣 Twitch", "📞 Viber", "📱 IMO", "🎶 Likee", "📓 Tumblr", "🐘 Mastodon"};
 
     public static String svcName(String svc) {
         for (int i = 0; i < SVC_IDS.length; i++) if (SVC_IDS[i].equals(svc)) return SVC_NAMES[i];
@@ -67,6 +69,26 @@ public class ConnectWorker {
             case "pinterest": return "https://www.pinterest.com";
             case "whatsapp": return "https://web.whatsapp.com";
             case "gmail": return "https://mail.google.com";
+            case "linkedin": return "https://www.linkedin.com";
+            case "snapchat": return "https://www.snapchat.com";
+            case "reddit": return "https://www.reddit.com";
+            case "discord": return "https://discord.com/app";
+            case "medium": return "https://medium.com";
+            case "substack": return "https://substack.com";
+            case "shopify": return "https://admin.shopify.com";
+            case "slack": return "https://app.slack.com";
+            case "spotify": return "https://open.spotify.com";
+            case "github": return "https://github.com";
+            case "googledrive": return "https://drive.google.com";
+            case "notion": return "https://www.notion.so";
+            case "canva": return "https://www.canva.com";
+            case "quora": return "https://www.quora.com";
+            case "twitch": return "https://www.twitch.tv";
+            case "viber": return "https://www.viber.com";
+            case "imo": return "https://imo.im";
+            case "likee": return "https://likee.video";
+            case "tumblr": return "https://www.tumblr.com";
+            case "mastodon": return "https://mastodon.social";
             default: return "";
         }
     }

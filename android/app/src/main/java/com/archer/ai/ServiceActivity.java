@@ -56,7 +56,15 @@ public class ServiceActivity extends Activity {
 
         boolean isCustom = "custom".equals(svc);
         findViewById(R.id.svcCustomNameWrap).setVisibility(isCustom ? View.VISIBLE : View.GONE);
-        if (isCustom) customName.setText(prefs.getString("conn_custom_name", ""));
+        if (isCustom) {
+            String savedName = prefs.getString("conn_custom_name", "");
+            String prefill = getIntent().getStringExtra("prefill_name");
+            customName.setText(!savedName.isEmpty() ? savedName : (prefill == null ? "" : prefill));
+            if (!savedName.isEmpty() && prefill != null && !prefill.trim().isEmpty()
+                    && !savedName.equalsIgnoreCase(prefill.trim())) {
+                customName.setText(prefill.trim());
+            }
+        }
 
         info.setText(infoFor(svc));
 

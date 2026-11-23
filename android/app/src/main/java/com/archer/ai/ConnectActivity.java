@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
@@ -39,6 +40,26 @@ public class ConnectActivity extends Activity {
             {"gmail", "📧 Gmail", "gmail email জিমেইল ইমেইল mail", "email", "#EA4335"},
             {"website", "🌐 ওয়েবসাইট", "website ওয়েবসাইট site সাইট web", "website", "#2EE59D"},
             {"custom", "🔗 কাস্টম সাইট", "custom কাস্টম other অন্য", "website", "#D4AF37"},
+            {"linkedin", "💼 LinkedIn", "linkedin লিংকডইন job চাকরি", "social", "#0A66C2"},
+            {"snapchat", "👻 Snapchat", "snapchat স্ন্যাপচ্যাট snap", "social", "#E6C200"},
+            {"reddit", "🤖 Reddit", "reddit রেডিট", "social", "#FF4500"},
+            {"discord", "🎮 Discord", "discord ডিসকর্ড", "messaging", "#5865F2"},
+            {"medium", "✍️ Medium", "medium মিডিয়াম লেখা", "blogging", "#555555"},
+            {"substack", "📬 Substack", "substack সাবস্ট্যাক newsletter", "blogging", "#FF6719"},
+            {"shopify", "🛍️ Shopify", "shopify শপিফাই shop দোকান store", "website", "#96BF48"},
+            {"slack", "💬 Slack", "slack স্ল্যাক", "messaging", "#611F69"},
+            {"spotify", "🎧 Spotify", "spotify স্পটিফাই music গান", "social", "#1DB954"},
+            {"github", "🐙 GitHub", "github গিটহাব code কোড", "website", "#555555"},
+            {"googledrive", "📁 Google Drive", "drive google drive ড্রাইভ ফাইল", "website", "#4285F4"},
+            {"notion", "📓 Notion", "notion নোশন note নোট", "website", "#555555"},
+            {"canva", "🎨 Canva", "canva ক্যানভা design ডিজাইন", "website", "#00C4CC"},
+            {"quora", "❓ Quora", "quora কোরা প্রশ্ন", "social", "#B92B27"},
+            {"twitch", "🟣 Twitch", "twitch টুইচ live stream", "social", "#9146FF"},
+            {"viber", "📞 Viber", "viber ভাইবার", "messaging", "#7360F2"},
+            {"imo", "📱 IMO", "imo ইমো", "messaging", "#00A0E9"},
+            {"likee", "🎶 Likee", "likee লাইকি video ভিডিও", "social", "#FF0050"},
+            {"tumblr", "📓 Tumblr", "tumblr টাম্বলার blog ব্লগ", "blogging", "#35465C"},
+            {"mastodon", "🐘 Mastodon", "mastodon মাস্টোডন", "social", "#6364FF"},
     };
 
     private static final String[][] CATEGORIES = {
@@ -137,6 +158,23 @@ public class ConnectActivity extends Activity {
                 continue;
             }
             shown.add(entry);
+        }
+
+        // Any searched site/app should come up: if the query matches no catalog
+        // entry exactly, add a "new site" card that opens the custom connect page.
+        if (!query.isEmpty()) {
+            boolean exact = false;
+            for (String[] entry : CATALOG) {
+                if (entry[0].equals(query)
+                        || entry[1].toLowerCase(Locale.ROOT).endsWith(query)) {
+                    exact = true;
+                    break;
+                }
+            }
+            if (!exact) {
+                String title = query.substring(0, 1).toUpperCase(Locale.ROOT) + query.substring(1);
+                shown.add(new String[]{"custom", "🔗 " + title, "", "all", "#D4AF37", title});
+            }
         }
 
         // ---- 2-column grid of cards ----
@@ -254,6 +292,7 @@ public class ConnectActivity extends Activity {
         View.OnClickListener open = v -> {
             Intent i = new Intent(this, ServiceActivity.class);
             i.putExtra("svc", svc);
+            if (entry.length > 5) i.putExtra("prefill_name", entry[5]);
             startActivity(i);
         };
         btn.setOnClickListener(open);
