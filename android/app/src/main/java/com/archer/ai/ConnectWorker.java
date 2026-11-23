@@ -194,11 +194,22 @@ public class ConnectWorker {
         } catch (Exception ignored) {}
     }
 
+    static void saveError(Context ctx, String svc, String reason) {
+        try {
+            prefs(ctx).edit().putString("conn_" + svc + "_last_error", reason).apply();
+        } catch (Exception ignored) {}
+    }
+
+    public static String lastError(Context ctx, String svc) {
+        return prefs(ctx).getString("conn_" + svc + "_last_error", "");
+    }
+
     public static boolean browserPost(Context ctx, String svc, String text) {
         String name = svcName(svc);
         try {
             ArcherAccessibilityService a11y = ArcherAccessibilityService.instance;
             if (a11y == null) {
+                saveError(ctx, svc, "Accessibility বন্ধ আছে — Settings → Accessibility → NVN AI Voice Control চালু করো");
                 logHistory(ctx, name + " — ব্রাউজার মোড: Accessibility বন্ধ আছে, তাই কাজ হয়নি");
                 notifyUser(ctx, "NVN ব্রাউজার মোড", name + "-এ কাজ করতে Accessibility চালু লাগবে (Settings → Accessibility → NVN AI Voice Control)", false);
                 return false;
@@ -257,6 +268,7 @@ public class ConnectWorker {
                 typed = a11y.typeText(text);
             }
             if (!typed) {
+                saveError(ctx, svc, "লেখার জায়গা পাওয়া যায়নি — ফোন আনলক আছে কিনা আর অ্যাপের ব্রাউজারে সাইটে লগইন আছে কিনা দেখো");
                 workStatus(ctx, "❌ লেখার জায়গা পাওয়া যায়নি — ফোন আনলক + অ্যাপের ব্রাউজারে লগইন আছে কিনা দেখো");
                 workShot(ctx, a11y);
                 logHistory(ctx, name + " — ব্রাউজার মোড: লেখার জায়গা পাওয়া যায়নি (ফোন লক থাকলে বা লগইন না থাকলে এমন হয়)");
@@ -271,6 +283,7 @@ public class ConnectWorker {
                     a11y.tapText(btn);
                     ArcherAccessibilityService.sleep(3000);
                     workStatus(ctx, "✅ পোস্ট হয়ে গেছে — " + name);
+                    saveError(ctx, svc, "");
                     saveLastLink(ctx, svc, "");
                     workShot(ctx, a11y);
                     logHistory(ctx, name + " — ব্রাউজার মোডে পোস্ট পাঠানো হয়েছে");
@@ -280,6 +293,7 @@ public class ConnectWorker {
                 }
             }
             // Typed but no Post button found — leave it typed for the owner to press Post.
+            saveError(ctx, svc, "লেখা বসানো হয়েছে কিন্তু Post বাটন পাওয়া যায়নি — ব্রাউজারে গিয়ে Post বাটনে নিজে টিপ দাও");
             workStatus(ctx, "✍️ লেখা বসানো হয়েছে — Post বাটনে নিজে টিপ দাও");
             workShot(ctx, a11y);
             logHistory(ctx, name + " — ব্রাউজার মোড: লেখা বসানো হয়েছে, Post বাটন পাওয়া যায়নি — নিজে টিপ দাও");

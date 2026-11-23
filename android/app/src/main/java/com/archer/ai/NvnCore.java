@@ -442,7 +442,10 @@ public class NvnCore {
                     item.put("kind", "post");
                     item.put("text", text);
                     boolean ok = ConnectWorker.sendQueuedItem(ctx.getApplicationContext(), item);
-                    if (!ok) return "post failed on " + svcId;
+                    if (!ok) {
+                        String err = ConnectWorker.lastError(ctx, svcId);
+                        return "post failed on " + svcId + (err.isEmpty() ? "" : ". Reason: " + err);
+                    }
                     String link = ConnectWorker.lastLink(ctx, svcId);
                     return "posted successfully to " + svcId + (link.isEmpty() ? "" : ". Link: " + link);
                 } catch (Exception e) {

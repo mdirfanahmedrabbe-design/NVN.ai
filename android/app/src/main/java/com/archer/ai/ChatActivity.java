@@ -648,6 +648,8 @@ public class ChatActivity extends Activity {
                 + "HONESTY RULE (most important): only say work is done when a function result confirms success. "
                 + "If a function fails, or no function ran, say honestly in Bengali that it did NOT happen and why. "
                 + "Never claim a post, message or any action succeeded unless the function returned success. "
+                + "If the owner says 'হয়েছে' or asks 'হয়েছে?', do NOT agree that it succeeded — check with post_link or connect_status and answer only from that. "
+                + "If post_now returns a failure reason, tell him that exact reason in Bengali. "
                 + "When he says post this / পোস্ট করো and gives text, call post_now with the exact text and the site; "
                 + "report exactly what post_now returns, and always give him the link when post_now returns one. "
                 + "When he asks for a post's link / লিংক দেও, call post_link and give him that link. "
