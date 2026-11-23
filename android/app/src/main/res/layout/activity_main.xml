@@ -131,10 +131,11 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/dashUpdated"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="monospace"
-                    android:text="TODAY"
+                    android:text="UPDATED • TODAY"
                     android:textColor="#A7E8C8"
                     android:textSize="9sp" />
             </LinearLayout>
