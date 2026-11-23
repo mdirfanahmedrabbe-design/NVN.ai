@@ -255,7 +255,8 @@ public class NvnCore {
         fns.put(fnDef("open_browser", "Open NVN built-in browser so the user can log in to a website inside the app, or to show a website", "url", "Website URL to open, e.g. https://www.facebook.com (can be empty)"));
         fns.put(fnDefNoArg("connect_status", "Report which sites are connected, which have daily work on, and what rules are saved"));
         fns.put(fnDefNoArg("run_connect_work", "Run the connected-sites work right now (check comments, reply, post)"));
-        fns.put(fnDef2("post_now", "Post a text RIGHT NOW to one connected site (token API or browser mode). Use when the owner says post this / পোস্ট করো and gives the text. Returns whether the post really succeeded.", "service", "Site name: facebook, instagram, threads, youtube, telegram, blogger, wordpress, tiktok, x, pinterest, whatsapp, gmail, website, custom, or any connected site id", "text", "The exact post text in the owner's words"));
+        fns.put(fnDef2("post_now", "Post a text RIGHT NOW to one connected site (token API or browser mode). Use when the owner says post this / পোস্ট করো and gives the text. Returns whether the post really succeeded, with the post link when available.", "service", "Site name: facebook, instagram, threads, youtube, telegram, blogger, wordpress, tiktok, x, pinterest, whatsapp, gmail, website, custom, or any connected site id", "text", "The exact post text in the owner's words"));
+        fns.put(fnDef("post_link", "Get the link of the last post made on a connected site. Use when the owner asks for the link / লিংক দেও.", "service", "Site name"));
         fns.put(fnDef("connect_site", "Connect a site: opens the secure connect box in this chat (login/token/password) so the owner can connect it without leaving the chat", "service", "Site name"));
         return fns;
     }
@@ -441,10 +442,18 @@ public class NvnCore {
                     item.put("kind", "post");
                     item.put("text", text);
                     boolean ok = ConnectWorker.sendQueuedItem(ctx.getApplicationContext(), item);
-                    return ok ? "posted successfully to " + svcId : "post failed on " + svcId;
+                    if (!ok) return "post failed on " + svcId;
+                    String link = ConnectWorker.lastLink(ctx, svcId);
+                    return "posted successfully to " + svcId + (link.isEmpty() ? "" : ". Link: " + link);
                 } catch (Exception e) {
                     return "post failed on " + svcId;
                 }
+            }
+            case "post_link": {
+                String svcId = normalizeService(args.optString("service", ""));
+                if (svcId == null) svcId = args.optString("service", "").trim().toLowerCase(java.util.Locale.ROOT);
+                String link = ConnectWorker.lastLink(ctx, svcId);
+                return link.isEmpty() ? "no post link saved yet for " + svcId : "Last post link for " + svcId + ": " + link;
             }
             case "connect_site": {
                 String svcId = normalizeService(args.optString("service", ""));

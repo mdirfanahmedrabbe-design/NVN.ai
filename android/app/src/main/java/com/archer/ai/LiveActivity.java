@@ -298,7 +298,8 @@ public class LiveActivity extends Activity {
                 fns.put(fnDef2("toggle_service", "Turn daily work on or off for a connected site", "service", "Site name", "state", "One of: on, off"));
                 fns.put(fnDefNoArg("connect_status", "Report which sites are connected, which have daily work on, and what rules are saved"));
                 fns.put(fnDefNoArg("run_connect_work", "Run the connected-sites work right now (check comments, reply, post)"));
-                fns.put(fnDef2("post_now", "Post a text RIGHT NOW to one connected site (token API or browser mode). Use when the owner says post this / পোস্ট করো and gives the text. Returns whether the post really succeeded.", "service", "Site name", "text", "The exact post text in the owner's words"));
+                fns.put(fnDef2("post_now", "Post a text RIGHT NOW to one connected site (token API or browser mode). Use when the owner says post this / পোস্ট করো and gives the text. Returns whether the post really succeeded, with the post link when available.", "service", "Site name", "text", "The exact post text in the owner's words"));
+                fns.put(fnDef("post_link", "Get the link of the last post made on a connected site. Use when the owner asks for the link / লিংক দেও.", "service", "Site name"));
                 fns.put(fnDef2("set_browser_mode", "Turn Browser Mode on or off for a site. Browser Mode works without any token: NVN opens the site in the owner's Chrome browser (already logged in) and posts by tapping and typing, the way the owner works by hand.", "service", "Site name", "state", "One of: on, off"));
                 fns.put(fnDef2("set_reminder", "Set a reminder that will notify the user later, even if the app is closed. Use when he says remind me / মনে করিয়ে দাও.", "text", "What to remind him about, in his own words", "minutes", "After how many minutes, digits only, e.g. 30"));
                 JSONArray tools = new JSONArray().put(new JSONObject().put("functionDeclarations", fns));
@@ -652,7 +653,8 @@ public class LiveActivity extends Activity {
                 return sb.toString();
             }
             case "post_now":
-                return NvnCore.execute(this, "post_now", args);
+            case "post_link":
+                return NvnCore.execute(this, name, args);
             case "run_connect_work": {
                 ConnectWorker.runInBackground(getApplicationContext(), true);
                 return "connect work started";

@@ -271,6 +271,7 @@ public class ConnectWorker {
                     a11y.tapText(btn);
                     ArcherAccessibilityService.sleep(3000);
                     workStatus(ctx, "✅ পোস্ট হয়ে গেছে — " + name);
+                    saveLastLink(ctx, svc, "");
                     workShot(ctx, a11y);
                     logHistory(ctx, name + " — ব্রাউজার মোডে পোস্ট পাঠানো হয়েছে");
                     workNotifyClear(ctx);
@@ -775,10 +776,36 @@ public class ConnectWorker {
                 JSONObject o = new JSONObject().put("chat_id", parts[0]).put("text", text)
                         .put("reply_to_message_id", Long.parseLong(parts[1]));
                 String res = httpPostJson("https://api.telegram.org/bot" + token + "/sendMessage", o.toString(), null);
-                return res != null && res.contains("\"ok\":true");
+                boolean okTg = res != null && res.contains("\"ok\":true");
+                if (okTg) {
+                    try {
+                        long mid = new JSONObject(res).optJSONObject("result").optLong("message_id", 0);
+                        String link = "";
+                        if (mid > 0 && chatId.startsWith("@")) {
+                            link = "https://t.me/" + chatId.substring(1) + "/" + mid;
+                        }
+                        saveLastLink(ctx, svc, link);
+                    } catch (Exception ignored) { saveLastLink(ctx, svc, ""); }
+                }
+                return okTg;
             }
         } catch (Exception ignored) {}
         return false;
+    }
+
+    // Remember the last post's link so the assistant can give it when asked.
+    static void saveLastLink(Context ctx, String svc, String link) {
+        try {
+            if (link == null || link.isEmpty()) link = siteUrl(ctx, svc);
+            prefs(ctx).edit()
+                    .putString("conn_" + svc + "_last_link", link)
+                    .putLong("conn_" + svc + "_last_post_time", System.currentTimeMillis())
+                    .apply();
+        } catch (Exception ignored) {}
+    }
+
+    public static String lastLink(Context ctx, String svc) {
+        return prefs(ctx).getString("conn_" + svc + "_last_link", "");
     }
 
     public static boolean sendPost(Context ctx, String svc, String token, String text) {
@@ -789,7 +816,21 @@ public class ConnectWorker {
                 if (pageId.isEmpty()) return false;
                 String res = httpPostForm("https://graph.facebook.com/v19.0/" + pageId + "/feed",
                         "message=" + enc(text) + "&access_token=" + enc(token));
-                return res != null && res.contains("\"id\"");
+                boolean okFb = res != null && res.contains("\"id\"");
+                if (okFb) {
+                    try {
+                        String pid = new JSONObject(res).optString("id", "");
+                        String link = "";
+                        if (pid.contains("_")) {
+                            String[] parts = pid.split("_", 2);
+                            link = "https://www.facebook.com/" + parts[0] + "/posts/" + parts[1];
+                        } else if (!pid.isEmpty()) {
+                            link = "https://www.facebook.com/" + pid;
+                        }
+                        saveLastLink(ctx, svc, link);
+                    } catch (Exception ignored) { saveLastLink(ctx, svc, ""); }
+                }
+                return okFb;
             }
             if ("telegram".equals(svc)) {
                 String chatId = p.getString("conn_telegram_id", "").trim();
@@ -840,7 +881,13 @@ public class ConnectWorker {
                 String basic = "Basic " + android.util.Base64.encodeToString(
                         (user + ":" + pass).getBytes(StandardCharsets.UTF_8), android.util.Base64.NO_WRAP);
                 String res = httpPostJsonAuth(site + "/wp-json/wp/v2/posts", o.toString(), basic);
-                return res != null && res.contains("\"id\"");
+                boolean okWp = res != null && res.contains("\"id\"");
+                if (okWp) {
+                    try {
+                        saveLastLink(ctx, svc, new JSONObject(res).optString("link", ""));
+                    } catch (Exception ignored) { saveLastLink(ctx, svc, ""); }
+                }
+                return okWp;
             }
         } catch (Exception ignored) {}
         return false;
