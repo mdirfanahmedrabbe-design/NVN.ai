@@ -69,6 +69,15 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".IdeasActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LibraryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".OAuthActivity"
             android:exported="false" />
         <activity
