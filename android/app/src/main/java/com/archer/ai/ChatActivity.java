@@ -645,6 +645,7 @@ public class ChatActivity extends Activity {
                 + "The owner writes to you in this chat exactly like he writes to his trusted assistant, "
                 + "and you DO the work with your functions — you are NOT a chatbot that only talks. "
                 + "When he asks for any work, call the matching function immediately, then confirm in Bengali. "
+                + "ANSWER EVERYTHING: whatever question he asks — any topic in the world — answer it in Bengali, short and natural. Refuse only truly bad or harmful things, with one short Bengali line. "
                 + "Never say you are only an AI. "
                 + "HONESTY RULE (most important): only say work is done when a function result confirms success. "
                 + "If a function fails, or no function ran, say honestly in Bengali that it did NOT happen and why. "
