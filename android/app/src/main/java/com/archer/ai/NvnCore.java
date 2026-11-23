@@ -759,6 +759,40 @@ public class NvnCore {
         } catch (Exception ignored) {}
     }
 
+    // Shared secret for owner-only server calls (must match NVN_TOKEN on the server).
+    public static final String SERVER_TOKEN = "nvn-secret-change-me";
+
+    // Send all Connect settings (tokens, rules, schedule) to the NVN server so it
+    // can do scheduled token-API work even when the phone is off.
+    public static void syncConnectToServer(Context ctx) {
+        new Thread(() -> {
+            try {
+                SharedPreferences p = ctx.getSharedPreferences("archer", Context.MODE_PRIVATE);
+                JSONObject services = new JSONObject();
+                for (String svc : ConnectWorker.SVC_IDS) {
+                    JSONObject c = new JSONObject();
+                    c.put("token", p.getString("conn_" + svc + "_token", ""));
+                    c.put("id", p.getString("conn_" + svc + "_id", ""));
+                    c.put("user", p.getString("conn_" + svc + "_user", ""));
+                    c.put("pass", p.getString("conn_" + svc + "_pass", ""));
+                    c.put("rules", p.getString("conn_" + svc + "_rules", ""));
+                    c.put("hour", p.getInt("conn_" + svc + "_hour", 9));
+                    c.put("minute", p.getInt("conn_" + svc + "_minute", 0));
+                    c.put("enabled", p.getBoolean("conn_" + svc + "_enabled", false));
+                    c.put("post", p.getBoolean("conn_" + svc + "_post", false));
+                    c.put("comments", p.getBoolean("conn_" + svc + "_comments", true));
+                    c.put("approve", p.getBoolean("conn_" + svc + "_approve", true));
+                    c.put("browser", p.getBoolean("conn_" + svc + "_browser", false));
+                    services.put(svc, c);
+                }
+                JSONObject payload = new JSONObject();
+                payload.put("token", SERVER_TOKEN);
+                payload.put("services", services);
+                httpPost(SERVER_BASE + "/sync", payload.toString());
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
     public static String postAnnouncement(Context ctx, String token, String title, String body) {
         try {
             JSONObject o = new JSONObject().put("token", token).put("title", title).put("body", body);

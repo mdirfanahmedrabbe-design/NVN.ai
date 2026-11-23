@@ -60,6 +60,7 @@ public class ChatActivity extends Activity {
 
         // App init (chat is now the launcher screen)
         try { ConnectWorker.scheduleAll(getApplicationContext()); } catch (Exception ignored) {}
+        try { NvnCore.syncConnectToServer(getApplicationContext()); } catch (Exception ignored) {}
         try {
             if (getSharedPreferences("archer", MODE_PRIVATE).getBoolean("bubble_on", false)) {
                 startService(new Intent(this, BubbleService.class));

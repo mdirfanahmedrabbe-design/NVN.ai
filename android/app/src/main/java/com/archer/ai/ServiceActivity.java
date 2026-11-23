@@ -147,6 +147,7 @@ public class ServiceActivity extends Activity {
                     || browser.isChecked())
                 NvnCore.markConnected(this, svc, null);
             new Thread(() -> NvnCore.backupData(getApplicationContext())).start();
+            NvnCore.syncConnectToServer(getApplicationContext());
             ConnectWorker.scheduleAll(getApplicationContext());
             Toast.makeText(this, "সেভ হয়েছে", Toast.LENGTH_SHORT).show();
             finish();
