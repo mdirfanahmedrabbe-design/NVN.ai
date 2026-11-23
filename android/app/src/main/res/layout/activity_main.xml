@@ -173,6 +173,24 @@
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="TODAY'S USAGE"
+                android:textColor="#E7C873"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/usageChart"
+                android:layout_width="match_parent"
+                android:layout_height="76dp"
+                android:layout_marginTop="4dp"
+                android:gravity="bottom"
+                android:orientation="horizontal" />
+
             <ProgressBar
                 android:id="@+id/barQuestions"
                 style="?android:attr/progressBarStyleHorizontal"
