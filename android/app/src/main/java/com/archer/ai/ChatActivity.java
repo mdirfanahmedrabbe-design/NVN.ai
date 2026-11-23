@@ -68,10 +68,7 @@ public class ChatActivity extends Activity {
         fetchServerConfig();
         if (getSharedPreferences("archer", MODE_PRIVATE).getString("girl_name", "").isEmpty()) showNameDialog();
 
-        // WhatsApp-style header: ball (orb) on top, name below, ⋮ menu
-        String girl = getSharedPreferences("archer", MODE_PRIVATE).getString("girl_name", "NVN");
-        TextView nameTv = findViewById(R.id.chatName);
-        if (nameTv != null) nameTv.setText(girl);
+        // WhatsApp-style header: ball (orb) on top only, ⋮ menu
         findViewById(R.id.chatBack).setOnClickListener(v -> finish());
         findViewById(R.id.chatMenu).setOnClickListener(this::showChatMenu);
         findViewById(R.id.chatCamera).setOnClickListener(v -> openLive("camera"));
@@ -79,7 +76,7 @@ public class ChatActivity extends Activity {
             input.append("😊");
             input.requestFocus();
         });
-        findViewById(R.id.chatAttach).setOnClickListener(v -> BrowserActivity.open(this, ""));
+        findViewById(R.id.chatAttach).setOnClickListener(this::showAttachMenu);
 
         // Mic/send button: 🎤 when empty (opens Live voice), ➤ when text present
         TextView sendBtn = findViewById(R.id.chatSend);
@@ -285,6 +282,214 @@ public class ChatActivity extends Activity {
         }
     }
 
+    // ---------- attach: photo / video / file (WhatsApp-style) ----------
+    private static final int REQ_IMAGE = 7001;
+    private static final int REQ_VIDEO = 7002;
+    private static final int REQ_FILE = 7003;
+
+    private void showAttachMenu(View anchor) {
+        android.widget.PopupMenu pm = new android.widget.PopupMenu(this, anchor);
+        pm.getMenu().add(0, 1, 0, "🖼 ছবি (Gallery)");
+        pm.getMenu().add(0, 2, 1, "🎬 ভিডিও");
+        pm.getMenu().add(0, 3, 2, "📄 ফাইল");
+        pm.setOnMenuItemClickListener(item -> {
+            Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            i.addCategory(Intent.CATEGORY_OPENABLE);
+            switch (item.getItemId()) {
+                case 1: i.setType("image/*"); startActivityForResult(i, REQ_IMAGE); return true;
+                case 2: i.setType("video/*"); startActivityForResult(i, REQ_VIDEO); return true;
+                case 3: i.setType("*/*"); startActivityForResult(i, REQ_FILE); return true;
+            }
+            return false;
+        });
+        pm.show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode != RESULT_OK || data == null || data.getData() == null) return;
+        Uri uri = data.getData();
+        String caption = input.getText().toString().trim();
+        input.setText("");
+        new Thread(() -> handleAttachment(uri, caption)).start();
+    }
+
+    private void handleAttachment(Uri uri, String caption) {
+        try {
+            String mime = getContentResolver().getType(uri);
+            if (mime == null) mime = "application/octet-stream";
+            String name = queryFileName(uri);
+            if (mime.startsWith("image/")) {
+                android.graphics.Bitmap bmp = decodeDownscaled(uri, 1024);
+                if (bmp == null) { postBubble(false, "মাস্টার, ছবিটা খুলতে পারলাম না।"); return; }
+                runOnUiThread(() -> addImageBubble(bmp));
+                saveMsg("user", "[ছবি পাঠানো হয়েছে]" + (caption.isEmpty() ? "" : " " + caption));
+                java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+                bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, bos);
+                String b64 = android.util.Base64.encodeToString(bos.toByteArray(), android.util.Base64.NO_WRAP);
+                String prompt = caption.isEmpty()
+                        ? "এই ছবিটা দেখে বাংলায় বলো ছবিতে কী আছে।"
+                        : caption;
+                String reply = analyzeMedia("image/jpeg", b64, prompt);
+                postBubble(false, reply);
+                saveMsg("model", reply);
+            } else if (mime.startsWith("video/") || mime.equals("application/pdf")) {
+                byte[] bytes = readUriBytes(uri, 15 * 1024 * 1024);
+                runOnUiThread(() -> addBubble(true, (mime.startsWith("video/") ? "🎬 " : "📄 ") + name));
+                if (bytes == null) {
+                    postBubble(false, "মাস্টার, এটা অনেক বড় (15MB-এর বেশি) — ছোটটা দাও, দেখে বলছি।");
+                    return;
+                }
+                saveMsg("user", "[" + name + "]" + (caption.isEmpty() ? "" : " " + caption));
+                String b64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP);
+                String prompt = caption.isEmpty()
+                        ? (mime.startsWith("video/") ? "এই ভিডিওটা দেখে বাংলায় বলো কী আছে।" : "এই ফাইলটা পড়ে বাংলায় সারসংক্ষেপ বলো।")
+                        : caption;
+                String reply = analyzeMedia(mime, b64, prompt);
+                postBubble(false, reply);
+                saveMsg("model", reply);
+            } else if (mime.startsWith("text/")) {
+                byte[] bytes = readUriBytes(uri, 200 * 1024);
+                runOnUiThread(() -> addBubble(true, "📄 " + name));
+                if (bytes == null) { postBubble(false, "মাস্টার, ফাইলটা বড় — ছোটটা দাও।"); return; }
+                String text = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+                saveMsg("user", "[" + name + "]");
+                String reply = analyzeMedia(null, null,
+                        "এই লেখাটা পড়ে বাংলায় বলো কী আছে:\n" + text + (caption.isEmpty() ? "" : "\n\nপ্রশ্ন: " + caption));
+                postBubble(false, reply);
+                saveMsg("model", reply);
+            } else {
+                runOnUiThread(() -> addBubble(true, "📎 " + name));
+                postBubble(false, "মাস্টার, এই ধরনের ফাইল (" + mime + ") আমি পড়তে পারি না — ছবি, ভিডিও, PDF বা লেখা ফাইল দাও।");
+            }
+        } catch (Exception e) {
+            postBubble(false, "মাস্টার, ফাইলটা নিতে সমস্যা হলো — আবার চেষ্টা করো।");
+        }
+    }
+
+    private void postBubble(boolean mine, String text) {
+        runOnUiThread(() -> addBubble(mine, text));
+    }
+
+    private void addImageBubble(android.graphics.Bitmap bmp) {
+        ImageView iv = new ImageView(this);
+        iv.setImageBitmap(bmp);
+        iv.setAdjustViewBounds(true);
+        float d = getResources().getDisplayMetrics().density;
+        int maxW = (int) (getResources().getDisplayMetrics().widthPixels * 0.7);
+        iv.setMaxWidth(maxW);
+        iv.setBackgroundResource(R.drawable.bubble_mine);
+        iv.setPadding((int) (4 * d), (int) (4 * d), (int) (4 * d), (int) (4 * d));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.gravity = Gravity.END;
+        lp.bottomMargin = (int) (8 * d);
+        iv.setLayoutParams(lp);
+        msgBox.addView(iv);
+        scroll.post(() -> scroll.fullScroll(View.FOCUS_DOWN));
+    }
+
+    private android.graphics.Bitmap decodeDownscaled(Uri uri, int maxDim) {
+        try {
+            android.graphics.BitmapFactory.Options bounds = new android.graphics.BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            java.io.InputStream in1 = getContentResolver().openInputStream(uri);
+            android.graphics.BitmapFactory.decodeStream(in1, null, bounds);
+            if (in1 != null) in1.close();
+            int sample = 1;
+            while (Math.max(bounds.outWidth, bounds.outHeight) / sample > maxDim) sample *= 2;
+            android.graphics.BitmapFactory.Options opts = new android.graphics.BitmapFactory.Options();
+            opts.inSampleSize = sample;
+            java.io.InputStream in2 = getContentResolver().openInputStream(uri);
+            android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeStream(in2, null, opts);
+            if (in2 != null) in2.close();
+            return bmp;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private byte[] readUriBytes(Uri uri, int maxBytes) {
+        try {
+            java.io.InputStream in = getContentResolver().openInputStream(uri);
+            if (in == null) return null;
+            java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) {
+                bos.write(buf, 0, n);
+                if (bos.size() > maxBytes) { in.close(); return null; }
+            }
+            in.close();
+            return bos.toByteArray();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String queryFileName(Uri uri) {
+        String name = "ফাইল";
+        try {
+            android.database.Cursor c = getContentResolver().query(uri, null, null, null, null);
+            if (c != null) {
+                int idx = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
+                if (idx >= 0 && c.moveToFirst()) name = c.getString(idx);
+                c.close();
+            }
+        } catch (Exception ignored) {}
+        return name;
+    }
+
+    // Send media (or text) to Gemini and return her reply.
+    private String analyzeMedia(String mime, String base64, String prompt) {
+        try {
+            JSONArray parts = new JSONArray();
+            if (mime != null && base64 != null) {
+                parts.put(new JSONObject().put("inline_data",
+                        new JSONObject().put("mime_type", mime).put("data", base64)));
+            }
+            parts.put(new JSONObject().put("text", prompt));
+            JSONObject body = new JSONObject().put("contents",
+                    new JSONArray().put(new JSONObject().put("role", "user").put("parts", parts)));
+            String model = "gemini-3.5-flash";
+            boolean switched = false;
+            for (int attempt = 0; attempt < 3; attempt++) {
+                String key = NvnCore.currentKey(getSharedPreferences("archer", MODE_PRIVATE));
+                if (key == null || key.trim().isEmpty()) return "মাস্টার, Gemini Key বসানো নেই — ⋮ মেনু থেকে API Keys-এ বসাও।";
+                String res = NvnCore.httpPost(
+                        "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + key.trim(),
+                        body.toString());
+                if (res != null && NvnCore.isQuotaError(res)) {
+                    NvnCore.rotateKey(getSharedPreferences("archer", MODE_PRIVATE));
+                    continue;
+                }
+                if (res != null && res.contains("\"error\"") && !switched) {
+                    model = "gemini-3.5-flash-lite";
+                    switched = true;
+                    continue;
+                }
+                if (res == null) return "দুঃখিত মাস্টার, এখন দেখতে পারছি না — একটু পরে আবার দাও।";
+                JSONObject o = new JSONObject(res);
+                JSONArray cands = o.optJSONArray("candidates");
+                if (cands == null || cands.length() == 0) return "দুঃখিত মাস্টার, উত্তর পাইনি।";
+                JSONObject content = cands.getJSONObject(0).optJSONObject("content");
+                JSONArray rparts = content != null ? content.optJSONArray("parts") : null;
+                if (rparts == null) return "দুঃখিত মাস্টার, উত্তর পাইনি।";
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < rparts.length(); i++) {
+                    JSONObject part = rparts.getJSONObject(i);
+                    if (part.has("text")) sb.append(part.optString("text"));
+                }
+                String t = sb.toString().trim();
+                return t.isEmpty() ? "দেখলাম মাস্টার 💜" : t;
+            }
+            return "দুঃখিত মাস্টার, এখন দেখতে পারছি না — একটু পরে আবার দাও।";
+        } catch (Exception e) {
+            return "দুঃখিত মাস্টার, এখন দেখতে পারছি না — একটু পরে আবার দাও।";
+        }
+    }
+
     private void showNameDialog() {
         EditText et = new EditText(this);
         et.setHint("যেমন: ফারিহা");
@@ -296,8 +501,6 @@ public class ChatActivity extends Activity {
                     String name = et.getText().toString().trim();
                     if (!name.isEmpty()) {
                         getSharedPreferences("archer", MODE_PRIVATE).edit().putString("girl_name", name).apply();
-                        TextView nameTv = findViewById(R.id.chatName);
-                        if (nameTv != null) nameTv.setText(name);
                     }
                 })
                 .setCancelable(false)
