@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_main"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/connSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_input"
+        android:hint="🔍 সাইট/অ্যাপ খুঁজো (যেমন: facebook, blogger, tiktok)"
+        android:padding="12dp"
+        android:textColor="#F3E9C8"
+        android:textColorHint="#A8C3B2" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="14dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/connList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+</LinearLayout>
