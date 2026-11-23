@@ -776,18 +776,7 @@ public class ConnectWorker {
                 JSONObject o = new JSONObject().put("chat_id", parts[0]).put("text", text)
                         .put("reply_to_message_id", Long.parseLong(parts[1]));
                 String res = httpPostJson("https://api.telegram.org/bot" + token + "/sendMessage", o.toString(), null);
-                boolean okTg = res != null && res.contains("\"ok\":true");
-                if (okTg) {
-                    try {
-                        long mid = new JSONObject(res).optJSONObject("result").optLong("message_id", 0);
-                        String link = "";
-                        if (mid > 0 && chatId.startsWith("@")) {
-                            link = "https://t.me/" + chatId.substring(1) + "/" + mid;
-                        }
-                        saveLastLink(ctx, svc, link);
-                    } catch (Exception ignored) { saveLastLink(ctx, svc, ""); }
-                }
-                return okTg;
+                return res != null && res.contains("\"ok\":true");
             }
         } catch (Exception ignored) {}
         return false;
@@ -837,7 +826,18 @@ public class ConnectWorker {
                 if (chatId.isEmpty()) return false;
                 JSONObject o = new JSONObject().put("chat_id", chatId).put("text", text);
                 String res = httpPostJson("https://api.telegram.org/bot" + token + "/sendMessage", o.toString(), null);
-                return res != null && res.contains("\"ok\":true");
+                boolean okTg = res != null && res.contains("\"ok\":true");
+                if (okTg) {
+                    try {
+                        long mid = new JSONObject(res).optJSONObject("result").optLong("message_id", 0);
+                        String link = "";
+                        if (mid > 0 && chatId.startsWith("@")) {
+                            link = "https://t.me/" + chatId.substring(1) + "/" + mid;
+                        }
+                        saveLastLink(ctx, svc, link);
+                    } catch (Exception ignored) { saveLastLink(ctx, svc, ""); }
+                }
+                return okTg;
             }
             if ("threads".equals(svc)) {
                 String userId = p.getString("conn_threads_id", "").trim();
