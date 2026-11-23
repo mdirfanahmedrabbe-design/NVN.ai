@@ -76,7 +76,8 @@ public class NvnCore {
         String t = today();
         int count = t.equals(p.getString("q_date", "")) ? p.getInt("q_count", 0) : 0;
         if (count >= TIER_Q[tierIndex(ctx)]) return false;
-        p.edit().putString("q_date", t).putInt("q_count", count + 1).apply();
+        p.edit().putString("q_date", t).putInt("q_count", count + 1)
+                .putInt("q_hist_" + t, p.getInt("q_hist_" + t, 0) + 1).apply();
         return true;
     }
 
