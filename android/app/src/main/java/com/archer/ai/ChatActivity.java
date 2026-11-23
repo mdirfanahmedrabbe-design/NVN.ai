@@ -317,9 +317,9 @@ public class ChatActivity extends Activity {
 
     private void handleAttachment(Uri uri, String caption) {
         try {
-            String mime = getContentResolver().getType(uri);
-            if (mime == null) mime = "application/octet-stream";
-            String name = queryFileName(uri);
+            String mime0 = getContentResolver().getType(uri);
+            final String mime = mime0 == null ? "application/octet-stream" : mime0;
+            final String name = queryFileName(uri);
             if (mime.startsWith("image/")) {
                 android.graphics.Bitmap bmp = decodeDownscaled(uri, 1024);
                 if (bmp == null) { postBubble(false, "মাস্টার, ছবিটা খুলতে পারলাম না।"); return; }
