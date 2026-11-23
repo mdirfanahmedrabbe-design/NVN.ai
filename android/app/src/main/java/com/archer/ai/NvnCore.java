@@ -785,9 +785,17 @@ public class NvnCore {
                     c.put("browser", p.getBoolean("conn_" + svc + "_browser", false));
                     services.put(svc, c);
                 }
+                JSONArray keyArr = new JSONArray();
+                String allKeys = p.getString("gemini_keys", "");
+                if (allKeys != null) {
+                    for (String k : allKeys.split("\n")) {
+                        if (!k.trim().isEmpty()) keyArr.put(k.trim());
+                    }
+                }
                 JSONObject payload = new JSONObject();
                 payload.put("token", SERVER_TOKEN);
                 payload.put("services", services);
+                payload.put("gemini_keys", keyArr);
                 httpPost(SERVER_BASE + "/sync", payload.toString());
             } catch (Exception ignored) {}
         }).start();

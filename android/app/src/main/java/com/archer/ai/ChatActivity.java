@@ -43,6 +43,11 @@ public class ChatActivity extends Activity {
     private String lastStatus = "";
     private long lastShotTs = 0;
     private boolean busy = false;
+    private String pendingQuote = "";
+    private TextView editingView = null;
+    private String editingOldText = "";
+    private LinearLayout quoteBar;
+    private TextView quoteTextView;
     private boolean polling = false;
 
     @Override
@@ -86,6 +91,14 @@ public class ChatActivity extends Activity {
             input.requestFocus();
         });
         findViewById(R.id.chatAttach).setOnClickListener(this::showAttachMenu);
+
+        // Reply quote bar
+        quoteBar = findViewById(R.id.quoteBar);
+        quoteTextView = findViewById(R.id.quoteText);
+        findViewById(R.id.quoteCancel).setOnClickListener(v -> {
+            pendingQuote = "";
+            quoteBar.setVisibility(View.GONE);
+        });
 
         // Send button: ➤ only, shown when text is present (no mic button)
         TextView sendBtn = findViewById(R.id.chatSend);
@@ -151,16 +164,49 @@ public class ChatActivity extends Activity {
     }
 
     private void saveMsg(String role, String text) {
+        saveMsg(role, text, "");
+    }
+
+    private void saveMsg(String role, String text, String quote) {
         try {
             JSONArray a = msgs();
-            a.put(new JSONObject().put("r", role).put("t", text));
+            JSONObject o = new JSONObject().put("r", role).put("t", text);
+            if (quote != null && !quote.isEmpty()) o.put("q", quote);
+            a.put(o);
             while (a.length() > 200) a.remove(0);
             SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
             String hist = p.getString("chat_history", "");
-            String line = ("user".equals(role) ? "তুমি: " : "NVN: ") + text + "\n";
+            String line = ("user".equals(role) ? "তুমি: " : "NVN: ")
+                    + (quote != null && !quote.isEmpty() ? "[রিপ্লাই: " + quote + "] " : "") + text + "\n";
             hist = hist + line;
             if (hist.length() > 8000) hist = hist.substring(hist.length() - 8000);
             p.edit().putString("chat_msgs", a.toString()).putString("chat_history", hist).apply();
+        } catch (Exception ignored) {}
+    }
+
+    private void updateSavedMsg(String oldText, String newText) {
+        try {
+            JSONArray a = msgs();
+            for (int i = a.length() - 1; i >= 0; i--) {
+                JSONObject m = a.optJSONObject(i);
+                if (m != null && "user".equals(m.optString("r")) && oldText.equals(m.optString("t"))) {
+                    m.put("t", newText);
+                    break;
+                }
+            }
+            StringBuilder hist = new StringBuilder();
+            for (int i = 0; i < a.length(); i++) {
+                JSONObject m = a.optJSONObject(i);
+                if (m == null) continue;
+                String q = m.optString("q", "");
+                hist.append("user".equals(m.optString("r")) ? "তুমি: " : "NVN: ")
+                        .append(q.isEmpty() ? "" : "[রিপ্লাই: " + q + "] ")
+                        .append(m.optString("t", "")).append("\n");
+            }
+            String h = hist.toString();
+            if (h.length() > 8000) h = h.substring(h.length() - 8000);
+            getSharedPreferences("archer", MODE_PRIVATE).edit()
+                    .putString("chat_msgs", a.toString()).putString("chat_history", h).apply();
         } catch (Exception ignored) {}
     }
 
@@ -170,20 +216,77 @@ public class ChatActivity extends Activity {
         for (int i = 0; i < a.length(); i++) {
             JSONObject m = a.optJSONObject(i);
             if (m == null) continue;
-            addBubble("user".equals(m.optString("r")), m.optString("t", ""));
+            addBubble("user".equals(m.optString("r")), m.optString("t", ""), m.optString("q", ""));
         }
     }
 
-    private void addBubble(boolean mine, String text) {
-        TextView tv = new TextView(this);
+    private void setBubbleText(TextView tv, boolean mine, String text, String quote) {
         String time = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).format(new java.util.Date());
         String stamp = "  " + time + (mine ? " ✓✓" : "");
-        android.text.SpannableString ss = new android.text.SpannableString(text + stamp);
-        ss.setSpan(new android.text.style.RelativeSizeSpan(0.72f), text.length(), text.length() + stamp.length(), 0);
+        String quoteLine = "";
+        if (quote != null && !quote.isEmpty()) {
+            String qs = quote.length() > 120 ? quote.substring(0, 120) + "…" : quote;
+            quoteLine = "❝ " + qs + "\n";
+        }
+        String display = quoteLine + text;
+        android.text.SpannableString ss = new android.text.SpannableString(display + stamp);
+        if (!quoteLine.isEmpty()) {
+            ss.setSpan(new android.text.style.RelativeSizeSpan(0.8f), 0, quoteLine.length(), 0);
+            ss.setSpan(new android.text.style.ForegroundColorSpan(0xFF9FD8C9), 0, quoteLine.length(), 0);
+        }
+        ss.setSpan(new android.text.style.RelativeSizeSpan(0.72f), display.length(), display.length() + stamp.length(), 0);
         ss.setSpan(new android.text.style.ForegroundColorSpan(mine ? 0xFF9FD8C9 : 0xFF8696A0),
-                text.length(), text.length() + stamp.length(), 0);
+                display.length(), display.length() + stamp.length(), 0);
         tv.setText(ss);
+        tv.setTag(text);
+    }
+
+    private void copyText(String text) {
+        try {
+            android.content.ClipboardManager cm =
+                    (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("NVN", text));
+            android.widget.Toast.makeText(this, "কপি হয়েছে", android.widget.Toast.LENGTH_SHORT).show();
+        } catch (Exception ignored) {}
+    }
+
+    private void addBubble(boolean mine, String text) {
+        addBubble(mine, text, "");
+    }
+
+    private void addBubble(boolean mine, String text, String quote) {
+        TextView tv = new TextView(this);
+        setBubbleText(tv, mine, text, quote);
         tv.setTextSize(15);
+        tv.setOnLongClickListener(v -> {
+            String cur = tv.getTag() instanceof String ? (String) tv.getTag() : text;
+            android.widget.PopupMenu pm = new android.widget.PopupMenu(this, tv);
+            pm.getMenu().add(0, 1, 0, "📋 কপি করো");
+            pm.getMenu().add(0, 2, 1, "↩️ রিপ্লাই");
+            if (mine) pm.getMenu().add(0, 3, 2, "✏️ এডিট করো");
+            pm.setOnMenuItemClickListener(item -> {
+                switch (item.getItemId()) {
+                    case 1: copyText(cur); return true;
+                    case 2:
+                        pendingQuote = cur;
+                        quoteTextView.setText(cur);
+                        quoteBar.setVisibility(View.VISIBLE);
+                        input.requestFocus();
+                        return true;
+                    case 3:
+                        editingView = tv;
+                        editingOldText = cur;
+                        input.setText(cur);
+                        input.setSelection(cur.length());
+                        input.requestFocus();
+                        android.widget.Toast.makeText(this, "এডিট করে পাঠাও", android.widget.Toast.LENGTH_SHORT).show();
+                        return true;
+                }
+                return false;
+            });
+            pm.show();
+            return true;
+        });
         float d = getResources().getDisplayMetrics().density;
         tv.setPadding((int) (12 * d), (int) (9 * d), (int) (12 * d), (int) (9 * d));
         if (mine) {
@@ -606,11 +709,22 @@ public class ChatActivity extends Activity {
         String text = input.getText().toString().trim();
         if (text.isEmpty()) return;
         input.setText("");
-        addBubble(true, text);
-        saveMsg("user", text);
+        if (editingView != null) {
+            setBubbleText(editingView, true, text, "");
+            updateSavedMsg(editingOldText, text);
+            editingView = null;
+            editingOldText = "";
+            return;
+        }
+        String quote = pendingQuote;
+        pendingQuote = "";
+        quoteBar.setVisibility(View.GONE);
+        addBubble(true, text, quote);
+        saveMsg("user", text, quote);
         busy = true;
+        String forModel = quote.isEmpty() ? text : "[রিপ্লাই: " + quote + "] " + text;
         new Thread(() -> {
-            String reply = chatLoop(text);
+            String reply = chatLoop(forModel);
             runOnUiThread(() -> {
                 busy = false;
                 addBubble(false, reply);
