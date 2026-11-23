@@ -1,182 +1,212 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0B141A"
-    android:orientation="vertical">
-
-    <!-- Top row: back (left), three-dot menu (right) -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="10dp">
-
-        <TextView
-            android:id="@+id/chatBack"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="@drawable/bg_card"
-            android:gravity="center"
-            android:text="←"
-            android:textColor="#FFFFFF"
-            android:textSize="22sp" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
-
-        <TextView
-            android:id="@+id/chatMenu"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="@drawable/bg_card"
-            android:gravity="center"
-            android:text="⋮"
-            android:textColor="#FFFFFF"
-            android:textSize="24sp" />
-    </LinearLayout>
-
-    <!-- The app's ball (orb), big and round at top center -->
-    <com.archer.ai.OrbView
-        android:id="@+id/chatAvatar"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:layout_gravity="center_horizontal" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/bg_card"
-        android:paddingStart="14dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="14dp"
-        android:paddingBottom="4dp"
-        android:text="Today"
-        android:textColor="#A8C3B2"
-        android:textSize="12sp" />
+    android:background="#0B141A">
 
     <LinearLayout
-        android:id="@+id/workCard"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:background="@drawable/bg_card"
-        android:orientation="vertical"
-        android:padding="12dp"
-        android:visibility="gone">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="🌐 ব্রাউজার কার্ড — লাইভ কাজ"
-            android:textColor="#4ADE80"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/workText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:textColor="#EDE6D6"
-            android:textSize="13sp" />
-
-        <ImageView
-            android:id="@+id/workShot"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:adjustViewBounds="true"
-            android:maxHeight="220dp"
-            android:visibility="gone" />
-    </LinearLayout>
-
-    <ScrollView
-        android:id="@+id/chatScroll"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="6dp"
-        android:layout_weight="1">
-
+        <!-- Top row: back (left), side menu (right) -->
         <LinearLayout
-            android:id="@+id/msgBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="10dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="6dp" />
-    </ScrollView>
-
-    <!-- WhatsApp-style bottom bar: emoji, message pill, attach, camera, green Live mic -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="6dp">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/bg_input"
-            android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="10dp"
-            android:paddingEnd="6dp">
+            android:padding="10dp">
 
             <TextView
-                android:id="@+id/chatEmoji"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="4dp"
-                android:text="😊"
-                android:textSize="20sp" />
+                android:id="@+id/chatBack"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_card"
+                android:gravity="center"
+                android:text="←"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp" />
 
-            <EditText
-                android:id="@+id/chatInput"
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/chatMenu"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_card"
+                android:gravity="center"
+                android:text="☰"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp" />
+        </LinearLayout>
+
+        <!-- The app's ball (orb), big and round at top center -->
+        <com.archer.ai.OrbView
+            android:id="@+id/chatAvatar"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_card"
+            android:paddingStart="14dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="4dp"
+            android:text="Today"
+            android:textColor="#A8C3B2"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:id="@+id/workCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🌐 ব্রাউজার কার্ড — লাইভ কাজ"
+                android:textColor="#4ADE80"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/workText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="#EDE6D6"
+                android:textSize="13sp" />
+
+            <ImageView
+                android:id="@+id/workShot"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:adjustViewBounds="true"
+                android:maxHeight="220dp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/chatScroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="6dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/msgBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="10dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="6dp" />
+        </ScrollView>
+
+        <!-- WhatsApp-style bottom bar: emoji, message pill, attach, camera, green Live mic -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="6dp">
+
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@null"
+                android:background="@drawable/bg_input"
                 android:gravity="center_vertical"
-                android:hint="Message"
-                android:maxLines="4"
-                android:padding="10dp"
-                android:textColor="#F3E9C8"
-                android:textColorHint="#8AA79B" />
+                android:orientation="horizontal"
+                android:paddingStart="10dp"
+                android:paddingEnd="6dp">
+
+                <TextView
+                    android:id="@+id/chatEmoji"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="4dp"
+                    android:text="😊"
+                    android:textSize="20sp" />
+
+                <EditText
+                    android:id="@+id/chatInput"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:gravity="center_vertical"
+                    android:hint="Message"
+                    android:maxLines="4"
+                    android:padding="10dp"
+                    android:textColor="#F3E9C8"
+                    android:textColorHint="#8AA79B" />
+
+                <TextView
+                    android:id="@+id/chatAttach"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="4dp"
+                    android:text="📎"
+                    android:textSize="19sp" />
+
+                <TextView
+                    android:id="@+id/chatCamera"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="4dp"
+                    android:text="📷"
+                    android:textSize="19sp" />
+            </LinearLayout>
 
             <TextView
-                android:id="@+id/chatAttach"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="4dp"
-                android:text="📎"
-                android:textSize="19sp" />
-
-            <TextView
-                android:id="@+id/chatCamera"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="4dp"
-                android:text="📷"
-                android:textSize="19sp" />
+                android:id="@+id/chatSend"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/btn_mic_green"
+                android:gravity="center"
+                android:text="🎤"
+                android:textSize="22sp" />
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/chatSend"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:layout_marginStart="6dp"
-            android:background="@drawable/btn_mic_green"
-            android:gravity="center"
-            android:text="🎤"
-            android:textSize="22sp" />
     </LinearLayout>
-</LinearLayout>
+
+    <!-- Side menu dim backdrop -->
+    <View
+        android:id="@+id/panelDim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:visibility="gone" />
+
+    <!-- Side menu panel (right): Ideas / Library / Connectors + all features + profile -->
+    <ScrollView
+        android:id="@+id/sidePanel"
+        android:layout_width="280dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:background="#10201A"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/panelItems"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="14dp" />
+    </ScrollView>
+</FrameLayout>
