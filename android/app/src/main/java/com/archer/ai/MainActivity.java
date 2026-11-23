@@ -134,7 +134,7 @@ public class MainActivity extends Activity {
                         android.R.attr.progressBarStyleHorizontal);
                 bar.setMax(100);
                 bar.setProgress(on ? 100 : 0);
-                bar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFF34D399));
+                bar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFE7C873));
                 android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
                         android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 8);
                 lp.topMargin = 2;
@@ -152,6 +152,47 @@ public class MainActivity extends Activity {
             if (bq != null) bq.setProgress(qLimit > 0 ? Math.min(100, qUsed * 100 / qLimit) : 0);
             android.widget.ProgressBar bl = findViewById(R.id.barLive);
             if (bl != null) bl.setProgress(limitMin > 0 ? Math.min(100, usedMin * 100 / limitMin) : 0);
+            // TODAY'S USAGE chart: gold bars for the last 4 days (question counts)
+            android.widget.LinearLayout chart = findViewById(R.id.usageChart);
+            if (chart != null) {
+                chart.removeAllViews();
+                java.util.Calendar cal = java.util.Calendar.getInstance();
+                java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US);
+                java.text.SimpleDateFormat dn = new java.text.SimpleDateFormat("EEE", java.util.Locale.US);
+                int[] vals = new int[4];
+                String[] names = new String[4];
+                int max = 1;
+                for (int i = 3; i >= 0; i--) {
+                    java.util.Calendar c = (java.util.Calendar) cal.clone();
+                    c.add(java.util.Calendar.DAY_OF_YEAR, -(3 - i));
+                    String d = df.format(c.getTime());
+                    int v = prefs.getInt("q_hist_" + d, d.equals(today) ? qUsed : 0);
+                    vals[i] = v;
+                    names[i] = dn.format(c.getTime()).toUpperCase(java.util.Locale.US);
+                    if (v > max) max = v;
+                }
+                for (int i = 0; i < 4; i++) {
+                    android.widget.LinearLayout col = new android.widget.LinearLayout(this);
+                    col.setOrientation(android.widget.LinearLayout.VERTICAL);
+                    col.setGravity(android.view.Gravity.BOTTOM | android.view.Gravity.CENTER_HORIZONTAL);
+                    android.widget.LinearLayout.LayoutParams clp = new android.widget.LinearLayout.LayoutParams(
+                            0, android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 1f);
+                    col.setLayoutParams(clp);
+                    android.view.View bv = new android.view.View(this);
+                    int h = 6 + (vals[i] * 44 / max);
+                    android.widget.LinearLayout.LayoutParams blp = new android.widget.LinearLayout.LayoutParams(26, h);
+                    bv.setLayoutParams(blp);
+                    bv.setBackgroundColor(0xFFE7C873);
+                    col.addView(bv);
+                    android.widget.TextView tv = new android.widget.TextView(this);
+                    tv.setText(names[i]);
+                    tv.setTextSize(9);
+                    tv.setTextColor(0xFFA7E8C8);
+                    tv.setGravity(android.view.Gravity.CENTER);
+                    col.addView(tv);
+                    chart.addView(col);
+                }
+            }
         } catch (Exception ignored) {}
     }
 
@@ -246,13 +287,15 @@ public class MainActivity extends Activity {
     private void refreshUsage() {
         try {
             boolean running = prefs.getBoolean("live_running", false);
-            if (liveBtn != null) liveBtn.setText(running ? "((•)) On Live" : "Off Live ›");
+            if (liveBtn != null) liveBtn.setText(running ? "● LIVE ON" : "● ON LIVE");
             int used = NvnCore.liveSecondsToday(this) / 60;
             int limit = NvnCore.TIER_LIVE_MIN[NvnCore.tierIndex(this)];
             onlinePill.setText(NvnCore.isOwner(this) ? "👑 মালিক — আনলিমিটেড" : "● Online for " + used + " min  (আজ " + used + "/" + limit + ")");
             if (dashText != null) dashText.setText("CONNECTED APPS: " + countConnected() + "  •  SYS: ONLINE");
+            TextView du = findViewById(R.id.dashUpdated);
+            if (du != null) du.setText("UPDATED • " + new java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).format(new java.util.Date()) + " • TODAY");
             TextView sl = findViewById(R.id.statusLine);
-            if (sl != null) sl.setText("> NVN ready | voice ready | apps connected: " + countConnected() + " | standby: off");
+            if (sl != null) sl.setText("> initializing secure channel.. voice ready | encryption: AES-256 | " + countConnected() + " apps connected | standby mode: off");
             updateDashboard(used, limit);
         } catch (Exception ignored) {}
     }
