@@ -70,7 +70,12 @@ public class ServiceActivity extends Activity {
 
         String tokenUrl = tokenUrlFor(svc);
         android.view.View tokenBtn = findViewById(R.id.svcTokenBtn);
-        if (tokenUrl == null) {
+        if ("facebook".equals(svc)) {
+            // One-tap Facebook login: token saves itself (same as chat dialog).
+            ((android.widget.Button) tokenBtn).setText("🔐 Facebook দিয়ে লগইন করো — Token নিজে বসবে");
+            tokenBtn.setOnClickListener(v ->
+                    startActivity(new android.content.Intent(this, OAuthActivity.class)));
+        } else if (tokenUrl == null) {
             tokenBtn.setVisibility(View.GONE);
         } else {
             tokenBtn.setOnClickListener(v -> {
