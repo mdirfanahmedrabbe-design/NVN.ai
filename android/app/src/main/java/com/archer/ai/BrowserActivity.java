@@ -602,12 +602,15 @@ public class BrowserActivity extends Activity {
     @Override
     public void onBackPressed() {
         Tab t = cur();
+        String u = t != null ? t.web.getUrl() : null;
+        boolean onStart = u == null || u.contains("nvn.local");
         if (findBar.getVisibility() == View.VISIBLE) {
             if (t != null) t.web.clearMatches();
             findBar.setVisibility(View.GONE);
-        } else if (t != null && t.web.canGoBack()) {
+        } else if (!onStart && t != null && t.web.canGoBack()) {
             t.web.goBack();
         } else {
+            // On the start page (or nowhere to go back): leave the browser.
             super.onBackPressed();
         }
     }
