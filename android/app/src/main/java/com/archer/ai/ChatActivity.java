@@ -1079,7 +1079,18 @@ public class ChatActivity extends Activity {
     private String executeFunction(String name, JSONObject args) {
         if ("connect_site".equals(name)) {
             String svcId = NvnCore.normalizeService(args.optString("service", ""));
-            if (svcId == null) return "unknown service: " + args.optString("service", "");
+            if (svcId == null) {
+                // Any site at all: open the custom connect page with the name prefilled
+                String raw = args.optString("service", "").trim();
+                if (raw.isEmpty()) return "unknown service";
+                runOnUiThread(() -> {
+                    Intent i = new Intent(this, ServiceActivity.class);
+                    i.putExtra("svc", "custom");
+                    i.putExtra("prefill_name", raw);
+                    startActivity(i);
+                });
+                return "opened connect page for " + raw;
+            }
             return showConnectDialog(svcId);
         }
         return NvnCore.execute(getApplicationContext(), name, args);
