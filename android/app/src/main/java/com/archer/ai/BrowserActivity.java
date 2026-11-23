@@ -1,9 +1,11 @@
 package com.archer.ai;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -22,24 +24,41 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-// NVN built-in browser — Chrome-style: omnibox, tabs button, menu, start page,
-// error page with retry, desktop mode, file upload, downloads.
+import java.util.ArrayList;
+import java.util.List;
+
+// NVN built-in browser — Chrome-style: home button, omnibox, new-tab button,
+// tab counter + switcher, Chrome menu (new tab, incognito, history, delete
+// data, downloads, bookmarks, share, find in page, desktop site), start page,
+// error page with retry, file upload, downloads.
 // Sites logged in here stay logged in (persistent cookies), so NVN can work
 // inside them without Chrome.
 public class BrowserActivity extends Activity {
 
-    private WebView web;
+    private static class Tab {
+        WebView web;
+        boolean incognito;
+        String title = "";
+    }
+
+    private final List<Tab> tabs = new ArrayList<>();
+    private int current = 0;
+    private FrameLayout holder;
     private EditText addr;
     private ProgressBar bar;
     private TextView tabCount;
+    private LinearLayout findBar;
+    private EditText findText;
     private ValueCallback<Uri[]> fileCallback;
     private boolean desktopMode = false;
+    private SharedPreferences bp;
     private static final String UA_MOBILE = "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36";
     private static final String UA_DESKTOP = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
     private static final int REQ_FILE = 77;
@@ -51,38 +70,41 @@ public class BrowserActivity extends Activity {
         ctx.startActivity(i);
     }
 
+    private Tab cur() {
+        return tabs.isEmpty() ? null : tabs.get(Math.min(current, tabs.size() - 1));
+    }
+
     private TextView iconBtn(String text) {
         TextView b = new TextView(this);
         b.setText(text);
         b.setTextColor(Color.parseColor("#F3E9C8"));
         b.setTextSize(20);
         b.setGravity(Gravity.CENTER);
-        b.setPadding(18, 10, 18, 10);
+        b.setPadding(16, 10, 16, 10);
         return b;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        bp = getSharedPreferences("nvn_browser", MODE_PRIVATE);
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(Color.parseColor("#04170F"));
 
-        // ---- Chrome-style top bar ----
+        // ---- Chrome-style top bar: home, omnibox, +, tab count, menu ----
         LinearLayout top = new LinearLayout(this);
         top.setOrientation(LinearLayout.HORIZONTAL);
         top.setGravity(Gravity.CENTER_VERTICAL);
         top.setBackgroundColor(Color.parseColor("#07271C"));
         top.setPadding(8, 10, 8, 10);
 
-        TextView back = iconBtn("◀");
-        back.setOnClickListener(v -> { if (web.canGoBack()) web.goBack(); });
-        TextView fwd = iconBtn("▶");
-        fwd.setOnClickListener(v -> { if (web.canGoForward()) web.goForward(); });
+        TextView home = iconBtn("⌂");
+        home.setOnClickListener(v -> showStart(cur()));
 
         addr = new EditText(this);
-        addr.setHint("সার্চ করুন বা ঠিকানা লিখুন");
+        addr.setHint("Google-এ সার্চ করুন বা ঠিকানা লিখুন");
         addr.setHintTextColor(Color.parseColor("#7FBF9E"));
         addr.setTextColor(Color.parseColor("#F3E9C8"));
         addr.setTextSize(15);
@@ -97,21 +119,33 @@ public class BrowserActivity extends Activity {
             if (actionId == EditorInfo.IME_ACTION_GO) { goTo(addr.getText().toString()); return true; }
             return false;
         });
+        addr.setOnFocusChangeListener((v, hasFocus) -> {
+            Tab t = cur();
+            if (t == null) return;
+            String u = t.web.getUrl();
+            if (hasFocus) {
+                if (u != null && u.startsWith("http") && !u.contains("nvn.local")) {
+                    addr.setText(u);
+                    addr.selectAll();
+                }
+            } else {
+                showHost(u);
+            }
+        });
 
-        TextView reload = iconBtn("↻");
-        reload.setOnClickListener(v -> web.reload());
+        TextView plus = iconBtn("+");
+        plus.setOnClickListener(v -> newTab(false, ""));
 
         tabCount = iconBtn("▣ 1");
         tabCount.setTextSize(15);
-        tabCount.setOnClickListener(v -> Toast.makeText(this, "এখন ১টি ট্যাব খোলা আছে", Toast.LENGTH_SHORT).show());
+        tabCount.setOnClickListener(v -> showTabs());
 
         TextView menu = iconBtn("⋮");
         menu.setOnClickListener(this::showMenu);
 
-        top.addView(back);
-        top.addView(fwd);
+        top.addView(home);
         top.addView(addr);
-        top.addView(reload);
+        top.addView(plus);
         top.addView(tabCount);
         top.addView(menu);
         root.addView(top);
@@ -121,8 +155,44 @@ public class BrowserActivity extends Activity {
         bar.setProgressTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#E7C873")));
         root.addView(bar, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 6));
 
-        web = new WebView(this);
-        root.addView(web, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
+        // find-in-page bar (hidden until used)
+        findBar = new LinearLayout(this);
+        findBar.setOrientation(LinearLayout.HORIZONTAL);
+        findBar.setGravity(Gravity.CENTER_VERTICAL);
+        findBar.setBackgroundColor(Color.parseColor("#07271C"));
+        findBar.setPadding(10, 6, 10, 6);
+        findBar.setVisibility(View.GONE);
+        findText = new EditText(this);
+        findText.setHint("পেজে খুঁজুন");
+        findText.setHintTextColor(Color.parseColor("#7FBF9E"));
+        findText.setTextColor(Color.parseColor("#F3E9C8"));
+        findText.setSingleLine(true);
+        findText.setBackgroundResource(R.drawable.bg_input);
+        findText.setPadding(20, 10, 20, 10);
+        findText.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        findText.setOnEditorActionListener((v, a, e) -> {
+            Tab t = cur();
+            if (t != null) t.web.findAllAsync(findText.getText().toString());
+            return true;
+        });
+        TextView fUp = iconBtn("▲");
+        fUp.setOnClickListener(v -> { Tab t = cur(); if (t != null) t.web.findNext(false); });
+        TextView fDown = iconBtn("▼");
+        fDown.setOnClickListener(v -> { Tab t = cur(); if (t != null) t.web.findNext(true); });
+        TextView fClose = iconBtn("✕");
+        fClose.setOnClickListener(v -> {
+            Tab t = cur();
+            if (t != null) t.web.clearMatches();
+            findBar.setVisibility(View.GONE);
+        });
+        findBar.addView(findText);
+        findBar.addView(fUp);
+        findBar.addView(fDown);
+        findBar.addView(fClose);
+        root.addView(findBar);
+
+        holder = new FrameLayout(this);
+        root.addView(holder, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
 
         TextView hint = new TextView(this);
         hint.setText("এখানে সাইটে লগইন করে রাখলে সে অ্যাপের ভিতর থেকেই কাজ করবে।");
@@ -134,6 +204,12 @@ public class BrowserActivity extends Activity {
 
         setContentView(root);
 
+        String url = getIntent() != null ? getIntent().getStringExtra("url") : null;
+        newTab(false, url == null ? "" : url.trim());
+    }
+
+    private WebView makeWebView(Tab tab) {
+        WebView web = new WebView(this);
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -144,9 +220,10 @@ public class BrowserActivity extends Activity {
         s.setDisplayZoomControls(false);
         s.setSupportZoom(true);
         s.setMediaPlaybackRequiresUserGesture(false);
-        s.setUserAgentString(UA_MOBILE);
+        s.setUserAgentString(desktopMode ? UA_DESKTOP : UA_MOBILE);
         s.setAllowFileAccess(true);
         s.setAllowContentAccess(true);
+        if (tab.incognito) s.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
         CookieManager cm = CookieManager.getInstance();
         cm.setAcceptCookie(true);
@@ -155,8 +232,15 @@ public class BrowserActivity extends Activity {
         web.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onProgressChanged(WebView view, int progress) {
-                bar.setProgress(progress);
-                bar.setVisibility(progress >= 100 ? View.GONE : View.VISIBLE);
+                if (cur() != null && cur().web == view) {
+                    bar.setProgress(progress);
+                    bar.setVisibility(progress >= 100 ? View.GONE : View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onReceivedTitle(WebView view, String title) {
+                tab.title = title == null ? "" : title;
             }
 
             @Override
@@ -177,17 +261,18 @@ public class BrowserActivity extends Activity {
         web.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
-                if (url != null && !url.startsWith("data:") && !url.equals("about:blank")) {
-                    addr.setText(url);
-                }
+                if (cur() != null && cur().web == view && !addr.hasFocus()) showHost(url);
                 CookieManager.getInstance().flush();
+                if (!tab.incognito && url != null && url.startsWith("http") && !url.contains("nvn.local")) {
+                    addHistory(url, tab.title);
+                }
             }
 
             @Override
             public void onReceivedError(WebView view, WebResourceRequest req, WebResourceError err) {
                 if (req != null && req.isForMainFrame()) {
                     String failed = req.getUrl() != null ? req.getUrl().toString() : "";
-                    showError(failed);
+                    showError(tab, failed);
                 }
             }
 
@@ -223,28 +308,99 @@ public class BrowserActivity extends Activity {
                 }
             }
         });
+        return web;
+    }
 
-        String url = getIntent() != null ? getIntent().getStringExtra("url") : null;
-        if (url != null && !url.trim().isEmpty()) {
-            web.loadUrl(url.trim());
-        } else {
-            showStart();
+    private void newTab(boolean incognito, String url) {
+        Tab t = new Tab();
+        t.incognito = incognito;
+        t.web = makeWebView(t);
+        tabs.add(t);
+        current = tabs.size() - 1;
+        showTab(current);
+        if (url != null && !url.isEmpty()) t.web.loadUrl(url);
+        else showStart(t);
+        updateTabCount();
+    }
+
+    private void showTab(int idx) {
+        if (idx < 0 || idx >= tabs.size()) return;
+        current = idx;
+        holder.removeAllViews();
+        Tab t = tabs.get(idx);
+        if (t.web.getParent() != null) ((android.view.ViewGroup) t.web.getParent()).removeView(t.web);
+        holder.addView(t.web, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        showHost(t.web.getUrl());
+        updateTabCount();
+    }
+
+    private void closeTab(int idx) {
+        if (idx < 0 || idx >= tabs.size()) return;
+        Tab t = tabs.remove(idx);
+        if (t.incognito) t.web.clearCache(true);
+        t.web.destroy();
+        if (tabs.isEmpty()) {
+            newTab(false, "");
+            return;
         }
+        showTab(Math.min(idx, tabs.size() - 1));
+    }
+
+    private void updateTabCount() {
+        tabCount.setText("▣ " + tabs.size());
+    }
+
+    private void showTabs() {
+        String[] items = new String[tabs.size() + 1];
+        for (int i = 0; i < tabs.size(); i++) {
+            Tab t = tabs.get(i);
+            String label = t.title != null && !t.title.isEmpty() ? t.title : hostOf(t.web.getUrl());
+            if (label.isEmpty()) label = "নতুন ট্যাব";
+            items[i] = (i == current ? "● " : "○ ") + label + (t.incognito ? "  (ইনকগনিটো)" : "");
+        }
+        items[tabs.size()] = "+ নতুন ট্যাব";
+        new AlertDialog.Builder(this)
+                .setTitle("ট্যাবসমূহ")
+                .setItems(items, (d, w) -> {
+                    if (w == tabs.size()) newTab(false, "");
+                    else showTab(w);
+                })
+                .setNeutralButton("বর্তমান ট্যাব বন্ধ করুন", (d, w) -> closeTab(current))
+                .setNegativeButton("বন্ধ", null)
+                .show();
+    }
+
+    private String hostOf(String url) {
+        if (url == null || url.isEmpty() || url.contains("nvn.local")) return "";
+        try {
+            String h = Uri.parse(url).getHost();
+            return h == null ? url : h;
+        } catch (Exception e) {
+            return url;
+        }
+    }
+
+    private void showHost(String url) {
+        addr.setText(hostOf(url));
     }
 
     private void goTo(String text) {
         String q = text == null ? "" : text.trim();
-        if (q.isEmpty()) return;
+        Tab t = cur();
+        if (q.isEmpty() || t == null) return;
         if (q.startsWith("http://") || q.startsWith("https://")) {
-            web.loadUrl(q);
+            t.web.loadUrl(q);
         } else if (q.contains(".") && !q.contains(" ")) {
-            web.loadUrl("https://" + q);
+            t.web.loadUrl("https://" + q);
         } else {
-            web.loadUrl("https://www.google.com/search?q=" + Uri.encode(q));
+            t.web.loadUrl("https://www.google.com/search?q=" + Uri.encode(q));
         }
+        addr.clearFocus();
     }
 
-    private void showStart() {
+    private void showStart(Tab t) {
+        if (t == null) return;
         String html = "<html><head><meta name='viewport' content='width=device-width,initial-scale=1'>"
                 + "<style>body{background:#04170F;color:#F3E9C8;font-family:sans-serif;text-align:center;padding:24px}"
                 + "h2{color:#E7C873}a{display:inline-block;margin:8px;padding:14px 20px;background:#07271C;color:#A7E8C8;"
@@ -259,38 +415,135 @@ public class BrowserActivity extends Activity {
                 + "<a href='https://web.whatsapp.com'>WhatsApp</a>"
                 + "<a href='https://www.google.com'>Google</a>"
                 + "</body></html>";
-        web.loadDataWithBaseURL("https://nvn.local/", html, "text/html", "UTF-8", null);
-        addr.setText("");
+        t.web.loadDataWithBaseURL("https://nvn.local/", html, "text/html", "UTF-8", null);
+        t.title = "NVN ব্রাউজার";
+        if (t == cur()) addr.setText("");
     }
 
-    private void showError(String failedUrl) {
+    private void showError(Tab t, String failedUrl) {
         String html = "<html><head><meta name='viewport' content='width=device-width,initial-scale=1'>"
                 + "<style>body{background:#04170F;color:#F3E9C8;font-family:sans-serif;text-align:center;padding:32px}"
                 + "h3{color:#E7C873}a{display:inline-block;margin-top:16px;padding:14px 28px;background:#065F46;color:#fff;"
                 + "border-radius:24px;text-decoration:none;font-size:16px}</style></head><body>"
                 + "<h3>পেজটা লোড হয়নি</h3><p>ইন্টারনেট চালু আছে কিনা দেখুন, তারপর আবার চেষ্টা করুন।</p>"
                 + "<a href='" + (failedUrl == null ? "" : failedUrl) + "'>আবার চেষ্টা করুন</a></body></html>";
-        web.loadDataWithBaseURL("https://nvn.local/", html, "text/html", "UTF-8", null);
+        t.web.loadDataWithBaseURL("https://nvn.local/", html, "text/html", "UTF-8", null);
+    }
+
+    // ---- history & bookmarks (stored as "url\ttitle" lines) ----
+    private void addHistory(String url, String title) {
+        try {
+            String old = bp.getString("history", "");
+            String entry = url + "\t" + (title == null ? "" : title.replace("\n", " "));
+            StringBuilder sb = new StringBuilder(entry);
+            int n = 1;
+            for (String line : old.split("\n")) {
+                if (line.isEmpty() || line.startsWith(url + "\t")) continue;
+                sb.append("\n").append(line);
+                if (++n >= 100) break;
+            }
+            bp.edit().putString("history", sb.toString()).apply();
+        } catch (Exception ignored) {}
+    }
+
+    private void showList(String key, String title) {
+        String data = bp.getString(key, "");
+        List<String> labels = new ArrayList<>();
+        List<String> urls = new ArrayList<>();
+        for (String line : data.split("\n")) {
+            if (line.isEmpty()) continue;
+            String[] parts = line.split("\t", 2);
+            urls.add(parts[0]);
+            labels.add(parts.length > 1 && !parts[1].isEmpty() ? parts[1] : hostOf(parts[0]));
+        }
+        if (labels.isEmpty()) {
+            Toast.makeText(this, "এখানে কিছু নেই", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setItems(labels.toArray(new String[0]), (d, w) -> {
+                    Tab t = cur();
+                    if (t != null) t.web.loadUrl(urls.get(w));
+                })
+                .setNegativeButton("বন্ধ", null)
+                .show();
+    }
+
+    private void addBookmark() {
+        Tab t = cur();
+        if (t == null) return;
+        String u = t.web.getUrl();
+        if (u == null || !u.startsWith("http") || u.contains("nvn.local")) {
+            Toast.makeText(this, "এই পেজ বুকমার্ক করা যাবে না", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String old = bp.getString("bookmarks", "");
+        String entry = u + "\t" + (t.title == null ? "" : t.title.replace("\n", " "));
+        if (!old.contains(u + "\t")) {
+            bp.edit().putString("bookmarks", entry + (old.isEmpty() ? "" : "\n" + old)).apply();
+        }
+        Toast.makeText(this, "বুকমার্ক করা হয়েছে", Toast.LENGTH_SHORT).show();
     }
 
     private void showMenu(View anchor) {
         PopupMenu pm = new PopupMenu(this, anchor);
-        pm.getMenu().add(0, 1, 0, "নতুন ট্যাব (শুরুর পেজ)");
-        pm.getMenu().add(0, 2, 1, desktopMode ? "মোবাইল সাইট" : "ডেস্কটপ সাইট");
-        pm.getMenu().add(0, 3, 2, "পেজ শেয়ার করুন");
-        pm.getMenu().add(0, 4, 3, "লগইন ডেটা মুছুন");
+        pm.getMenu().add(0, 1, 0, "নতুন ট্যাব");
+        pm.getMenu().add(0, 2, 1, "ইনকগনিটো ট্যাব");
+        pm.getMenu().add(0, 3, 2, "ইতিহাস");
+        pm.getMenu().add(0, 4, 3, "ব্রাউজিং ডেটা মুছুন");
+        pm.getMenu().add(0, 5, 4, "ডাউনলোড");
+        pm.getMenu().add(0, 6, 5, "বুকমার্ক");
+        pm.getMenu().add(0, 7, 6, "এই পেজ বুকমার্ক করুন");
+        pm.getMenu().add(0, 8, 7, "শেয়ার করুন");
+        pm.getMenu().add(0, 9, 8, "পেজে খুঁজুন");
+        pm.getMenu().add(0, 10, 9, desktopMode ? "ডেস্কটপ সাইট ✓" : "ডেস্কটপ সাইট");
+        pm.getMenu().add(0, 11, 10, "এই ট্যাব বন্ধ করুন");
         pm.setOnMenuItemClickListener(item -> {
+            Tab t = cur();
             switch (item.getItemId()) {
                 case 1:
-                    showStart();
+                    newTab(false, "");
                     return true;
                 case 2:
-                    desktopMode = !desktopMode;
-                    web.getSettings().setUserAgentString(desktopMode ? UA_DESKTOP : UA_MOBILE);
-                    web.reload();
+                    newTab(true, "");
+                    Toast.makeText(this, "ইনকগনিটো ট্যাব — ইতিহাস জমা হবে না", Toast.LENGTH_SHORT).show();
                     return true;
-                case 3: {
-                    String u = web.getUrl();
+                case 3:
+                    showList("history", "ইতিহাস");
+                    return true;
+                case 4:
+                    new AlertDialog.Builder(this)
+                            .setTitle("ব্রাউজিং ডেটা মুছুন")
+                            .setMessage("লগইন, কুকি, ইতিহাস সব মুছে যাবে।")
+                            .setPositiveButton("মুছুন", (d, w) -> {
+                                CookieManager.getInstance().removeAllCookies(null);
+                                bp.edit().remove("history").apply();
+                                for (Tab tb : tabs) {
+                                    tb.web.clearCache(true);
+                                    tb.web.clearHistory();
+                                }
+                                Toast.makeText(this, "ডেটা মোছা হয়েছে", Toast.LENGTH_SHORT).show();
+                                if (t != null) showStart(t);
+                            })
+                            .setNegativeButton("বাতিল", null)
+                            .show();
+                    return true;
+                case 5:
+                    try {
+                        startActivity(new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS));
+                    } catch (Exception e) {
+                        Toast.makeText(this, "ডাউনলোড ফোল্ডার খোলা যায়নি", Toast.LENGTH_SHORT).show();
+                    }
+                    return true;
+                case 6:
+                    showList("bookmarks", "বুকমার্ক");
+                    return true;
+                case 7:
+                    addBookmark();
+                    return true;
+                case 8: {
+                    String u = t != null ? t.web.getUrl() : null;
                     if (u != null) {
                         Intent sh = new Intent(Intent.ACTION_SEND);
                         sh.setType("text/plain");
@@ -299,12 +552,19 @@ public class BrowserActivity extends Activity {
                     }
                     return true;
                 }
-                case 4:
-                    CookieManager.getInstance().removeAllCookies(null);
-                    web.clearCache(true);
-                    web.clearHistory();
-                    Toast.makeText(this, "লগইন ডেটা মোছা হয়েছে", Toast.LENGTH_SHORT).show();
-                    showStart();
+                case 9:
+                    findBar.setVisibility(View.VISIBLE);
+                    findText.requestFocus();
+                    return true;
+                case 10:
+                    desktopMode = !desktopMode;
+                    for (Tab tb : tabs) {
+                        tb.web.getSettings().setUserAgentString(desktopMode ? UA_DESKTOP : UA_MOBILE);
+                    }
+                    if (t != null) t.web.reload();
+                    return true;
+                case 11:
+                    closeTab(current);
                     return true;
             }
             return false;
@@ -336,21 +596,29 @@ public class BrowserActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
         String url = intent.getStringExtra("url");
-        if (url != null && !url.trim().isEmpty()) web.loadUrl(url.trim());
+        if (url != null && !url.trim().isEmpty()) newTab(false, url.trim());
     }
 
     @Override
     public void onBackPressed() {
-        if (web != null && web.canGoBack()) web.goBack();
-        else super.onBackPressed();
+        Tab t = cur();
+        if (findBar.getVisibility() == View.VISIBLE) {
+            if (t != null) t.web.clearMatches();
+            findBar.setVisibility(View.GONE);
+        } else if (t != null && t.web.canGoBack()) {
+            t.web.goBack();
+        } else {
+            super.onBackPressed();
+        }
     }
 
     @Override
     protected void onDestroy() {
-        if (web != null) {
-            web.destroy();
-            web = null;
+        for (Tab t : tabs) {
+            if (t.incognito) t.web.clearCache(true);
+            t.web.destroy();
         }
+        tabs.clear();
         super.onDestroy();
     }
 }
