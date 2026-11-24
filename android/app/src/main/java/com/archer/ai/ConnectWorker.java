@@ -236,50 +236,67 @@ public class ConnectWorker {
                 a11y.wakeScreen();
                 ArcherAccessibilityService.sleep(2500);
             }
-            // Open in the owner's Chrome FIRST — that is where he is logged in to his
-            // sites. NVN's own built-in browser has separate cookies (not logged in),
-            // so opening there only shows a login page and nothing can be posted.
-            workStatus(ctx, "🌐 " + name + " — Chrome-এ সাইট খুলছি…");
-            boolean browserOpened = a11y.openUrl(url);
-            if (!browserOpened) {
-                try {
-                    BrowserActivity.open(ctx, url);
-                    browserOpened = true;
-                } catch (Exception e) {
-                    browserOpened = false;
-                }
-            }
-            if (!browserOpened) {
-                saveError(ctx, svc, "ব্রাউজার খোলা যায়নি");
-                logHistory(ctx, name + " — ব্রাউজার মোড: ব্রাউজার খোলা যায়নি");
-                workStatus(ctx, "❌ ব্রাউজার খোলা যায়নি");
-                workNotifyClear(ctx);
-                if (wasOff) a11y.lockScreen();
-                return false;
-            }
-            // Wait for the page to load — poll for the composer instead of one fixed wait.
-            workShot(ctx, a11y);
-            dismissBanners(a11y);
+            // Try the owner's Chrome first (most likely logged in there). If Chrome
+            // shows a login page instead of the composer, fall back to NVN's own
+            // built-in browser, where he may be logged in instead. Only give up
+            // when neither browser is logged in.
+            workStatus(ctx, "🌐 " + name + " — ব্রাউজারে সাইট খুলছি…");
             boolean opened = false;
             boolean loggedOut = false;
-            for (int i = 0; i < 10; i++) {
-                for (String hint : composerHints(svc)) {
-                    if (a11y.hasText(hint)) { a11y.tapText(hint); opened = true; break; }
+            boolean useChrome = true;
+            boolean triedAppBrowser = false;
+            while (true) {
+                boolean browserOpened;
+                if (useChrome) {
+                    browserOpened = a11y.openUrl(url);
+                    if (!browserOpened) {
+                        try { BrowserActivity.open(ctx, url); browserOpened = true; useChrome = false; }
+                        catch (Exception e) { browserOpened = false; }
+                    }
+                } else {
+                    try { BrowserActivity.open(ctx, url); browserOpened = true; }
+                    catch (Exception e) { browserOpened = false; }
+                }
+                if (!browserOpened) {
+                    saveError(ctx, svc, "ব্রাউজার খোলা যায়নি");
+                    logHistory(ctx, name + " — ব্রাউজার মোড: ব্রাউজার খোলা যায়নি");
+                    workStatus(ctx, "❌ ব্রাউজার খোলা যায়নি");
+                    workNotifyClear(ctx);
+                    if (wasOff) a11y.lockScreen();
+                    return false;
+                }
+                // Wait for the page to load — poll for the composer instead of one fixed wait.
+                workShot(ctx, a11y);
+                dismissBanners(a11y);
+                opened = false;
+                loggedOut = false;
+                for (int i = 0; i < 10; i++) {
+                    for (String hint : composerHints(svc)) {
+                        if (a11y.hasText(hint)) { a11y.tapText(hint); opened = true; break; }
+                    }
+                    if (opened) break;
+                    if (a11y.hasText("Log in") || a11y.hasText("লগ ইন") || a11y.hasText("Create new account")
+                            || a11y.hasText("Email or phone") || a11y.hasText("Sign in")) {
+                        loggedOut = true;
+                        break;
+                    }
+                    ArcherAccessibilityService.sleep(2000);
                 }
                 if (opened) break;
-                if (a11y.hasText("Log in") || a11y.hasText("লগ ইন") || a11y.hasText("Create new account")
-                        || a11y.hasText("Email or phone") || a11y.hasText("Sign in")) {
-                    loggedOut = true;
-                    break;
+                if (loggedOut && useChrome && !triedAppBrowser) {
+                    useChrome = false;
+                    triedAppBrowser = true;
+                    workStatus(ctx, "🌐 Chrome-এ লগইন নেই — অ্যাপের ব্রাউজারে চেষ্টা করছি…");
+                    continue;
                 }
-                ArcherAccessibilityService.sleep(2000);
+                break;
             }
             if (!opened && loggedOut) {
-                saveError(ctx, svc, "Chrome-এ " + name + "-এ লগইন নেই — Chrome খুলে লগইন করো, তারপর আবার বলো");
-                workStatus(ctx, "❌ Chrome-এ " + name + "-এ লগইন নেই — Chrome খুলে লগইন করো");
+                saveError(ctx, svc, "Chrome-এও আর অ্যাপের ব্রাউজারেও " + name + "-এ লগইন নেই — যেকোনো একটায় লগইন করো, তারপর আবার বলো");
+                workStatus(ctx, "❌ " + name + "-এ লগইন নেই — Chrome বা অ্যাপের ব্রাউজারে লগইন করো");
                 workShot(ctx, a11y);
-                logHistory(ctx, name + " — ব্রাউজার মোড: Chrome-এ লগইন নেই, লগইন পাতা দেখাচ্ছে");
-                notifyUser(ctx, "NVN ব্রাউজার মোড", "Chrome-এ " + name + "-এ লগইন নেই — Chrome খুলে লগইন করো, তারপর আবার বলো", false);
+                logHistory(ctx, name + " — ব্রাউজার মোড: Chrome-এও অ্যাপের ব্রাউজারেও লগইন নেই");
+                notifyUser(ctx, "NVN ব্রাউজার মোড", name + "-এ লগইন নেই — Chrome বা অ্যাপের ব্রাউজারে লগইন করো, তারপর আবার বলো", false);
                 workNotifyClear(ctx);
                 if (wasOff) a11y.lockScreen();
                 return false;
