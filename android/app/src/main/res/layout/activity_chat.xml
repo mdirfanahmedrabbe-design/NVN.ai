@@ -16,6 +16,16 @@
             android:orientation="horizontal"
             android:padding="10dp">
 
+            <TextView
+                android:id="@+id/chatWorkCardToggle"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_card"
+                android:gravity="center"
+                android:text="🌐"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp" />
+
             <View
                 android:layout_width="0dp"
                 android:layout_height="1dp"
@@ -43,9 +53,10 @@
             android:visibility="gone">
 
             <TextView
+                android:id="@+id/workCardTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="🌐 ব্রাউজার কার্ড — লাইভ কাজ"
+                android:text="🌐 ব্রাউজার কার্ড — লাইভ কাজ  ✕"
                 android:textColor="#4ADE80"
                 android:textSize="14sp"
                 android:textStyle="bold" />
