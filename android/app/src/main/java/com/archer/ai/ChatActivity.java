@@ -76,6 +76,18 @@ public class ChatActivity extends Activity {
 
         // WhatsApp-style header: ☰ menu only
         findViewById(R.id.chatMenu).setOnClickListener(v -> togglePanel());
+        // Browser card toggle (🌐): card stays HIDDEN unless the master asks to see it.
+        // Tap 🌐 to show the live-work card; tap the card title (✕) to hide it again.
+        findViewById(R.id.chatWorkCardToggle).setOnClickListener(v -> {
+            boolean show = !getSharedPreferences("archer", MODE_PRIVATE).getBoolean("show_work_card", false);
+            getSharedPreferences("archer", MODE_PRIVATE).edit().putBoolean("show_work_card", show).apply();
+            workCard.setVisibility(show ? View.VISIBLE : View.GONE);
+            if (show) postBubble(false, "লাইভ কাজের কার্ড দেখাচ্ছি মাস্টার 🌐 — বন্ধ করতে কার্ডের ওপরের ✕ চাপুন বা লিখুন 'কার্ড বন্ধ করো'।");
+        });
+        findViewById(R.id.workCardTitle).setOnClickListener(v -> {
+            getSharedPreferences("archer", MODE_PRIVATE).edit().putBoolean("show_work_card", false).apply();
+            workCard.setVisibility(View.GONE);
+        });
         findViewById(R.id.panelDim).setOnClickListener(v -> togglePanel());
         buildPanel();
         String prefill = getIntent() != null ? getIntent().getStringExtra("prefill") : null;
@@ -135,16 +147,19 @@ public class ChatActivity extends Activity {
                 SharedPreferences p = getSharedPreferences("archer", MODE_PRIVATE);
                 String status = p.getString("conn_work_status", "");
                 long ts = p.getLong("conn_work_shot_ts", 0);
+                // Card stays hidden unless the master asked to see it (show_work_card pref).
+                // Content is still refreshed so it is current whenever he opens it.
+                boolean showCard = p.getBoolean("show_work_card", false);
                 if (!status.isEmpty() && !status.equals(lastStatus)) {
                     lastStatus = status;
-                    workCard.setVisibility(View.VISIBLE);
+                    if (showCard) workCard.setVisibility(View.VISIBLE);
                     workText.setText(status);
                 }
                 if (ts > lastShotTs) {
                     lastShotTs = ts;
                     File f = new File(getFilesDir(), "browser_shot.png");
                     if (f.exists()) {
-                        workCard.setVisibility(View.VISIBLE);
+                        if (showCard) workCard.setVisibility(View.VISIBLE);
                         workShot.setImageBitmap(BitmapFactory.decodeFile(f.getAbsolutePath()));
                         workShot.setVisibility(View.VISIBLE);
                     }
@@ -747,6 +762,10 @@ public class ChatActivity extends Activity {
                 + "and you DO the work with your functions — you are NOT a chatbot that only talks. "
                 + "When he asks for any work, call the matching function immediately, then confirm in Bengali. "
                 + "ANSWER EVERYTHING: whatever question he asks — any topic in the world — answer it in Bengali, short and natural. Refuse only truly bad or harmful things, with one short Bengali line. "
+                + "Facts about your master that you always know — never say you do not know these: he works at AKH Group garments factory as a Finishing Iron Man, Grade 3, salary ৳13,800 per month plus ৳750 attendance bonus. "
+                + "About the garment minimum wage board: the 3rd meeting was on 23 November 2026; owners proposed a minimum wage of ৳15,800 (revised up twice from ৳15,000 to ৳15,500 to ৳15,800); workers first demanded ৳32,000 (Grade 3 ৳38,000) then revised down to ৳22,000; NO agreement yet — workers called the owners' offer too low; the next meeting is today, 24 November 2026 at 2:00 PM; the board aims to finalise within December; the new wage is expected from 1 December 2026 and will appear in the January salary. "
+                + "When he asks about salary or wage news ('বেতন এর খবর'), answer from these facts in short Bengali and say clearly what is decided and what is still undecided — never say you have no information about his salary or the wage board. "
+                + "If a question is about him, his job, his family or his work, answer from the facts in this prompt and your memory — never answer 'আমার কাছে তথ্য নেই' when the facts are known to you. "
                 + "Never say you are only an AI. "
                 + "HONESTY RULE (most important): only say work is done when a function result confirms success. "
                 + "If a function fails, or no function ran, say honestly in Bengali that it did NOT happen and why. "
@@ -910,6 +929,23 @@ public class ChatActivity extends Activity {
         try {
             String t = raw.trim();
             String low = bnToEn(t).toLowerCase(java.util.Locale.ROOT);
+
+            // Browser live-work card: hidden by default; show only when the master asks.
+            // Must run BEFORE the broad "ব্রাউজার" branch below (that one opens the browser).
+            if (low.contains("কার্ড")) {
+                boolean show = low.contains("দেখাও") || low.contains("দেখা") || low.contains("খুল") || low.contains("show") || low.contains("অন");
+                boolean hide = low.contains("বন্ধ") || low.contains("লুকা") || low.contains("সরা") || low.contains("hide") || low.contains("অফ");
+                if (show && !hide) {
+                    getSharedPreferences("archer", MODE_PRIVATE).edit().putBoolean("show_work_card", true).apply();
+                    runOnUiThread(() -> workCard.setVisibility(View.VISIBLE));
+                    return "লাইভ কাজের কার্ড দেখাচ্ছি মাস্টার 🌐 — বন্ধ করতে কার্ডের ওপরের ✕ চাপুন বা লিখুন 'কার্ড বন্ধ করো'।";
+                }
+                if (hide) {
+                    getSharedPreferences("archer", MODE_PRIVATE).edit().putBoolean("show_work_card", false).apply();
+                    runOnUiThread(() -> workCard.setVisibility(View.GONE));
+                    return "কার্ড বন্ধ করে দিয়েছি মাস্টার — যখন চাইবেন, 'কার্ড দেখাও' বললেই দেখাবো।";
+                }
+            }
 
             // "ফেসবুক কি তোমার সাথে যুক্ত আছে" — answer from saved state, no internet needed
             if (low.contains("যুক্ত") || low.contains("কানেক্ট") || low.contains("connected") || low.contains("সংযোগ")) {
