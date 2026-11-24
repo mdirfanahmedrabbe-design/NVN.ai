@@ -104,30 +104,34 @@ public class ConnectWorker {
     }
 
     static String[] composerHints(String svc) {
+        // NOTE: the owner's Facebook UI is Bengali — the feed composer reads
+        // "একটি স্ট্যাটাস আপডেট পোস্ট করুন". English-only hints missed it, so
+        // she opened the page and did nothing. Every list leads with the exact
+        // Bengali text, then English.
         switch (svc) {
-            case "facebook": return new String[]{"What's on your mind", "কী ভাবছেন", "Create post", "Write something"};
-            case "instagram": return new String[]{"New post", "Create", "What's on your mind"};
-            case "threads": return new String[]{"Start a thread", "New thread", "What's new"};
-            case "x": return new String[]{"What is happening", "What's happening", "Post your reply"};
-            case "tiktok": return new String[]{"Upload", "Create", "Post"};
-            case "pinterest": return new String[]{"Create Pin", "Create", "Add a title"};
-            case "youtube": return new String[]{"Create", "Upload video"};
-            case "whatsapp": return new String[]{"Type a message", "মেসেজ লিখুন"};
-            case "gmail": return new String[]{"Compose", "লিখুন"};
-            case "telegram": return new String[]{"Message", "মেসেজ"};
-            default: return new String[]{"Write", "Post", "লিখুন"};
+            case "facebook": return new String[]{"একটি স্ট্যাটাস আপডেট পোস্ট করুন", "স্ট্যাটাস আপডেট", "What's on your mind", "কী ভাবছেন", "আপনার মনে কী আছে", "Create post", "Write something"};
+            case "instagram": return new String[]{"নতুন পোস্ট তৈরি করুন", "New post", "Create", "তৈরি করুন", "What's on your mind"};
+            case "threads": return new String[]{"থ্রেড শুরু করুন", "Start a thread", "New thread", "What's new"};
+            case "x": return new String[]{"কী ঘটছে", "What is happening", "What's happening", "Post your reply"};
+            case "tiktok": return new String[]{"আপলোড", "Upload", "Create", "তৈরি করুন", "Post"};
+            case "pinterest": return new String[]{"পিন তৈরি করুন", "Create Pin", "Create", "Add a title"};
+            case "youtube": return new String[]{"তৈরি করুন", "Create", "Upload video", "ভিডিও আপলোড"};
+            case "whatsapp": return new String[]{"Type a message", "মেসেজ লিখুন", "বার্তা লিখুন"};
+            case "gmail": return new String[]{"Compose", "লিখুন", "কম্পোজ"};
+            case "telegram": return new String[]{"Message", "মেসেজ", "বার্তা"};
+            default: return new String[]{"Write", "Post", "লিখুন", "পোস্ট করুন", "তৈরি করুন"};
         }
     }
 
     static String[] postButtonTexts(String svc) {
         switch (svc) {
-            case "x": return new String[]{"Post", "Tweet", "পোস্ট"};
-            case "threads": return new String[]{"Post", "পোস্ট"};
+            case "x": return new String[]{"পোস্ট করুন", "Post", "Tweet", "পোস্ট"};
+            case "threads": return new String[]{"পোস্ট করুন", "Post", "পোস্ট"};
             case "pinterest": return new String[]{"Publish", "Save", "Post"};
             case "gmail": return new String[]{"Send", "পাঠাও"};
             case "whatsapp": return new String[]{"Send", "পাঠাও"};
             case "telegram": return new String[]{"Send", "পাঠাও"};
-            default: return new String[]{"Post", "Share", "Publish", "পোস্ট", "শেয়ার"};
+            default: return new String[]{"পোস্ট করুন", "Post", "Share", "Publish", "পোস্ট", "শেয়ার"};
         }
     }
 
