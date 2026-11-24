@@ -216,6 +216,7 @@ public class ConnectWorker {
             }
             String url = siteUrl(ctx, svc);
             if (url.isEmpty()) {
+                saveError(ctx, svc, "সাইটের ঠিকানা বসানো নেই — Connect পাতায় সাইটের ঠিকানা দাও");
                 logHistory(ctx, name + " — ব্রাউজার মোড: সাইটের ঠিকানা বসানো নেই");
                 return false;
             }
@@ -225,6 +226,7 @@ public class ConnectWorker {
                 String fg = a11y.foregroundPackage();
                 if (fg != null && !fg.isEmpty() && !fg.equals(ctx.getPackageName())
                         && !fg.contains("launcher") && !fg.contains("home")) {
+                    saveError(ctx, svc, "ফোন ব্যবহার হচ্ছিল, তাই এখন করা হয়নি — পরে আবার বলো");
                     logHistory(ctx, name + " — ব্রাউজার মোড: ফোন ব্যবহার হচ্ছিল, তাই এখন করা হয়নি — পরে করবে");
                     return false;
                 }
@@ -234,25 +236,53 @@ public class ConnectWorker {
                 a11y.wakeScreen();
                 ArcherAccessibilityService.sleep(2500);
             }
-            workStatus(ctx, "🌐 " + name + " — অ্যাপের ব্রাউজারে সাইট খুলছি…");
-            try {
-                BrowserActivity.open(ctx, url);
-            } catch (Exception e) {
-                if (!a11y.openUrl(url)) {
-                    logHistory(ctx, name + " — ব্রাউজার মোড: ব্রাউজার খোলা যায়নি");
-                    workStatus(ctx, "❌ ব্রাউজার খোলা যায়নি");
-                    workNotifyClear(ctx);
-                    if (wasOff) a11y.lockScreen();
-                    return false;
+            // Open in the owner's Chrome FIRST — that is where he is logged in to his
+            // sites. NVN's own built-in browser has separate cookies (not logged in),
+            // so opening there only shows a login page and nothing can be posted.
+            workStatus(ctx, "🌐 " + name + " — Chrome-এ সাইট খুলছি…");
+            boolean browserOpened = a11y.openUrl(url);
+            if (!browserOpened) {
+                try {
+                    BrowserActivity.open(ctx, url);
+                    browserOpened = true;
+                } catch (Exception e) {
+                    browserOpened = false;
                 }
             }
-            ArcherAccessibilityService.sleep(7000);
+            if (!browserOpened) {
+                saveError(ctx, svc, "ব্রাউজার খোলা যায়নি");
+                logHistory(ctx, name + " — ব্রাউজার মোড: ব্রাউজার খোলা যায়নি");
+                workStatus(ctx, "❌ ব্রাউজার খোলা যায়নি");
+                workNotifyClear(ctx);
+                if (wasOff) a11y.lockScreen();
+                return false;
+            }
+            // Wait for the page to load — poll for the composer instead of one fixed wait.
             workShot(ctx, a11y);
             dismissBanners(a11y);
-            // If the phone is locked (PIN screen), the site text never appears.
             boolean opened = false;
-            for (String hint : composerHints(svc)) {
-                if (a11y.hasText(hint)) { a11y.tapText(hint); opened = true; break; }
+            boolean loggedOut = false;
+            for (int i = 0; i < 10; i++) {
+                for (String hint : composerHints(svc)) {
+                    if (a11y.hasText(hint)) { a11y.tapText(hint); opened = true; break; }
+                }
+                if (opened) break;
+                if (a11y.hasText("Log in") || a11y.hasText("লগ ইন") || a11y.hasText("Create new account")
+                        || a11y.hasText("Email or phone") || a11y.hasText("Sign in")) {
+                    loggedOut = true;
+                    break;
+                }
+                ArcherAccessibilityService.sleep(2000);
+            }
+            if (!opened && loggedOut) {
+                saveError(ctx, svc, "Chrome-এ " + name + "-এ লগইন নেই — Chrome খুলে লগইন করো, তারপর আবার বলো");
+                workStatus(ctx, "❌ Chrome-এ " + name + "-এ লগইন নেই — Chrome খুলে লগইন করো");
+                workShot(ctx, a11y);
+                logHistory(ctx, name + " — ব্রাউজার মোড: Chrome-এ লগইন নেই, লগইন পাতা দেখাচ্ছে");
+                notifyUser(ctx, "NVN ব্রাউজার মোড", "Chrome-এ " + name + "-এ লগইন নেই — Chrome খুলে লগইন করো, তারপর আবার বলো", false);
+                workNotifyClear(ctx);
+                if (wasOff) a11y.lockScreen();
+                return false;
             }
             if (!opened) {
                 // Some sites open the editor directly; try typing anyway.
@@ -262,26 +292,45 @@ public class ConnectWorker {
                 dismissBanners(a11y);
             }
             workStatus(ctx, "✍️ পোস্টের লেখা বসাচ্ছি…");
-            boolean typed = a11y.typeText(text);
-            if (!typed) {
-                ArcherAccessibilityService.sleep(1500);
+            boolean typed = false;
+            for (int i = 0; i < 5 && !typed; i++) {
                 typed = a11y.typeText(text);
+                if (!typed) ArcherAccessibilityService.sleep(1500);
             }
             if (!typed) {
-                saveError(ctx, svc, "লেখার জায়গা পাওয়া যায়নি — ফোন আনলক আছে কিনা আর অ্যাপের ব্রাউজারে সাইটে লগইন আছে কিনা দেখো");
-                workStatus(ctx, "❌ লেখার জায়গা পাওয়া যায়নি — ফোন আনলক + অ্যাপের ব্রাউজারে লগইন আছে কিনা দেখো");
+                saveError(ctx, svc, "লেখার জায়গা পাওয়া যায়নি — ফোন আনলক আছে কিনা আর Chrome-এ " + name + "-এ লগইন আছে কিনা দেখো");
+                workStatus(ctx, "❌ লেখার জায়গা পাওয়া যায়নি — ফোন আনলক + Chrome-এ লগইন আছে কিনা দেখো");
                 workShot(ctx, a11y);
                 logHistory(ctx, name + " — ব্রাউজার মোড: লেখার জায়গা পাওয়া যায়নি (ফোন লক থাকলে বা লগইন না থাকলে এমন হয়)");
-                notifyUser(ctx, "NVN ব্রাউজার মোড", name + "-এ লেখা বসানো যায়নি — ফোন আনলক আছে কিনা আর অ্যাপের ব্রাউজারে লগইন আছে কিনা দেখো", false);
+                notifyUser(ctx, "NVN ব্রাউজার মোড", name + "-এ লেখা বসানো যায়নি — ফোন আনলক আছে কিনা আর Chrome-এ লগইন আছে কিনা দেখো", false);
                 workNotifyClear(ctx);
                 if (wasOff) a11y.lockScreen();
                 return false;
             }
             ArcherAccessibilityService.sleep(1200);
-            for (String btn : postButtonTexts(svc)) {
-                if (a11y.hasText(btn)) {
-                    a11y.tapText(btn);
-                    ArcherAccessibilityService.sleep(3000);
+            boolean posted = false;
+            for (int i = 0; i < 5 && !posted; i++) {
+                for (String btn : postButtonTexts(svc)) {
+                    if (a11y.hasText(btn)) {
+                        a11y.tapText(btn);
+                        posted = true;
+                        break;
+                    }
+                }
+                if (!posted) ArcherAccessibilityService.sleep(2000);
+            }
+            if (posted) {
+                // Verify it really went through: after a post the page returns to the
+                // feed, where the composer box shows again. Only then claim success.
+                boolean backOnFeed = false;
+                for (int i = 0; i < 5; i++) {
+                    ArcherAccessibilityService.sleep(2000);
+                    for (String hint : composerHints(svc)) {
+                        if (a11y.hasText(hint)) { backOnFeed = true; break; }
+                    }
+                    if (backOnFeed) break;
+                }
+                if (backOnFeed) {
                     workStatus(ctx, "✅ পোস্ট হয়ে গেছে — " + name);
                     saveError(ctx, svc, "");
                     saveLastLink(ctx, svc, "");
@@ -291,6 +340,13 @@ public class ConnectWorker {
                     if (wasOff) a11y.lockScreen();
                     return true;
                 }
+                saveError(ctx, svc, "Post বাটন চাপা হয়েছে কিন্তু পোস্ট হয়েছে কিনা নিশ্চিত হওয়া যায়নি — " + name + "-এ গিয়ে দেখে নাও");
+                workStatus(ctx, "⚠️ Post চাপা হয়েছে, নিশ্চিত হওয়া যায়নি — " + name + "-এ দেখে নাও");
+                workShot(ctx, a11y);
+                logHistory(ctx, name + " — ব্রাউজার মোড: Post চাপা হয়েছে, ফিডে ফেরা যাচাই হয়নি");
+                workNotifyClear(ctx);
+                if (wasOff) a11y.lockScreen();
+                return false;
             }
             // Typed but no Post button found — leave it typed for the owner to press Post.
             saveError(ctx, svc, "লেখা বসানো হয়েছে কিন্তু Post বাটন পাওয়া যায়নি — ব্রাউজারে গিয়ে Post বাটনে নিজে টিপ দাও");
@@ -301,6 +357,7 @@ public class ConnectWorker {
             workNotifyClear(ctx);
             return false;
         } catch (Exception e) {
+            saveError(ctx, svc, "ব্রাউজার মোডে সমস্যা হয়েছে — আবার চেষ্টা করো");
             logHistory(ctx, name + " — ব্রাউজার মোডে সমস্যা হয়েছে");
             workNotifyClear(ctx);
             return false;
